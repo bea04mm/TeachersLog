@@ -38,6 +38,14 @@
     <string name="subject_average_label">Subject Average</string>
     <string name="students_count_label">%d Students</string>
     <string name="average_format">Average: %s</string>
+    <string name="add_subject">Add Subject</string>
+    <string name="edit_subject">Edit Subject</string>
+    <string name="delete_subject_title">Delete Subject</string>
+    <string name="delete_subject_message">Are you sure you want to delete \'%s\'? This will also delete all associated classes and students.</string>
+    <string name="subject_name">Subject Name</string>
+    <string name="select_icon">Select Icon</string>
+    <string name="select_color">Select Color</string>
+    <string name="subject_name_required">Subject name is required</string>
 
     <!-- Class Roster -->
     <string name="students_roster">STUDENTS ROSTER</string>
