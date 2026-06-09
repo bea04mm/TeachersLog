@@ -1,0 +1,119 @@
+<resources>
+    <string name="app_name">Diário do Professor</string>
+
+    <!-- Geral -->
+    <string name="back">Voltar</string>
+    <string name="menu">Menu</string>
+    <string name="notifications">Notificações</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="edit">Editar</string>
+    <string name="delete_label">Apagar</string>
+    <string name="close">Fechar</string>
+    <string name="loading">A carregar…</string>
+
+    <!-- Navegação Inferior -->
+    <string name="nav_dashboard">Painel</string>
+    <string name="nav_classes">Disciplinas</string>
+    <string name="nav_settings">Definições</string>
+
+    <!-- Painel Principal -->
+    <string name="academic_dashboard">PAINEL ACADÉMICO</string>
+    <string name="active_overview">Resumo Ativo</string>
+    <string name="total_students">Total de Alunos</string>
+    <string name="global_average">Média Global</string>
+    <string name="active_subjects">Disciplinas Ativas</string>
+    <string name="view_all">Ver Todas</string>
+    <string name="pick_random_student">Escolher Aluno Aleatório</string>
+    <string name="no_students_found">Nenhum aluno encontrado em %s</string>
+    <string name="no_classes_available">Nenhuma turma disponível para seleção</string>
+
+    <!-- Disciplinas / Turmas -->
+    <string name="my_subjects">MINHAS DISCIPLINAS</string>
+    <string name="active_curriculum">Currículo Ativo</string>
+    <string name="view_all_classes">Ver Todas as Disciplinas</string>
+    <string name="academic_overview">RESUMO ACADÉMICO</string>
+    <string name="all_registered_classes">Todas as Disciplinas Registadas</string>
+    <string name="active_year_classes">Turmas do Ano Ativo</string>
+    <string name="subject_average_label">Média da Disciplina</string>
+    <string name="students_count_label">%d Alunos</string>
+    <string name="average_format">Média: %s</string>
+
+    <!-- Lista de Turma -->
+    <string name="students_roster">LISTA DE ALUNOS</string>
+    <string name="process_prefix">Proc: %s</string>
+    <string name="class_header">TURMAS</string>
+
+    <!-- Avaliação do Aluno -->
+    <string name="student_grading">Avaliação do Aluno</string>
+    <string name="total_grade_weighted">NOTA TOTAL (PONDERADA)</string>
+    <string name="weight_label">Peso: %s</string>
+    <string name="homework_assignments">Trabalhos de Casa</string>
+    <string name="classroom_participation">Participação na Aula</string>
+    <string name="quizzes_tests">Testes e Fichas</string>
+    <string name="collaborative_projects">Projetos Colaborativos</string>
+    <string name="teachers_notes">Notas do Professor</string>
+    <string name="save_grades">Guardar Notas</string>
+    <string name="qualitative_feedback_hint">Escreva feedback qualitativo sobre o desempenho do aluno…</string>
+    <string name="max_grade"> / 5.0</string>
+    <string name="low_label">Baixa</string>
+    <string name="mid_label">Média</string>
+    <string name="high_label">Alta</string>
+    <string name="exemplary_label">Exemplar</string>
+    <string name="needs_focus_label">Precisa de Foco</string>
+
+    <!-- Definições -->
+    <string name="edit_profile">Editar Perfil</string>
+    <string name="configuration">CONFIGURAÇÃO</string>
+    <string name="app_preferences">Preferências da App</string>
+    <string name="app_preferences_desc">Modo escuro, notificações, escala</string>
+    <string name="institutional_access">Acesso Institucional</string>
+    <string name="institutional_access_desc">Ligar a agrupamentos escolares</string>
+    <string name="privacy">Privacidade</string>
+    <string name="privacy_desc">Visibilidade pública e analítica</string>
+    <string name="sign_out">Sair</string>
+    <string name="version_info">Versão 2.4.1 (Build 108)</string>
+
+    <!-- Detalhes de Preferências -->
+    <string name="language_label">Idioma</string>
+    <string name="app_language">Idioma da App</string>
+    <string name="select_language">Selecionar Idioma</string>
+    <string name="english">Inglês</string>
+    <string name="portuguese">Português</string>
+
+    <string name="appearance">Aparência</string>
+    <string name="dark_mode">Modo Escuro</string>
+    <string name="dark_mode_desc">Ajustar para ambientes de pouca luz</string>
+    <string name="interface_scale">Escala da Interface</string>
+    <string name="interface_scale_desc">Alterar o tamanho dos elementos</string>
+    <string name="grading">Avaliação</string>
+    <string name="default_grading_scale">Escala de Avaliação Padrão</string>
+    <string name="grading_scale_desc">Sistema principal para novas disciplinas</string>
+    <string name="compact_label">Compacto</string>
+    <string name="standard_label">Padrão</string>
+    <string name="large_label">Grande</string>
+    <string name="scale_range_label">Escala 1–5</string>
+
+    <!-- Diálogos de Ano Letivo -->
+    <string name="academic_years_header">ANOS LETIVOS</string>
+    <string name="add_new_year">Adicionar Novo Ano</string>
+    <string name="delete_year_title">Apagar Ano Letivo</string>
+    <string name="delete_year_message">Tem a certeza que deseja apagar o ano %s? Todos os dados associados (disciplinas, turmas e alunos) serão perdidos permanentemente.</string>
+    <string name="year_exists_error">Este ano letivo já existe!</string>
+    <string name="select_starting_year">Selecione o ano de início:</string>
+
+    <!-- Detalhes da Conta -->
+    <string name="account">Conta</string>
+    <string name="jane_harrison">Jane Harrison</string>
+    <string name="jane_email">jane.harrison@edu-log.com</string>
+    <string name="state_university">Universidade Estadual</string>
+    <string name="personal_information">Informações Pessoais</string>
+    <string name="first_name">Primeiro Nome</string>
+    <string name="last_name">Apelido</string>
+    <string name="email">Email</string>
+    <string name="security">Segurança</string>
+    <string name="password">Palavra-passe</string>
+    <string name="password_desc">Alterada há 3 meses</string>
+    <string name="two_factor_auth">Autenticação de Dois Fatores</string>
+    <string name="two_factor_auth_desc">Proteja a sua conta com um código</string>
+</resources>
