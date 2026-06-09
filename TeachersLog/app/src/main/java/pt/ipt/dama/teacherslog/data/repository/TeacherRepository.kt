@@ -34,5 +34,11 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
 
     suspend fun insertAcademicYear(year: AcademicYear) = teacherDao.insertAcademicYear(year)
     suspend fun deleteAcademicYear(year: AcademicYear) = teacherDao.deleteAcademicYear(year)
+    
+    suspend fun insertSubject(subject: Subject) = teacherDao.insertSubject(subject)
+    suspend fun updateSubject(subject: Subject) = teacherDao.updateSubject(subject)
+    suspend fun deleteSubject(subject: Subject) = teacherDao.deleteSubject(subject)
+    fun getSubjectById(subjectId: Int): Flow<Subject?> = teacherDao.getSubjectById(subjectId)
+
     suspend fun insertGrade(grade: Grade) = teacherDao.insertGrade(grade)
 }

@@ -65,6 +65,15 @@ interface TeacherDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubject(subject: Subject): Long
 
+    @Update
+    suspend fun updateSubject(subject: Subject)
+
+    @Delete
+    suspend fun deleteSubject(subject: Subject)
+
+    @Query("SELECT * FROM subjects WHERE id = :subjectId")
+    fun getSubjectById(subjectId: Int): Flow<Subject?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStudentsClass(studentsClass: StudentsClass): Long
 
