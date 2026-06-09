@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,12 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import pt.ipt.dama.teacherslog.R
-import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 
@@ -29,12 +28,12 @@ import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 fun SubjectEditScreen(
     viewModel: TeacherViewModel,
     subjectId: Int?,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val existingSubject by if (subjectId != null) {
         viewModel.getSubjectById(subjectId).observeAsState()
     } else {
-        remember { mutableStateOf<Subject?>(null) }
+        remember { mutableStateOf(null) }
     }
 
     var name by remember { mutableStateOf("") }
@@ -57,7 +56,7 @@ fun SubjectEditScreen(
         "brush" to Icons.Default.Brush,
         "calculate" to Icons.Default.Calculate,
         "code" to Icons.Default.Code,
-        "menu_book" to Icons.Default.MenuBook,
+        "menu_book" to Icons.AutoMirrored.Filled.MenuBook,
         "music_note" to Icons.Default.MusicNote,
         "sports_basketball" to Icons.Default.SportsBasketball
     )

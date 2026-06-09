@@ -1,5 +1,6 @@
 ﻿package pt.ipt.dama.teacherslog
 
+import android.content.Context
 import android.os.Bundle
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -19,10 +20,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,14 +31,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.ui.components.TeacherBottomBar
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.screens.*
+import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModelFactory
-import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.utils.LocaleManager
-import android.content.Context
 
 /**
  * Entry point of the application. 
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context) {
         // Apply the saved language on attach
-        val lang = newBase.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        val lang = newBase.getSharedPreferences("prefs", MODE_PRIVATE)
             .getString("language", "en") ?: "en"
         super.attachBaseContext(LocaleManager.updateResources(newBase, lang))
     }
@@ -281,7 +281,27 @@ fun MainApp(viewModel: TeacherViewModel) {
                             val encodedName = URLEncoder.encode(subjectName, StandardCharsets.UTF_8.toString())
                             navController.navigate("subject/$subjectId/$encodedName")
                         },
-                        onViewAllClassesClick = { navController.navigate("all_subjects") }
+                        onViewAllClassesClick = { navController.navigate("all_subjects") },
+                        onAddSubjectClick = { navController.navigate("add_subject") },
+                        onEditSubjectClick = { subjectId -> navController.navigate("edit_subject/$subjectId") }
+                    )
+                }
+                composable("add_subject") {
+                    SubjectEditScreen(
+                        viewModel = viewModel,
+                        subjectId = null,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "edit_subject/{subjectId}",
+                    arguments = listOf(navArgument("subjectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val subjectId = backStackEntry.arguments?.getInt("subjectId")
+                    SubjectEditScreen(
+                        viewModel = viewModel,
+                        subjectId = subjectId,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
                 composable("all_subjects") {
