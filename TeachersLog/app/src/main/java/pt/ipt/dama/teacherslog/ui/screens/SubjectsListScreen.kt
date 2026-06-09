@@ -46,7 +46,7 @@ fun SubjectsListContent(
 
     if (subjectToDelete != null) {
         AlertDialog(
-            onDismissRequest = { subjectToDelete = null },
+            onDismissRequest = { /* TODO */ },
             title = { Text(stringResource(R.string.delete_subject_title)) },
             text = { Text(stringResource(R.string.delete_subject_message, subjectToDelete?.name ?: "")) },
             confirmButton = {
@@ -61,7 +61,7 @@ fun SubjectsListContent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { subjectToDelete = null }) {
+                TextButton(onClick = { /* TODO */ }) {
                     Text(stringResource(R.string.cancel))
                 }
             }
