@@ -1,3 +1,119 @@
 <resources>
     <string name="app_name">Teacher\'s Log</string>
+
+    <!-- General -->
+    <string name="back">Back</string>
+    <string name="menu">Menu</string>
+    <string name="notifications">Notifications</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="delete_label">Delete</string>
+    <string name="close">Close</string>
+    <string name="loading">Loading…</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_classes">Subjects</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Dashboard -->
+    <string name="academic_dashboard">ACADEMIC DASHBOARD</string>
+    <string name="active_overview">Active Overview</string>
+    <string name="total_students">Total Students</string>
+    <string name="global_average">Global Average</string>
+    <string name="active_subjects">Active Subjects</string>
+    <string name="view_all">View All</string>
+    <string name="pick_random_student">Pick Random Student</string>
+    <string name="no_students_found">No students found in %s</string>
+    <string name="no_classes_available">No classes available for selection</string>
+
+    <!-- Subjects -->
+    <string name="my_subjects">MY SUBJECTS</string>
+    <string name="active_curriculum">Active Curriculum</string>
+    <string name="view_all_classes">View All Subjects</string>
+    <string name="academic_overview">ACADEMIC OVERVIEW</string>
+    <string name="all_registered_classes">All Registered Subjects</string>
+    <string name="active_year_classes">Active Year Classes</string>
+    <string name="subject_average_label">Subject Average</string>
+    <string name="students_count_label">%d Students</string>
+    <string name="average_format">Average: %s</string>
+
+    <!-- Class Roster -->
+    <string name="students_roster">STUDENTS ROSTER</string>
+    <string name="process_prefix">Proc: %s</string>
+    <string name="class_header">CLASSES</string>
+
+    <!-- Student Grading -->
+    <string name="student_grading">Student Grading</string>
+    <string name="total_grade_weighted">TOTAL GRADE (WEIGHTED)</string>
+    <string name="weight_label">Weight: %s</string>
+    <string name="homework_assignments">Homework &amp; Assignments</string>
+    <string name="classroom_participation">Class Participation</string>
+    <string name="quizzes_tests">Quizzes &amp; Tests</string>
+    <string name="collaborative_projects">Collaborative Projects</string>
+    <string name="teachers_notes">Teacher\'s Notes</string>
+    <string name="save_grades">Save Grades</string>
+    <string name="qualitative_feedback_hint">Write qualitative feedback regarding student performance…</string>
+    <string name="max_grade"> / 5.0</string>
+    <string name="low_label">Low</string>
+    <string name="mid_label">Mid</string>
+    <string name="high_label">High</string>
+    <string name="exemplary_label">Exemplary</string>
+    <string name="needs_focus_label">Needs Focus</string>
+
+    <!-- Settings -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="configuration">CONFIGURATION</string>
+    <string name="app_preferences">App Preferences</string>
+    <string name="app_preferences_desc">Dark mode, notifications, grading scale</string>
+    <string name="institutional_access">Institutional Access</string>
+    <string name="institutional_access_desc">Connect school districts</string>
+    <string name="privacy">Privacy</string>
+    <string name="privacy_desc">Public visibility and analytics</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="version_info">Version 2.4.1 (Build 108)</string>
+
+    <!-- App Preferences Details -->
+    <string name="language_label">Language</string>
+    <string name="app_language">App Language</string>
+    <string name="select_language">Select Language</string>
+    <string name="english">English</string>
+    <string name="portuguese">Português</string>
+
+    <string name="appearance">Appearance</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Adjust for low-light environments</string>
+    <string name="interface_scale">Interface Scale</string>
+    <string name="interface_scale_desc">Change the sizing of dashboard</string>
+    <string name="grading">Grading</string>
+    <string name="default_grading_scale">Default Grading Scale</string>
+    <string name="grading_scale_desc">Primary system for new subjects</string>
+    <string name="compact_label">Compact</string>
+    <string name="standard_label">Standard</string>
+    <string name="large_label">Large</string>
+    <string name="scale_range_label">1-5 Scale</string>
+
+    <!-- Academic Year Dialogs -->
+    <string name="academic_years_header">ACADEMIC YEARS</string>
+    <string name="add_new_year">Add New Year</string>
+    <string name="delete_year_title">Delete Academic Year</string>
+    <string name="delete_year_message">Are you sure you want to delete the year %s? All associated data (subjects, classes, and students) will be permanently lost.</string>
+    <string name="year_exists_error">This academic year already exists!</string>
+    <string name="select_starting_year">Select the starting year:</string>
+
+    <!-- Account Details -->
+    <string name="account">Account</string>
+    <string name="jane_harrison">Jane Harrison</string>
+    <string name="jane_email">jane.harrison@edu-log.com</string>
+    <string name="state_university">State University</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="email">Email</string>
+    <string name="security">Security</string>
+    <string name="password">Password</string>
+    <string name="password_desc">Last changed 3 months ago</string>
+    <string name="two_factor_auth">Two-Factor Authentication</string>
+    <string name="two_factor_auth_desc">Secure your account with a code</string>
 </resources>
