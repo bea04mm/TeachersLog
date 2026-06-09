@@ -81,6 +81,29 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun addSubject(name: String, iconName: String, colorHex: String) {
+        val yearId = _selectedYearId.value ?: return
+        viewModelScope.launch {
+            repository.insertSubject(Subject(academicYearId = yearId, name = name, iconName = iconName, colorHex = colorHex))
+        }
+    }
+
+    fun updateSubject(subject: Subject) {
+        viewModelScope.launch {
+            repository.updateSubject(subject)
+        }
+    }
+
+    fun deleteSubject(subject: Subject) {
+        viewModelScope.launch {
+            repository.deleteSubject(subject)
+        }
+    }
+
+    fun getSubjectById(subjectId: Int): LiveData<Subject?> {
+        return repository.getSubjectById(subjectId).asLiveData()
+    }
+
     fun getStudentsClassesForSubject(subjectId: Int): LiveData<List<StudentsClassWithStats>> {
         return repository.getStudentsClassesForSubject(subjectId).asLiveData()
     }
