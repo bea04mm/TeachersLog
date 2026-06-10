@@ -108,7 +108,7 @@ fun AccountDetailsScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Button(
-                                onClick = { /* TODO */ },
+                                onClick = onBackClick,
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.medium
                             ) {

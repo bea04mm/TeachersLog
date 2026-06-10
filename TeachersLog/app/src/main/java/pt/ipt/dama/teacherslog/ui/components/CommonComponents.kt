@@ -18,13 +18,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
-
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import pt.ipt.dama.teacherslog.R
+import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 
 /**
- * Standardized TopBar for the application.
- * Dynamically switches between branding icons and navigation buttons.
+ * TeacherTopBar is a standardized TopAppBar for the application.
+ * 
+ * It dynamically switches its icon based on the title and provides
+ * support for both a side menu navigation and a back button.
+ *
+ * @param title The text to display as the screen title.
+ * @param modifier The [Modifier] to be applied to the TopAppBar.
+ * @param onNavigationIconClick Callback for the side menu icon. If null, icon is hidden.
+ * @param showBackButton Boolean flag to toggle the back button display.
+ * @param onBackClick Callback for the back button navigation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +44,7 @@ fun TeacherTopBar(
     showBackButton: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
-    // Icons synchronized with BottomBar labels using modern AutoMirrored versions
+    // Determine the branding/context icon based on the screen title
     val titleIcon = when {
         title.contains("Dashboard", true) || title.contains("Teacher", true) -> Icons.Default.Home
         title.contains("Subjects", true) || title.contains("Classes", true) -> Icons.AutoMirrored.Filled.MenuBook
@@ -47,13 +56,16 @@ fun TeacherTopBar(
         modifier = modifier,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Contextual icon with primary theme color
                 Icon(
                     imageVector = titleIcon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
+                // Spacing between icon and title
                 Spacer(modifier = Modifier.width(12.dp))
+                // Bold screen title
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
@@ -63,6 +75,7 @@ fun TeacherTopBar(
             }
         },
         navigationIcon = {
+            // Priority 1: Show Back button if explicitly requested
             if (showBackButton) {
                 IconButton(onClick = onBackClick) {
                     Icon(
@@ -72,6 +85,7 @@ fun TeacherTopBar(
                     )
                 }
             } else if (onNavigationIconClick != null) {
+                // Priority 2: Show Menu button if a callback is provided
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         imageVector = Icons.Default.Menu, 
@@ -89,7 +103,11 @@ fun TeacherTopBar(
 }
 
 /**
- * Bottom navigation bar with state-aware active icons.
+ * TeacherBottomBar is the main navigation bar containing tabs for high-level app destinations.
+ *
+ * @param currentRoute The currently active route string for selection highlighting.
+ * @param modifier The [Modifier] to be applied.
+ * @param onNavigate Callback executed when a tab is selected.
  */
 @Composable
 fun TeacherBottomBar(
@@ -102,29 +120,46 @@ fun TeacherBottomBar(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
     ) {
+        val navItemColors = NavigationBarItemDefaults.colors(
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        // Tab: Dashboard
         NavigationBarItem(
             selected = currentRoute == "dashboard",
             onClick = { onNavigate("dashboard") },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_dashboard), style = MaterialTheme.typography.labelSmall) }
+            label = { Text(stringResource(R.string.nav_dashboard), style = MaterialTheme.typography.labelSmall) },
+            colors = navItemColors
         )
+        // Tab: Subjects/Classes
         NavigationBarItem(
             selected = currentRoute == "subjects",
             onClick = { onNavigate("subjects") },
             icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_classes), style = MaterialTheme.typography.labelSmall) }
+            label = { Text(stringResource(R.string.nav_classes), style = MaterialTheme.typography.labelSmall) },
+            colors = navItemColors
         )
+        // Tab: Settings
         NavigationBarItem(
             selected = currentRoute == "settings",
             onClick = { onNavigate("settings") },
             icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.labelSmall) }
+            label = { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.labelSmall) },
+            colors = navItemColors
         )
     }
 }
 
 /**
- * Standardized container with low elevation and adaptive background.
+ * TonalCard is a reusable surface container with a subtle background color and low elevation.
+ *
+ * @param modifier The [Modifier] to be applied.
+ * @param content The Composable content to display inside the card.
  */
 @Composable
 fun TonalCard(
@@ -142,7 +177,13 @@ fun TonalCard(
 }
 
 /**
- * High-level summary card for the Dashboard.
+ * StatCard displays a summary metric with a representative icon and descriptive label.
+ *
+ * @param title The label describing the metric.
+ * @param value The prominent headline value of the metric.
+ * @param icon The icon to display in the decorative bubble.
+ * @param modifier The [Modifier] to be applied.
+ * @param color The accent color for the icon and its translucent background.
  */
 @Composable
 fun StatCard(
@@ -154,6 +195,7 @@ fun StatCard(
 ) {
     TonalCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Decorative icon bubble
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -164,14 +206,17 @@ fun StatCard(
                 Icon(imageVector = icon, contentDescription = null, tint = color)
             }
             Spacer(modifier = Modifier.height(12.dp))
+            // Descriptive label
             Text(
-                text = title.uppercase(),
+                text = title,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )
+            // Primary value
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -179,76 +224,89 @@ fun StatCard(
 }
 
 /**
- * Card representing a school subject summary.
+ * Unified card component for summarizing academic entities like Subjects or Classes.
+ *
+ * @param name The primary name/title to display (Subject or Class name).
+ * @param averageGrade The numerical grade to display as an average.
+ * @param studentCount Total number of students enrolled.
+ * @param color The branding color for the accent bar and icons.
+ * @param modifier The [Modifier] to be applied.
+ * @param icon Optional [androidx.compose.ui.graphics.vector.ImageVector] to display next to the name.
+ * @param actions Optional action buttons/menu to display in the top right.
+ * @param onClick Callback for when the card is selected.
  */
 @Composable
-fun SubjectCard(
+fun AcademicSummaryCard(
     name: String,
-    average: String,
-    students: Int,
+    averageGrade: Double,
+    studentCount: Int,
     color: Color,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     TonalCard(
         modifier = modifier.clickable(onClick = onClick)
     ) {
         Column {
+            // Colored accent bar at the top of the card
             Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(color))
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+                // Header row with optional icon, name and optional actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Column {
-                        Text(text = "Subject Average", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                        Text(text = average, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    // Wrapper for Icon and Title to keep them centered relative to each other
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (icon != null) {
+                            Icon(
+                                imageVector = icon, 
+                                contentDescription = null, 
+                                tint = color, 
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(text = "Students", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                        Text(text = students.toString(), style = MaterialTheme.typography.bodyLarge)
+                    
+                    // Render actions if provided (e.g., options menu)
+                    if (actions != null) {
+                        actions()
                     }
                 }
-            }
-        }
-    }
-}
-
-/**
- * Card representing a class summary.
- */
-@Composable
-fun ClassCard(
-    name: String,
-    studentCount: Int,
-    averageGrade: Double,
-    color: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    TonalCard(
-        modifier = modifier.clickable(onClick = onClick)
-    ) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(4.dp).background(color))
-            Column(modifier = Modifier.padding(16.dp)) {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Bottom row with stats and student count pill
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // Average performance section
+                    Column {
+                        Text(
+                            text = stringResource(R.string.subject_average_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                        Text(
+                            text = String.format(Locale.getDefault(), "%.2f", averageGrade),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    // Student count pill at the bottom right
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
                         shape = CircleShape
@@ -259,24 +317,213 @@ fun ClassCard(
                         ) {
                             Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "$studentCount Students", style = MaterialTheme.typography.labelSmall)
+                            // Use the formatted string resource for student count
+                            Text(
+                                text = stringResource(R.string.students_count_label, studentCount),
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Column {
-                    Text(
-                        text = "SUBJECT AVERAGE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = String.format(Locale.getDefault(), "%.2f / 10", averageGrade),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
             }
+        }
+    }
+}
+
+/**
+ * Compatibility wrapper for SubjectCard using the unified [AcademicSummaryCard].
+ * 
+ * @param name The name of the subject.
+ * @param average The average grade string.
+ * @param students The total student count.
+ * @param color The branding color.
+ * @param icon The representative icon.
+ * @param modifier The [Modifier] to be applied.
+ * @param actions Optional action buttons/menu.
+ * @param onClick Callback for selection.
+ */
+@Composable
+fun SubjectCard(
+    name: String,
+    average: String,
+    students: Int,
+    color: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    actions: @Composable (RowScope.() -> Unit)? = null,
+    onClick: () -> Unit
+) {
+    AcademicSummaryCard(
+        name = name,
+        averageGrade = average.toDoubleOrNull() ?: 0.0,
+        studentCount = students,
+        color = color,
+        modifier = modifier,
+        icon = icon,
+        actions = actions,
+        onClick = onClick
+    )
+}
+
+/**
+ * Compatibility wrapper for ClassCard using the unified [AcademicSummaryCard].
+ * 
+ * @param name The name of the class.
+ * @param studentCount The number of students.
+ * @param averageGrade The average grade.
+ * @param color The branding color.
+ * @param modifier The [Modifier] to be applied.
+ * @param onClick Callback for selection.
+ */
+@Composable
+fun ClassCard(
+    name: String,
+    studentCount: Int,
+    averageGrade: Double,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    AcademicSummaryCard(
+        name = name,
+        averageGrade = averageGrade,
+        studentCount = studentCount,
+        color = color,
+        modifier = modifier,
+        icon = null,
+        onClick = onClick
+    )
+}
+
+// --- Previews ---
+
+/**
+ * Visualizes the [TeacherTopBar] in a standard dashboard context.
+ */
+@Preview(showBackground = true, name = "Top Bar Preview")
+@Composable
+fun TeacherTopBarPreview() {
+    TeachersLogTheme {
+        TeacherTopBar(title = "Dashboard", onNavigationIconClick = {})
+    }
+}
+
+/**
+ * Visualizes the [TeacherBottomBar] with a selected route.
+ */
+@Preview(showBackground = true, name = "Bottom Bar Preview")
+@Composable
+fun TeacherBottomBarPreview() {
+    TeachersLogTheme {
+        TeacherBottomBar(currentRoute = "dashboard", onNavigate = {})
+    }
+}
+
+/**
+ * Visualizes the [StatCard] with sample numeric data.
+ */
+@Preview(showBackground = true, name = "Stat Card Preview")
+@Composable
+fun StatCardPreview() {
+    TeachersLogTheme {
+        StatCard(
+            title = stringResource(R.string.total_students),
+            value = "45",
+            icon = Icons.Default.Group,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+/**
+ * Visualizes the [SubjectCard] as it would appear in a list.
+ */
+@Preview(showBackground = true, name = "Subject Card Preview")
+@Composable
+fun SubjectCardPreview() {
+    TeachersLogTheme {
+        SubjectCard(
+            name = "Mathematics",
+            average = "4.2",
+            students = 12,
+            color = Color(0xFF004AC6),
+            icon = Icons.Default.Functions,
+            modifier = Modifier.padding(16.dp),
+            onClick = {}
+        )
+    }
+}
+
+/**
+ * Visualizes the [ClassCard] with its performance metrics.
+ */
+@Preview(showBackground = true, name = "Class Card Preview")
+@Composable
+fun ClassCardPreview() {
+    TeachersLogTheme {
+        ClassCard(
+            name = "4.ºA",
+            studentCount = 25,
+            averageGrade = 3.85,
+            color = Color(0xFF006686),
+            modifier = Modifier.padding(16.dp),
+            onClick = {}
+        )
+    }
+}
+
+/**
+ * Comprehensive preview showing a combination of common components in a simulated dashboard layout.
+ */
+@Preview(showBackground = true, name = "All Components Summary")
+@Composable
+fun CommonComponentsSummaryPreview() {
+    TeachersLogTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TeacherTopBar(title = "Components Overview", onNavigationIconClick = {})
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                StatCard(
+                    title = stringResource(R.string.total_students),
+                    value = "120",
+                    icon = Icons.Default.Person,
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    title = stringResource(R.string.global_average),
+                    value = "4.1",
+                    icon = Icons.Default.Star,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            
+            SubjectCard(
+                name = "Science",
+                average = "3.9",
+                students = 45,
+                color = Color(0xFF006874),
+                icon = Icons.Default.Biotech,
+                onClick = {}
+            )
+            
+            ClassCard(
+                name = "10.ºB",
+                studentCount = 30,
+                averageGrade = 4.5,
+                color = MaterialTheme.colorScheme.tertiary,
+                onClick = {}
+            )
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            TeacherBottomBar(currentRoute = "subjects", onNavigate = {})
         }
     }
 }

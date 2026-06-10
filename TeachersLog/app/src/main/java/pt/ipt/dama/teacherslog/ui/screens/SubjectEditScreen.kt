@@ -18,36 +18,52 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
+import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 
+/**
+ * SubjectEditContent is the stateless UI component for creating or editing a subject.
+ *
+ * It manages:
+ * 1. A text field for the subject name.
+ * 2. A selectable list of icons for visual representation.
+ * 3. A selectable list of colors for theme consistency.
+ * 4. Validation to ensure the name is not empty before saving.
+ *
+ * @param isEditMode Boolean flag to determine if the screen is in 'Edit' or 'Add' mode.
+ * @param initialName The initial name of the subject (empty for 'Add' mode).
+ * @param initialIcon The initial icon name (e.g., "functions").
+ * @param initialColor The initial color hex string (e.g., "#004AC6").
+ * @param onSave Callback executed when the user confirms the creation or update.
+ * @param onBackClick Callback executed when the user navigates back.
+ */
 @Composable
-fun SubjectEditScreen(
-    viewModel: TeacherViewModel,
-    subjectId: Int?,
-    onBackClick: () -> Unit,
+fun SubjectEditContent(
+    isEditMode: Boolean,
+    initialName: String,
+    initialIcon: String,
+    initialColor: String,
+    onSave: (String, String, String) -> Unit,
+    onBackClick: () -> Unit
 ) {
-    val existingSubject by if (subjectId != null) {
-        viewModel.getSubjectById(subjectId).observeAsState()
-    } else {
-        remember { mutableStateOf(null) }
+    // Local state for form fields
+    var name by remember { mutableStateOf(initialName) }
+    var selectedIcon by remember { mutableStateOf(initialIcon) }
+    var selectedColor by remember { mutableStateOf(initialColor) }
+
+    // Sync state if initial values change (e.g., when data is loaded from ViewModel)
+    LaunchedEffect(initialName, initialIcon, initialColor) {
+        name = initialName
+        selectedIcon = initialIcon
+        selectedColor = initialColor
     }
 
-    var name by remember { mutableStateOf("") }
-    var selectedIcon by remember { mutableStateOf("functions") }
-    var selectedColor by remember { mutableStateOf("#004AC6") }
-
-    LaunchedEffect(existingSubject) {
-        existingSubject?.let {
-            name = it.name
-            selectedIcon = it.iconName
-            selectedColor = it.colorHex
-        }
-    }
-
+    // Predefined set of icons available for subjects
     val icons = listOf(
         "functions" to Icons.Default.Functions,
         "biotech" to Icons.Default.Biotech,
@@ -61,6 +77,7 @@ fun SubjectEditScreen(
         "sports_basketball" to Icons.Default.SportsBasketball
     )
 
+    // Predefined palette for subject themes
     val colors = listOf(
         "#004AC6", "#006686", "#7D5260", "#6750A4", 
         "#B3261E", "#386A20", "#006874", "#A03D2F",
@@ -70,7 +87,7 @@ fun SubjectEditScreen(
     Scaffold(
         topBar = {
             TeacherTopBar(
-                title = stringResource(if (subjectId == null) R.string.add_subject else R.string.edit_subject),
+                title = stringResource(if (!isEditMode) R.string.add_subject else R.string.edit_subject),
                 showBackButton = true,
                 onBackClick = onBackClick
             )
@@ -83,6 +100,7 @@ fun SubjectEditScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // --- Name Input ---
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -91,6 +109,7 @@ fun SubjectEditScreen(
                 singleLine = true
             )
 
+            // --- Icon Selection ---
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.select_icon),
@@ -130,6 +149,7 @@ fun SubjectEditScreen(
                 }
             }
 
+            // --- Color Selection ---
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.select_color),
@@ -161,17 +181,11 @@ fun SubjectEditScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // --- Save Button ---
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
-                        if (subjectId == null) {
-                            viewModel.addSubject(name, selectedIcon, selectedColor)
-                        } else {
-                            existingSubject?.let {
-                                viewModel.updateSubject(it.copy(name = name, iconName = selectedIcon, colorHex = selectedColor))
-                            }
-                        }
-                        onBackClick()
+                        onSave(name, selectedIcon, selectedColor)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -180,5 +194,81 @@ fun SubjectEditScreen(
                 Text(stringResource(R.string.save))
             }
         }
+    }
+}
+
+/**
+ * SubjectEditScreen is the stateful Composable that connects the [TeacherViewModel]
+ * to the [SubjectEditContent] UI.
+ *
+ * @param viewModel The shared [TeacherViewModel] for CRUD operations.
+ * @param subjectId The ID of the subject to edit, or null to create a new one.
+ * @param onBackClick Callback for navigating back.
+ */
+@Composable
+fun SubjectEditScreen(
+    viewModel: TeacherViewModel,
+    subjectId: Int?,
+    onBackClick: () -> Unit,
+) {
+    // Observe existing subject data if in edit mode
+    val existingSubject by if (subjectId != null) {
+        viewModel.getSubjectById(subjectId).observeAsState()
+    } else {
+        remember { mutableStateOf(null) }
+    }
+
+    SubjectEditContent(
+        isEditMode = subjectId != null,
+        initialName = existingSubject?.name ?: "",
+        initialIcon = existingSubject?.iconName ?: "functions",
+        initialColor = existingSubject?.colorHex ?: "#004AC6",
+        onSave = { name, icon, color ->
+            if (subjectId == null) {
+                viewModel.addSubject(name, icon, color)
+            } else {
+                existingSubject?.let {
+                    viewModel.updateSubject(it.copy(name = name, iconName = icon, colorHex = color))
+                }
+            }
+            onBackClick()
+        },
+        onBackClick = onBackClick
+    )
+}
+
+/**
+ * Preview for the 'Add Subject' mode in light theme.
+ */
+@Preview(showBackground = true, name = "Add Subject Light")
+@Composable
+fun AddSubjectPreview() {
+    TeachersLogTheme(darkTheme = false) {
+        SubjectEditContent(
+            isEditMode = false,
+            initialName = "",
+            initialIcon = "functions",
+            initialColor = "#004AC6",
+            onSave = { _, _, _ -> },
+            onBackClick = {}
+        )
+    }
+}
+
+/**
+ * Preview for the 'Edit Subject' mode in dark theme.
+ */
+@Preview(showBackground = true, name = "Edit Subject Dark")
+@Composable
+fun EditSubjectPreview() {
+    TeachersLogTheme(darkTheme = true) {
+        SubjectEditContent(
+            isEditMode = true,
+            initialName = "Mathematics",
+            initialIcon = "calculate",
+            initialColor = "#B3261E",
+            onSave = { _, _, _ -> },
+            onBackClick = {}
+        )
     }
 }
