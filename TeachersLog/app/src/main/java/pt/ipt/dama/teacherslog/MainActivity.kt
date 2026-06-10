@@ -1,5 +1,6 @@
 ﻿package pt.ipt.dama.teacherslog
 
+import android.content.Context
 import android.os.Bundle
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -19,10 +20,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,43 +31,61 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.ui.components.TeacherBottomBar
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.screens.*
+import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModelFactory
-import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.utils.LocaleManager
-import android.content.Context
 
 /**
- * Entry point of the application. 
- * Manages the top-level Navigation Graph and the Navigation Drawer (Sidebar).
+ * MainActivity is the primary entry point for the Teacher's Log application.
+ *
+ * It is responsible for:
+ * 1. Initializing the shared [TeacherViewModel].
+ * 2. Managing the application's locale and theme based on user preferences.
+ * 3. Hosting the [MainApp] Composable which contains the navigation and global UI components.
  */
 class MainActivity : ComponentActivity() {
-    // Shared ViewModel across all screens to maintain state (like selected year)
+    
+    // Shared ViewModel across all screens to maintain global state (e.g., selected academic year)
     private val viewModel: TeacherViewModel by viewModels {
         TeacherViewModelFactory(application)
     }
 
+    /**
+     * Updates the base context to apply the selected language before the activity is created.
+     * 
+     * @param newBase The base context to be wrapped with the new locale configuration.
+     */
     override fun attachBaseContext(newBase: Context) {
-        // Apply the saved language on attach
-        val lang = newBase.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        // Retrieve the saved language preference from SharedPreferences
+        val lang = newBase.getSharedPreferences("prefs", MODE_PRIVATE)
             .getString("language", "en") ?: "en"
+        // Apply the locale using the LocaleManager utility
         super.attachBaseContext(LocaleManager.updateResources(newBase, lang))
     }
 
+    /**
+     * Called when the activity is first created.
+     * Sets up the edge-to-edge display and the Compose content.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Enable edge-to-edge display for a modern immersive UI
         enableEdgeToEdge()
+        
         setContent {
-            // Observe language to trigger UI updates
+            // Observe the current language from the ViewModel to trigger UI updates on change
             val currentLang by viewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(this))
             
-            // Observe the global theme state from the ViewModel
+            // Observe the dark mode preference from the ViewModel
             val isDarkMode by viewModel.isDarkMode.observeAsState(initial = true)
             
+            // Provide the updated LocalContext with the correct locale to the Composable tree
             CompositionLocalProvider(LocalContext provides LocaleManager.updateResources(this, currentLang)) {
+                // Apply the application theme
                 TeachersLogTheme(darkTheme = isDarkMode) {
                     MainApp(viewModel)
                 }
@@ -75,28 +94,46 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * MainApp is the root Composable of the application's UI.
+ * 
+ * It manages:
+ * 1. Navigation using [NavHost] and [rememberNavController].
+ * 2. The global [ModalNavigationDrawer] for academic year management.
+ * 3. The [Scaffold] containing the [TeacherBottomBar] and [SnackbarHost].
+ *
+ * @param viewModel The shared [TeacherViewModel] providing data and state.
+ */
 @Composable
 fun MainApp(viewModel: TeacherViewModel) {
+    // Controller for managing application navigation
     val navController = rememberNavController()
+    // Current backstack entry used to determine the active route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "dashboard"
     
+    // State and scope for the Navigation Drawer (Sidebar)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    // Host state for displaying Snackbars
     val snackbarHostState = remember { SnackbarHostState() }
     
+    // Observe academic years and the currently selected year
     val academicYears by viewModel.allAcademicYears.observeAsState(emptyList())
     val selectedYearId by viewModel.selectedYearId.observeAsState()
 
+    // UI state for management dialogs
     val showAddYearDialog = remember { mutableStateOf(false) }
     val yearToDelete = remember { mutableStateOf<AcademicYear?>(null) }
 
-    // --- Auxiliary Dialogs for Academic Year Management ---
+    // --- Global Dialogs ---
 
+    // Dialog for adding a new academic year cycle
     if (showAddYearDialog.value) {
         AddYearDialog(
             onDismiss = { showAddYearDialog.value = false },
             onAdd = { yearName ->
+                // Check for duplicates before adding
                 if (academicYears.any { it.year == yearName }) {
                     scope.launch {
                         snackbarHostState.showSnackbar(viewModel.getApplication<android.app.Application>().getString(R.string.year_exists_error))
@@ -109,6 +146,7 @@ fun MainApp(viewModel: TeacherViewModel) {
         )
     }
 
+    // Confirmation dialog for deleting an academic year
     yearToDelete.value?.let { year ->
         AlertDialog(
             onDismissRequest = { yearToDelete.value = null },
@@ -133,11 +171,13 @@ fun MainApp(viewModel: TeacherViewModel) {
         )
     }
 
-    // --- Navigation Drawer Implementation ---
+    // --- Main Layout Structure ---
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = drawerState.isOpen, // Disable swipe-to-open, but allow swipe-to-close
         drawerContent = {
+            // Sidebar content for switching and managing academic years
             Box(modifier = Modifier.fillMaxHeight()) {
                 ModalDrawerSheet(
                     modifier = Modifier.width(300.dp),
@@ -153,6 +193,7 @@ fun MainApp(viewModel: TeacherViewModel) {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         
+                        // List of available academic years
                         LazyColumn(modifier = Modifier.weight(1f)) {
                             items(academicYears) { year ->
                                 val isSelected = year.id == selectedYearId
@@ -164,6 +205,7 @@ fun MainApp(viewModel: TeacherViewModel) {
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(year.year, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                            // Allow deletion of non-selected years
                                             if (!isSelected) {
                                                 IconButton(
                                                     onClick = { yearToDelete.value = year },
@@ -193,6 +235,7 @@ fun MainApp(viewModel: TeacherViewModel) {
                         
                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                         
+                        // Button to trigger the 'Add New Year' dialog
                         OutlinedButton(
                             onClick = { showAddYearDialog.value = true },
                             modifier = Modifier.fillMaxWidth(),
@@ -206,7 +249,7 @@ fun MainApp(viewModel: TeacherViewModel) {
                     }
                 }
                 
-                // Snackbar Host inside the drawer to ensure visibility on top of the side menu
+                // Snackbar Host inside the drawer to ensure visibility on top of the menu
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)
@@ -218,7 +261,7 @@ fun MainApp(viewModel: TeacherViewModel) {
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                // BottomBar is only shown on main top-level destinations
+                // Display the BottomBar only on top-level main screens
                 if (currentRoute in listOf("dashboard", "subjects", "settings", "all_subjects")) {
                     TeacherBottomBar(
                         currentRoute = if (currentRoute == "all_subjects") "subjects" else currentRoute,
@@ -233,46 +276,42 @@ fun MainApp(viewModel: TeacherViewModel) {
                 }
             }
         ) { innerPadding ->
-            // --- Navigation Host (Main App Router) ---
+            // --- Navigation Host (Main Router) ---
             NavHost(
                 navController = navController,
                 startDestination = "dashboard",
                 modifier = Modifier.padding(innerPadding)
             ) {
+                // Dashboard Destination
                 composable("dashboard") {
                     DashboardScreen(
                         viewModel = viewModel,
                         onMenuClick = { scope.launch { drawerState.open() } },
                         onSubjectClick = { subjectId, subjectName ->
-                            // URL encoding is mandatory for names with special chars like "4ºA"
                             val encodedName = URLEncoder.encode(subjectName, StandardCharsets.UTF_8.toString())
                             navController.navigate("subject/$subjectId/$encodedName")
                         },
                         onViewAllSubjectsClick = { navController.navigate("subjects") },
                         onRandomStudentClick = {
-                            // Fetch a random student from the current classes
-                            val classes = viewModel.studentsClassesForYear.value
-                            if (!classes.isNullOrEmpty()) {
-                                val randomClass = classes.random()
-                                scope.launch {
-                                    val students = viewModel.getStudentsWithGradesForStudentsClass(randomClass.id).value
-                                    if (!students.isNullOrEmpty()) {
-                                        val student = students.random()
-                                        val encodedName = URLEncoder.encode(student.name, StandardCharsets.UTF_8.toString())
-                                        val encodedSubj = URLEncoder.encode(randomClass.name, StandardCharsets.UTF_8.toString())
-                                        navController.navigate("grading/${student.studentId}/$encodedName/$encodedSubj")
-                                    } else {
-                                        snackbarHostState.showSnackbar(viewModel.getApplication<android.app.Application>().getString(R.string.no_students_found, randomClass.name))
-                                    }
-                                }
-                            } else {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(viewModel.getApplication<android.app.Application>().getString(R.string.no_classes_available))
+                            scope.launch {
+                                val allStudents = viewModel.getAllStudentsForCurrentYear()
+                                if (allStudents.isNotEmpty()) {
+                                    val student = allStudents.random()
+                                    val encodedName = URLEncoder.encode(student.name, StandardCharsets.UTF_8.toString())
+                                    // Navigate directly to grading with student name and a default subject label
+                                    navController.navigate("grading/${student.studentId}/$encodedName/Random%20Selection")
+                                } else {
+                                    snackbarHostState.showSnackbar(
+                                        viewModel.getApplication<android.app.Application>()
+                                            .getString(R.string.no_students_found, "any class")
+                                    )
                                 }
                             }
                         }
                     )
                 }
+
+                // Subjects List Destination
                 composable("subjects") {
                     SubjectsListScreen(
                         viewModel = viewModel,
@@ -281,9 +320,35 @@ fun MainApp(viewModel: TeacherViewModel) {
                             val encodedName = URLEncoder.encode(subjectName, StandardCharsets.UTF_8.toString())
                             navController.navigate("subject/$subjectId/$encodedName")
                         },
-                        onViewAllClassesClick = { navController.navigate("all_subjects") }
+                        onViewAllClassesClick = { navController.navigate("all_subjects") },
+                        onAddSubjectClick = { navController.navigate("add_subject") },
+                        onEditSubjectClick = { subjectId -> navController.navigate("edit_subject/$subjectId") }
                     )
                 }
+
+                // Add Subject Destination
+                composable("add_subject") {
+                    SubjectEditScreen(
+                        viewModel = viewModel,
+                        subjectId = null,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                // Edit Subject Destination (with dynamic ID)
+                composable(
+                    route = "edit_subject/{subjectId}",
+                    arguments = listOf(navArgument("subjectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val subjectId = backStackEntry.arguments?.getInt("subjectId")
+                    SubjectEditScreen(
+                        viewModel = viewModel,
+                        subjectId = subjectId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                // All Classes Overview Destination
                 composable("all_subjects") {
                     AllClassesScreen(
                         viewModel = viewModel,
@@ -295,12 +360,16 @@ fun MainApp(viewModel: TeacherViewModel) {
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
+                // Settings Main Destination
                 composable("settings") {
                     SettingsScreen(
                         onNavigateToAccount = { navController.navigate("account") },
                         onNavigateToPreferences = { navController.navigate("preferences") }
                     )
                 }
+
+                // Subject Details / Classes within a Subject Destination
                 composable(
                     route = "subject/{subjectId}/{subjectName}",
                     arguments = listOf(
@@ -321,6 +390,8 @@ fun MainApp(viewModel: TeacherViewModel) {
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
+                // Class Roster / Students within a Class Destination
                 composable(
                     route = "students_class/{studentsClassId}/{className}",
                     arguments = listOf(
@@ -342,6 +413,8 @@ fun MainApp(viewModel: TeacherViewModel) {
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
+                // Student Grading Form Destination
                 composable(
                     route = "grading/{studentId}/{studentName}/{subjectName}",
                     arguments = listOf(
@@ -359,9 +432,13 @@ fun MainApp(viewModel: TeacherViewModel) {
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
+                // User Account Management Destination
                 composable("account") {
                     AccountDetailsScreen(onBackClick = { navController.popBackStack() })
                 }
+
+                // App Preferences (Dark Mode, Language) Destination
                 composable("preferences") {
                     AppPreferencesScreen(
                         viewModel = viewModel,
@@ -374,7 +451,11 @@ fun MainApp(viewModel: TeacherViewModel) {
 }
 
 /**
- * Modal to pick a start year for a new academic cycle.
+ * AddYearDialog is a modal component that allows the user to select a starting year
+ * for a new academic cycle (e.g., "2024/2025").
+ *
+ * @param onDismiss Callback executed when the dialog is dismissed without action.
+ * @param onAdd Callback executed when the user confirms the addition of a new year.
  */
 @Composable
 fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
@@ -398,6 +479,7 @@ fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Decrease start year button
                     IconButton(onClick = { selectedStartYear-- }) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease")
                     }
@@ -416,6 +498,7 @@ fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
                         )
                     }
                     
+                    // Increase start year button
                     IconButton(onClick = { selectedStartYear++ }) {
                         Icon(Icons.Default.Add, contentDescription = "Increase")
                     }

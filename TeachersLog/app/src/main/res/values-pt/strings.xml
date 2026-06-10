@@ -38,6 +38,14 @@
     <string name="subject_average_label">Média da Disciplina</string>
     <string name="students_count_label">%d Alunos</string>
     <string name="average_format">Média: %s</string>
+    <string name="add_subject">Adicionar Disciplina</string>
+    <string name="edit_subject">Editar Disciplina</string>
+    <string name="delete_subject_title">Apagar Disciplina</string>
+    <string name="delete_subject_message">Tem a certeza que deseja apagar \'%s\'? Isto também apagará todas as turmas e alunos associados.</string>
+    <string name="subject_name">Nome da Disciplina</string>
+    <string name="select_icon">Selecionar Ícone</string>
+    <string name="select_color">Selecionar Cor</string>
+    <string name="subject_name_required">O nome da disciplina é obrigatório</string>
 
     <!-- Lista de Turma -->
     <string name="students_roster">LISTA DE ALUNOS</string>

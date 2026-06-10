@@ -28,7 +28,6 @@ fun AccountDetailsScreen(
     var firstName by remember { mutableStateOf("Jane") }
     var lastName by remember { mutableStateOf("Harrison") }
     var email by remember { mutableStateOf("jane.h@school.edu") }
-    var institution by remember { mutableStateOf("State University") }
 
     Scaffold(
         topBar = {
@@ -109,7 +108,7 @@ fun AccountDetailsScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Button(
-                                onClick = { /* TODO */ },
+                                onClick = onBackClick,
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.medium
                             ) {

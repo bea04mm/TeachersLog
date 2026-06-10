@@ -7,7 +7,11 @@ import androidx.room.Index
 
 /**
  * Represents a full school cycle (e.g., "2024/2025").
- * Serves as the top-level filter for all academic data.
+ * Serves as the top-level filter for all academic data in the application.
+ * 
+ * @property id Unique identifier for the academic year (auto-generated).
+ * @property year The string representation of the year (e.g., "2024/2025").
+ * @property isCurrent Flag indicating if this is the currently active year.
  */
 @Entity(
     tableName = "academic_years",
@@ -20,8 +24,14 @@ data class AcademicYear(
 )
 
 /**
- * Represents a school subject (e.g., "Mathematics").
- * Linked to a specific academic year.
+ * Represents a school subject (e.g., "Mathematics", "Science").
+ * Each subject is linked to a specific [AcademicYear].
+ * 
+ * @property id Unique identifier for the subject (auto-generated).
+ * @property academicYearId Foreign key linking to [AcademicYear].
+ * @property name The name of the subject.
+ * @property iconName The identifier for the icon to be displayed in the UI.
+ * @property colorHex The hex code for the subject's theme color.
  */
 @Entity(
     tableName = "subjects",
@@ -44,8 +54,12 @@ data class Subject(
 )
 
 /**
- * Represents a specific class of students (StudentsClass) within a Subject.
+ * Represents a specific class of students (StudentsClass) within a [Subject].
  * Named 'StudentsClass' to avoid conflict with java.lang.Class.
+ * 
+ * @property id Unique identifier for the class (auto-generated).
+ * @property subjectId Foreign key linking to the parent [Subject].
+ * @property name The name of the class (e.g., "10-A").
  */
 @Entity(
     tableName = "students_classes",
@@ -66,6 +80,14 @@ data class StudentsClass(
 
 /**
  * Individual student record.
+ * A student belongs to a specific [StudentsClass].
+ * 
+ * @property studentId Unique identifier for the student (auto-generated).
+ * @property studentsClassId Foreign key linking to [StudentsClass].
+ * @property numberInGroup The student's number within their class roster.
+ * @property name The full name of the student.
+ * @property processNumber Optional administrative process number.
+ * @property profileImageUrl Optional URL or path to the student's profile image.
  */
 @Entity(
     tableName = "students",
@@ -88,7 +110,17 @@ data class Student(
 )
 
 /**
- * Performance metrics for a student.
+ * Performance metrics and qualitative data for a [Student].
+ * Links directly to a [Student] record.
+ * 
+ * @property id Unique identifier for the grade record (auto-generated).
+ * @property studentId Foreign key linking to the [Student].
+ * @property homework Grade for homework and assignments.
+ * @property participation Score for classroom participation.
+ * @property quizzes Grade for tests and quizzes.
+ * @property projects Grade for collaborative projects.
+ * @property teacherNotes Qualitative feedback or observations from the teacher.
+ * @property tags Categorization tags for the student's performance.
  */
 @Entity(
     tableName = "grades",
@@ -114,6 +146,15 @@ data class Grade(
 
 // --- Data Transfer Objects (DTOs) for UI ---
 
+/**
+ * DTO combining class information with calculated statistics for UI display.
+ * 
+ * @property id The class ID.
+ * @property subjectId The parent subject ID.
+ * @property name The class name.
+ * @property averageGrade The calculated average grade of all students in this class.
+ * @property studentCount The total number of students enrolled in this class.
+ */
 data class StudentsClassWithStats(
     val id: Int,
     val subjectId: Int,
@@ -122,6 +163,16 @@ data class StudentsClassWithStats(
     val studentCount: Int
 )
 
+/**
+ * DTO combining subject information with aggregated statistics for UI display.
+ * 
+ * @property id The subject ID.
+ * @property name The subject name.
+ * @property iconName The display icon identifier.
+ * @property colorHex The display theme color.
+ * @property studentCount Total students across all classes of this subject.
+ * @property averageGrade Aggregated average grade for the subject.
+ */
 data class SubjectWithStats(
     val id: Int,
     val name: String,
@@ -131,6 +182,16 @@ data class SubjectWithStats(
     val averageGrade: Double
 )
 
+/**
+ * DTO for displaying a student within a roster, including their weighted average grade.
+ * 
+ * @property studentId The student's ID.
+ * @property studentsClassId The ID of the class the student belongs to.
+ * @property numberInGroup Roster number.
+ * @property name Student's name.
+ * @property processNumber Admin process number.
+ * @property weightedGrade The student's final calculated grade based on weights.
+ */
 data class StudentWithGrade(
     val studentId: Int,
     val studentsClassId: Int,
@@ -140,6 +201,13 @@ data class StudentWithGrade(
     val weightedGrade: Double
 )
 
+/**
+ * DTO representing global academic metrics for an [AcademicYear].
+ * 
+ * @property totalStudents Count of all students in the year.
+ * @property totalSubjects Count of all subjects in the year.
+ * @property globalAverage The overall average grade across all subjects and students.
+ */
 data class GlobalStats(
     val totalStudents: Int,
     val totalSubjects: Int,
