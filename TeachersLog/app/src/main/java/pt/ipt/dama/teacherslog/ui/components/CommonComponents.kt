@@ -230,6 +230,8 @@ fun StatCard(
  * @param averageGrade The numerical grade to display as an average.
  * @param studentCount Total number of students enrolled.
  * @param color The branding color for the accent bar and icons.
+ * @param averageLabel The localized label for the average grade.
+ * @param gradingScale The grading scale identifier (e.g., "5", "20", "100").
  * @param modifier The [Modifier] to be applied.
  * @param icon Optional [androidx.compose.ui.graphics.vector.ImageVector] to display next to the name.
  * @param actions Optional action buttons/menu to display in the top right.
@@ -241,11 +243,19 @@ fun AcademicSummaryCard(
     averageGrade: Double,
     studentCount: Int,
     color: Color,
+    averageLabel: String,
+    gradingScale: String,
     modifier: Modifier = Modifier,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
 ) {
+    val suffix = when(gradingScale) {
+        "20" -> " / 20"
+        "100" -> " %"
+        else -> " / 5"
+    }
+
     TonalCard(
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -295,12 +305,12 @@ fun AcademicSummaryCard(
                     // Average performance section
                     Column {
                         Text(
-                            text = stringResource(R.string.subject_average_label),
+                            text = averageLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline
                         )
                         Text(
-                            text = String.format(Locale.getDefault(), "%.2f", averageGrade),
+                            text = String.format(Locale.getDefault(), "%.2f", averageGrade) + suffix,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -338,6 +348,7 @@ fun AcademicSummaryCard(
  * @param students The total student count.
  * @param color The branding color.
  * @param icon The representative icon.
+ * @param gradingScale The grading scale identifier.
  * @param modifier The [Modifier] to be applied.
  * @param actions Optional action buttons/menu.
  * @param onClick Callback for selection.
@@ -349,6 +360,7 @@ fun SubjectCard(
     students: Int,
     color: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    gradingScale: String,
     modifier: Modifier = Modifier,
     actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
@@ -358,6 +370,8 @@ fun SubjectCard(
         averageGrade = average.toDoubleOrNull() ?: 0.0,
         studentCount = students,
         color = color,
+        averageLabel = stringResource(R.string.subject_average_label),
+        gradingScale = gradingScale,
         modifier = modifier,
         icon = icon,
         actions = actions,
@@ -372,7 +386,9 @@ fun SubjectCard(
  * @param studentCount The number of students.
  * @param averageGrade The average grade.
  * @param color The branding color.
+ * @param gradingScale The grading scale identifier.
  * @param modifier The [Modifier] to be applied.
+ * @param actions Optional action buttons/menu.
  * @param onClick Callback for selection.
  */
 @Composable
@@ -381,7 +397,9 @@ fun ClassCard(
     studentCount: Int,
     averageGrade: Double,
     color: Color,
+    gradingScale: String,
     modifier: Modifier = Modifier,
+    actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     AcademicSummaryCard(
@@ -389,8 +407,11 @@ fun ClassCard(
         averageGrade = averageGrade,
         studentCount = studentCount,
         color = color,
+        averageLabel = stringResource(R.string.class_average_label),
+        gradingScale = gradingScale,
         modifier = modifier,
         icon = null,
+        actions = actions,
         onClick = onClick
     )
 }
@@ -448,6 +469,7 @@ fun SubjectCardPreview() {
             students = 12,
             color = Color(0xFF004AC6),
             icon = Icons.Default.Functions,
+            gradingScale = "5",
             modifier = Modifier.padding(16.dp),
             onClick = {}
         )
@@ -466,6 +488,7 @@ fun ClassCardPreview() {
             studentCount = 25,
             averageGrade = 3.85,
             color = Color(0xFF006686),
+            gradingScale = "5",
             modifier = Modifier.padding(16.dp),
             onClick = {}
         )
@@ -510,6 +533,7 @@ fun CommonComponentsSummaryPreview() {
                 students = 45,
                 color = Color(0xFF006874),
                 icon = Icons.Default.Biotech,
+                gradingScale = "100",
                 onClick = {}
             )
             
@@ -518,6 +542,7 @@ fun CommonComponentsSummaryPreview() {
                 studentCount = 30,
                 averageGrade = 4.5,
                 color = MaterialTheme.colorScheme.tertiary,
+                gradingScale = "20",
                 onClick = {}
             )
             

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,8 +29,19 @@ import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 
 /**
- * Encapsulates the visual content of the Dashboard.
- * Separated for easier previewing and testing.
+ * DashboardContent is the stateless UI component for the main landing screen.
+ *
+ * It manages:
+ * 1. A top-level summary of academic statistics (total students, global average).
+ * 2. A list of active subjects for the selected year.
+ * 3. A random student selector button (FAB).
+ *
+ * @param subjects List of [SubjectWithStats] to be displayed as cards.
+ * @param stats [GlobalStats] object containing aggregate academic data.
+ * @param onMenuClick Callback to trigger the side navigation drawer.
+ * @param onSubjectClick Callback when a specific subject card is selected.
+ * @param onViewAllSubjectsClick Callback to navigate to the full subjects list.
+ * @param onRandomStudentClick Callback to trigger the random student selection logic.
  */
 @Composable
 fun DashboardContent(
@@ -42,6 +54,7 @@ fun DashboardContent(
 ) {
     Scaffold(
         topBar = { 
+            // branding TopBar with drawer support
             TeacherTopBar(
                 title = stringResource(R.string.app_name),
                 modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top)), 
@@ -49,6 +62,7 @@ fun DashboardContent(
             ) 
         },
         floatingActionButton = {
+            // FAB for picking a random student from the current classes
             FloatingActionButton(
                 onClick = onRandomStudentClick,
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -67,6 +81,7 @@ fun DashboardContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // --- Header Section ---
             item {
                 Column {
                     Text(
@@ -82,6 +97,7 @@ fun DashboardContent(
                 }
             }
 
+            // --- Stats Summary Section ---
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -95,7 +111,7 @@ fun DashboardContent(
                     )
                     StatCard(
                         title = stringResource(R.string.global_average),
-                        value = String.format(Locale.getDefault(), "%.2f", stats?.globalAverage ?: 0.0),
+                        value = String.format(Locale.getDefault(), "%.1f %%", stats?.globalAverage ?: 0.0),
                         icon = Icons.Default.BarChart,
                         modifier = Modifier.weight(1f),
                         color = MaterialTheme.colorScheme.secondary
@@ -103,6 +119,7 @@ fun DashboardContent(
                 }
             }
 
+            // --- Active Subjects Section ---
             item {
                 Column {
                     Row(
@@ -120,6 +137,7 @@ fun DashboardContent(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     
+                    // Render a card for each subject
                     subjects.forEach { subject ->
                         SubjectCard(
                             name = subject.name,
@@ -129,8 +147,17 @@ fun DashboardContent(
                             icon = when(subject.iconName) {
                                 "functions" -> Icons.Default.Functions
                                 "biotech" -> Icons.Default.Biotech
+                                "history_edu" -> Icons.Default.HistoryEdu
+                                "language" -> Icons.Default.Language
+                                "brush" -> Icons.Default.Brush
+                                "calculate" -> Icons.Default.Calculate
+                                "code" -> Icons.Default.Code
+                                "menu_book" -> Icons.AutoMirrored.Filled.MenuBook
+                                "music_note" -> Icons.Default.MusicNote
+                                "sports_basketball" -> Icons.Default.SportsBasketball
                                 else -> Icons.Default.HistoryEdu
                             },
+                            gradingScale = subject.gradingScale,
                             modifier = Modifier.padding(vertical = 6.dp),
                             onClick = { onSubjectClick(subject.id, subject.name) }
                         )
@@ -141,6 +168,18 @@ fun DashboardContent(
     }
 }
 
+/**
+ * DashboardScreen is the stateful Composable for the landing screen.
+ *
+ * It observes global academic statistics and subjects from the [TeacherViewModel]
+ * to keep the Dashboard updated.
+ *
+ * @param viewModel The shared [TeacherViewModel] providing data and logic.
+ * @param onMenuClick Callback to open the navigation drawer.
+ * @param onSubjectClick Callback to navigate to a specific subject detail view.
+ * @param onViewAllSubjectsClick Callback to navigate to the subjects list.
+ * @param onRandomStudentClick Callback to execute the random student selection.
+ */
 @Composable
 fun DashboardScreen(
     viewModel: TeacherViewModel,
@@ -149,6 +188,7 @@ fun DashboardScreen(
     onViewAllSubjectsClick: () -> Unit,
     onRandomStudentClick: () -> Unit
 ) {
+    // Observe state from ViewModel
     val subjects by viewModel.subjectsWithStats.observeAsState(emptyList())
     val stats by viewModel.globalStats.observeAsState()
     
@@ -162,14 +202,38 @@ fun DashboardScreen(
     )
 }
 
-@Preview(showBackground = true)
+/**
+ * Preview for the [DashboardContent] UI in light mode.
+ */
+@Preview(showBackground = true, name = "Dashboard Light Mode")
 @Composable
 fun DashboardPreview() {
-    TeachersLogTheme {
+    TeachersLogTheme(darkTheme = false) {
         DashboardContent(
             subjects = listOf(
-                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.5),
-                SubjectWithStats(2, "Science", "biotech", "#006686", 8, 3.8)
+                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.5, "5"),
+                SubjectWithStats(2, "Science", "biotech", "#006686", 8, 3.8, "20")
+            ),
+            stats = GlobalStats(20, 2, 4.1),
+            onMenuClick = {},
+            onSubjectClick = { _, _ -> },
+            onViewAllSubjectsClick = {},
+            onRandomStudentClick = {}
+        )
+    }
+}
+
+/**
+ * Preview for the [DashboardContent] UI in dark mode.
+ */
+@Preview(showBackground = true, name = "Dashboard Dark Mode")
+@Composable
+fun DashboardDarkPreview() {
+    TeachersLogTheme(darkTheme = true) {
+        DashboardContent(
+            subjects = listOf(
+                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.5, "5"),
+                SubjectWithStats(2, "Science", "biotech", "#006686", 8, 3.8, "20")
             ),
             stats = GlobalStats(20, 2, 4.1),
             onMenuClick = {},
