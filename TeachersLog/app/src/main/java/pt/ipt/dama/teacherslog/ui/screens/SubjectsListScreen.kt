@@ -148,6 +148,7 @@ fun SubjectsListContent(
                     students = subject.studentCount,
                     color = subjectColor,
                     icon = subjectIcon,
+                    gradingScale = subject.gradingScale,
                     onClick = { onSubjectClick(subject.id, subject.name) },
                     actions = {
                         // --- Subject Options Menu ---
@@ -240,10 +241,10 @@ fun SubjectsListPreview() {
     TeachersLogTheme(darkTheme = false) {
         SubjectsListContent(
             subjects = listOf(
-                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2),
-                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8),
-                SubjectWithStats(3, "History", "history_edu", "#7D5260", 15, 4.5),
-                SubjectWithStats(4, "Arts", "brush", "#A03D2F", 10, 4.0)
+                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2, "5"),
+                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8, "20"),
+                SubjectWithStats(3, "History", "history_edu", "#7D5260", 15, 4.5, "5"),
+                SubjectWithStats(4, "Arts", "brush", "#A03D2F", 10, 4.0, "100")
             ),
             onMenuClick = {},
             onSubjectClick = { _, _ -> },
@@ -264,8 +265,8 @@ fun SubjectsListDarkPreview() {
     TeachersLogTheme(darkTheme = true) {
         SubjectsListContent(
             subjects = listOf(
-                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2),
-                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8)
+                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2, "5"),
+                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8, "20")
             ),
             onMenuClick = {},
             onSubjectClick = { _, _ -> },

@@ -86,12 +86,15 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
 
     /**
      * Inserts a new academic year into the database.
+     * 
      * @param year The [AcademicYear] entity to insert.
+     * @return The row ID of the newly inserted year.
      */
     suspend fun insertAcademicYear(year: AcademicYear) = teacherDao.insertAcademicYear(year)
 
     /**
      * Deletes an academic year and all cascading data (subjects, classes, etc.).
+     * 
      * @param year The [AcademicYear] entity to delete.
      */
     suspend fun deleteAcademicYear(year: AcademicYear) = teacherDao.deleteAcademicYear(year)
@@ -100,18 +103,22 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
 
     /**
      * Inserts a new subject into the database.
+     * 
      * @param subject The [Subject] entity to insert.
+     * @return The row ID of the newly inserted subject.
      */
     suspend fun insertSubject(subject: Subject) = teacherDao.insertSubject(subject)
 
     /**
      * Updates an existing subject's information (name, icon, or color).
+     * 
      * @param subject The [Subject] entity with updated values.
      */
     suspend fun updateSubject(subject: Subject) = teacherDao.updateSubject(subject)
 
     /**
      * Deletes a subject and its cascading classes and student records.
+     * 
      * @param subject The [Subject] entity to delete.
      */
     suspend fun deleteSubject(subject: Subject) = teacherDao.deleteSubject(subject)
@@ -124,11 +131,43 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
      */
     fun getSubjectById(subjectId: Int): Flow<Subject?> = teacherDao.getSubjectById(subjectId)
 
+    /**
+     * Inserts a new class into the database.
+     * 
+     * @param studentsClass The [StudentsClass] entity to insert.
+     * @return The row ID of the newly inserted class.
+     */
+    suspend fun insertStudentsClass(studentsClass: StudentsClass) = teacherDao.insertStudentsClass(studentsClass)
+
+    /**
+     * Updates an existing class information.
+     * 
+     * @param studentsClass The [StudentsClass] entity with updated values.
+     */
+    suspend fun updateStudentsClass(studentsClass: StudentsClass) = teacherDao.updateStudentsClass(studentsClass)
+
+    /**
+     * Deletes a class and its cascading student records.
+     * 
+     * @param studentsClass The [StudentsClass] entity to delete.
+     */
+    suspend fun deleteStudentsClass(studentsClass: StudentsClass) = teacherDao.deleteStudentsClass(studentsClass)
+
+    /**
+     * Retrieves a class by its unique ID.
+     * 
+     * @param id The unique identifier of the class.
+     * @return A [Flow] emitting the [StudentsClass] or null if it doesn't exist.
+     */
+    fun getStudentsClassById(id: Int): Flow<StudentsClass?> = teacherDao.getStudentsClassById(id)
+
     // --- Grade Operations ---
 
     /**
      * Inserts or replaces a student's grade data.
+     * 
      * @param grade The [Grade] entity to save.
+     * @return The row ID of the saved grade record.
      */
     suspend fun insertGrade(grade: Grade) = teacherDao.insertGrade(grade)
 }

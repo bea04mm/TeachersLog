@@ -36,6 +36,7 @@
     <string name="all_registered_classes">All Registered Subjects</string>
     <string name="active_year_classes">Active Year Classes</string>
     <string name="subject_average_label">Subject Average</string>
+    <string name="class_average_label">Class Average</string>
     <string name="students_count_label">%d Students</string>
     <string name="average_format">Average: %s</string>
     <string name="add_subject">Add Subject</string>
@@ -46,6 +47,16 @@
     <string name="select_icon">Select Icon</string>
     <string name="select_color">Select Color</string>
     <string name="subject_name_required">Subject name is required</string>
+    <string name="add_class">Add Class</string>
+    <string name="edit_class">Edit Class</string>
+    <string name="delete_class_title">Delete Class</string>
+    <string name="delete_class_message">Are you sure you want to delete the class \'%s\'? All associated students and grades will be permanently lost.</string>
+    <string name="class_name">Class Name</string>
+    <string name="class_name_required">Class name is required</string>
+    <string name="grading_scale">Grading Scale</string>
+    <string name="scale_5">0–5 Scale</string>
+    <string name="scale_20">0–20 Scale</string>
+    <string name="scale_100">0–100% Scale</string>
 
     <!-- Class Roster -->
     <string name="students_roster">STUDENTS ROSTER</string>
