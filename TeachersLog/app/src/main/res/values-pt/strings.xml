@@ -36,6 +36,7 @@
     <string name="all_registered_classes">Todas as Disciplinas Registadas</string>
     <string name="active_year_classes">Turmas do Ano Ativo</string>
     <string name="subject_average_label">Média da Disciplina</string>
+    <string name="class_average_label">Média da Turma</string>
     <string name="students_count_label">%d Alunos</string>
     <string name="average_format">Média: %s</string>
     <string name="add_subject">Adicionar Disciplina</string>
@@ -46,6 +47,16 @@
     <string name="select_icon">Selecionar Ícone</string>
     <string name="select_color">Selecionar Cor</string>
     <string name="subject_name_required">O nome da disciplina é obrigatório</string>
+    <string name="add_class">Adicionar Turma</string>
+    <string name="edit_class">Editar Turma</string>
+    <string name="delete_class_title">Apagar Turma</string>
+    <string name="delete_class_message">Tem a certeza que deseja apagar a turma \'%s\'? Todos os alunos e notas associados serão perdidos permanentemente.</string>
+    <string name="class_name">Nome da Turma</string>
+    <string name="class_name_required">O nome da turma é obrigatório</string>
+    <string name="grading_scale">Escala de Avaliação</string>
+    <string name="scale_5">Escala 0–5</string>
+    <string name="scale_20">Escala 0–20</string>
+    <string name="scale_100">Escala 0–100%</string>
 
     <!-- Lista de Turma -->
     <string name="students_roster">LISTA DE ALUNOS</string>

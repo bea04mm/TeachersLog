@@ -146,11 +146,18 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      * @param name The name of the subject.
      * @param iconName The name of the icon identifier.
      * @param colorHex The hex color code for the subject's theme.
+     * @param gradingScale The grading scale identifier (e.g., "5", "20", "100").
      */
-    fun addSubject(name: String, iconName: String, colorHex: String) {
+    fun addSubject(name: String, iconName: String, colorHex: String, gradingScale: String = "5") {
         val yearId = _selectedYearId.value ?: return
         viewModelScope.launch {
-            repository.insertSubject(Subject(academicYearId = yearId, name = name, iconName = iconName, colorHex = colorHex))
+            repository.insertSubject(Subject(
+                academicYearId = yearId, 
+                name = name, 
+                iconName = iconName, 
+                colorHex = colorHex,
+                gradingScale = gradingScale
+            ))
         }
     }
 
@@ -181,6 +188,39 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      */
     fun getSubjectById(subjectId: Int): LiveData<Subject?> {
         return repository.getSubjectById(subjectId).asLiveData()
+    }
+
+    // --- Student Class CRUD Methods ---
+
+    /**
+     * Adds a new class to a specific subject.
+     * @param name The name of the class (e.g., "10-A").
+     * @param subjectId The ID of the parent subject.
+     */
+    fun addStudentsClass(name: String, subjectId: Int) {
+        viewModelScope.launch {
+            repository.insertStudentsClass(StudentsClass(subjectId = subjectId, name = name))
+        }
+    }
+
+    /**
+     * Updates an existing class's information.
+     * @param studentsClass The updated [StudentsClass] object.
+     */
+    fun updateStudentsClass(studentsClass: StudentsClass) {
+        viewModelScope.launch {
+            repository.updateStudentsClass(studentsClass)
+        }
+    }
+
+    /**
+     * Deletes a class and its associated students/grades.
+     * @param studentsClass The [StudentsClass] object to delete.
+     */
+    fun deleteStudentsClass(studentsClass: StudentsClass) {
+        viewModelScope.launch {
+            repository.deleteStudentsClass(studentsClass)
+        }
     }
 
     // --- Data Retrieval Methods ---
@@ -215,6 +255,8 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     /**
      * Retrieves all students for all classes in the currently selected academic year.
      * Useful for picking a random student across the entire year.
+     * 
+     * @return A flat list of [StudentWithGrade] objects for the active year.
      */
     suspend fun getAllStudentsForCurrentYear(): List<StudentWithGrade> {
         val yearId = _selectedYearId.value ?: return emptyList()
@@ -257,10 +299,13 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
 /**
  * Factory class to satisfy Android's ViewModel initialization requirements.
  * Ensures the [TeacherViewModel] is created with the [Application] context.
+ * 
+ * @param application The application context.
  */
 class TeacherViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     /**
      * Creates a new instance of the requested ViewModel class.
+     * 
      * @param modelClass The class of the ViewModel to create.
      * @return A newly created ViewModel instance.
      */
