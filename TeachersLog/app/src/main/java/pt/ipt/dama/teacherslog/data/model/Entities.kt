@@ -32,6 +32,7 @@ data class AcademicYear(
  * @property name The name of the subject.
  * @property iconName The identifier for the icon to be displayed in the UI.
  * @property colorHex The hex code for the subject's theme color.
+ * @property gradingScale The grading scale used for this subject (e.g., "5", "20", "100").
  */
 @Entity(
     tableName = "subjects",
@@ -50,7 +51,8 @@ data class Subject(
     val academicYearId: Int,
     val name: String,
     val iconName: String,
-    val colorHex: String
+    val colorHex: String,
+    val gradingScale: String = "5"
 )
 
 /**
@@ -154,13 +156,15 @@ data class Grade(
  * @property name The class name.
  * @property averageGrade The calculated average grade of all students in this class.
  * @property studentCount The total number of students enrolled in this class.
+ * @property gradingScale The scale identifier (e.g., "5", "20", "100").
  */
 data class StudentsClassWithStats(
     val id: Int,
     val subjectId: Int,
     val name: String,
     val averageGrade: Double,
-    val studentCount: Int
+    val studentCount: Int,
+    val gradingScale: String
 )
 
 /**
@@ -172,6 +176,7 @@ data class StudentsClassWithStats(
  * @property colorHex The display theme color.
  * @property studentCount Total students across all classes of this subject.
  * @property averageGrade Aggregated average grade for the subject.
+ * @property gradingScale The scale identifier (e.g., "5", "20", "100").
  */
 data class SubjectWithStats(
     val id: Int,
@@ -179,7 +184,8 @@ data class SubjectWithStats(
     val iconName: String,
     val colorHex: String,
     val studentCount: Int,
-    val averageGrade: Double
+    val averageGrade: Double,
+    val gradingScale: String
 )
 
 /**
