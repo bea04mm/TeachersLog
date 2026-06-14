@@ -33,12 +33,14 @@ import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
  * 1. A text field for the subject name.
  * 2. A selectable list of icons for visual representation.
  * 3. A selectable list of colors for theme consistency.
- * 4. Validation to ensure the name is not empty before saving.
+ * 4. A radio button group to select the grading scale.
+ * 5. Validation to ensure the name is not empty before saving.
  *
  * @param isEditMode Boolean flag to determine if the screen is in 'Edit' or 'Add' mode.
  * @param initialName The initial name of the subject (empty for 'Add' mode).
  * @param initialIcon The initial icon name (e.g., "functions").
  * @param initialColor The initial color hex string (e.g., "#004AC6").
+ * @param initialScale The initial grading scale identifier (e.g., "5", "20", "100").
  * @param onSave Callback executed when the user confirms the creation or update.
  * @param onBackClick Callback executed when the user navigates back.
  */
@@ -48,19 +50,22 @@ fun SubjectEditContent(
     initialName: String,
     initialIcon: String,
     initialColor: String,
-    onSave: (String, String, String) -> Unit,
+    initialScale: String,
+    onSave: (String, String, String, String) -> Unit,
     onBackClick: () -> Unit
 ) {
     // Local state for form fields
     var name by remember { mutableStateOf(initialName) }
     var selectedIcon by remember { mutableStateOf(initialIcon) }
     var selectedColor by remember { mutableStateOf(initialColor) }
+    var selectedScale by remember { mutableStateOf(initialScale) }
 
     // Sync state if initial values change (e.g., when data is loaded from ViewModel)
-    LaunchedEffect(initialName, initialIcon, initialColor) {
+    LaunchedEffect(initialName, initialIcon, initialColor, initialScale) {
         name = initialName
         selectedIcon = initialIcon
         selectedColor = initialColor
+        selectedScale = initialScale
     }
 
     // Predefined set of icons available for subjects
@@ -108,6 +113,36 @@ fun SubjectEditContent(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+
+            // --- Grading Scale Selection ---
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.grading_scale),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                val scales = listOf("5" to R.string.scale_5, "20" to R.string.scale_20, "100" to R.string.scale_100)
+                scales.forEach { (scale, labelRes) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedScale = scale }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        RadioButton(
+                            selected = (selectedScale == scale),
+                            onClick = { selectedScale = scale }
+                        )
+                        Text(
+                            text = stringResource(labelRes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
 
             // --- Icon Selection ---
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -185,7 +220,7 @@ fun SubjectEditContent(
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onSave(name, selectedIcon, selectedColor)
+                        onSave(name, selectedIcon, selectedColor, selectedScale)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -223,12 +258,18 @@ fun SubjectEditScreen(
         initialName = existingSubject?.name ?: "",
         initialIcon = existingSubject?.iconName ?: "functions",
         initialColor = existingSubject?.colorHex ?: "#004AC6",
-        onSave = { name, icon, color ->
+        initialScale = existingSubject?.gradingScale ?: "5",
+        onSave = { name, icon, color, scale ->
             if (subjectId == null) {
-                viewModel.addSubject(name, icon, color)
+                viewModel.addSubject(name, icon, color, scale)
             } else {
                 existingSubject?.let {
-                    viewModel.updateSubject(it.copy(name = name, iconName = icon, colorHex = color))
+                    viewModel.updateSubject(it.copy(
+                        name = name, 
+                        iconName = icon, 
+                        colorHex = color,
+                        gradingScale = scale
+                    ))
                 }
             }
             onBackClick()
@@ -249,7 +290,8 @@ fun AddSubjectPreview() {
             initialName = "",
             initialIcon = "functions",
             initialColor = "#004AC6",
-            onSave = { _, _, _ -> },
+            initialScale = "5",
+            onSave = { _, _, _, _ -> },
             onBackClick = {}
         )
     }
@@ -267,7 +309,8 @@ fun EditSubjectPreview() {
             initialName = "Mathematics",
             initialIcon = "calculate",
             initialColor = "#B3261E",
-            onSave = { _, _, _ -> },
+            initialScale = "20",
+            onSave = { _, _, _, _ -> },
             onBackClick = {}
         )
     }

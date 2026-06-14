@@ -27,14 +27,25 @@ object DatabaseSeeder {
         // --- 1. Academic Years ---
         val year2324 = AcademicYear(year = "2023/2024", isCurrent = false)
         val year2425 = AcademicYear(year = "2024/2025", isCurrent = true)
-        val year1Id = teacherDao.insertAcademicYear(year2324).toInt()
-        val year2Id = teacherDao.insertAcademicYear(year2425).toInt()
+        
+        // Use a safe insert that returns the ID or -1 on conflict
+        var year1Id = teacherDao.insertAcademicYear(year2324).toInt()
+        var year2Id = teacherDao.insertAcademicYear(year2425).toInt()
 
-        // --- 2. Subjects ---
-        val sub1Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6")).toInt()
-        val sub2Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Science", iconName = "biotech", colorHex = "#006686")).toInt()
-        val sub3Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "History", iconName = "history_edu", colorHex = "#4E565B")).toInt()
-        val sub4Id = teacherDao.insertSubject(Subject(academicYearId = year1Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6")).toInt()
+        // If insert returned -1 (conflict), we need to fetch the real ID to avoid FK violations
+        // Though if DB is empty, this shouldn't happen.
+        if (year1Id == -1) {
+            year1Id = teacherDao.getAllAcademicYears().first().find { it.year == "2023/2024" }?.id ?: 1
+        }
+        if (year2Id == -1) {
+            year2Id = teacherDao.getAllAcademicYears().first().find { it.year == "2024/2025" }?.id ?: 2
+        }
+
+        // --- 2. Subjects (Grading scale is now defined here) ---
+        val sub1Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6", gradingScale = "5")).toInt()
+        val sub2Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Science", iconName = "biotech", colorHex = "#006686", gradingScale = "20")).toInt()
+        val sub3Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "History", iconName = "history_edu", colorHex = "#4E565B", gradingScale = "5")).toInt()
+        val sub4Id = teacherDao.insertSubject(Subject(academicYearId = year1Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6", gradingScale = "5")).toInt()
 
         // --- 3. Students Classes (Groups) ---
         val grp1Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub1Id, name = "4.ºA")).toInt()
