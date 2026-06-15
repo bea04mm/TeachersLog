@@ -253,6 +253,62 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * Checks if a student number is already taken in a specific class.
+     */
+    suspend fun isNumberTaken(classId: Int, number: Int, excludeId: Int = -1): Boolean {
+        return repository.existsNumberInClass(classId, number, excludeId)
+    }
+
+    /**
+     * Checks if a process number is already taken globally.
+     */
+    suspend fun isProcessNumberTaken(processNumber: String, excludeId: Int = -1): Boolean {
+        return repository.existsProcessNumber(processNumber, excludeId)
+    }
+
+    // --- Student CRUD Methods ---
+
+    /**
+     * Adds a new student to a specific class.
+     * @param name The student's full name.
+     * @param number The student's number in the class group.
+     * @param process The optional administrative process number.
+     * @param photoUrl The optional profile image URL or path.
+     * @param classId The ID of the class the student belongs to.
+     */
+    fun addStudent(name: String, number: Int, process: String?, photoUrl: String?, classId: Int) {
+        viewModelScope.launch {
+            repository.insertStudent(Student(
+                studentsClassId = classId,
+                numberInGroup = number,
+                name = name,
+                processNumber = process,
+                profileImageUrl = photoUrl
+            ))
+        }
+    }
+
+    /**
+     * Updates an existing student's information.
+     * @param student The updated [Student] object.
+     */
+    fun updateStudent(student: Student) {
+        viewModelScope.launch {
+            repository.updateStudent(student)
+        }
+    }
+
+    /**
+     * Deletes a student and their associated grades.
+     * @param student The [Student] object to delete.
+     */
+    fun deleteStudent(student: Student) {
+        viewModelScope.launch {
+            repository.deleteStudent(student)
+        }
+    }
+
+    /**
      * Retrieves all students for all classes in the currently selected academic year.
      * Useful for picking a random student across the entire year.
      * 

@@ -6,6 +6,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.Calendar
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -84,7 +85,10 @@ class MainActivity : ComponentActivity() {
             val isDarkMode by viewModel.isDarkMode.observeAsState(initial = true)
             
             // Provide the updated LocalContext with the correct locale to the Composable tree
-            CompositionLocalProvider(LocalContext provides LocaleManager.updateResources(this, currentLang)) {
+            CompositionLocalProvider(
+                LocalContext provides LocaleManager.updateResources(this, currentLang),
+                LocalActivityResultRegistryOwner provides this
+            ) {
                 // Apply the application theme
                 TeachersLogTheme(darkTheme = isDarkMode) {
                     MainApp(viewModel)
@@ -133,16 +137,10 @@ fun MainApp(viewModel: TeacherViewModel) {
         AddYearDialog(
             onDismiss = { showAddYearDialog.value = false },
             onAdd = { yearName ->
-                // Check for duplicates before adding
-                if (academicYears.any { it.year == yearName }) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(viewModel.getApplication<android.app.Application>().getString(R.string.year_exists_error))
-                    }
-                } else {
-                    viewModel.addAcademicYear(yearName)
-                }
+                viewModel.addAcademicYear(yearName)
                 showAddYearDialog.value = false
-            }
+            },
+            existingYears = academicYears
         )
     }
 
@@ -456,11 +454,27 @@ fun MainApp(viewModel: TeacherViewModel) {
  *
  * @param onDismiss Callback executed when the dialog is dismissed without action.
  * @param onAdd Callback executed when the user confirms the addition of a new year.
+ * @param existingYears List of already registered [AcademicYear] objects to avoid duplicates.
  */
 @Composable
-fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
+fun AddYearDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String) -> Unit,
+    existingYears: List<AcademicYear>
+) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-    var selectedStartYear by remember { mutableIntStateOf(currentYear) }
+    // Convert existing years to a set of starting integers (e.g., "2024/2025" -> 2024)
+    val takenStartYears = existingYears.mapNotNull { year ->
+        year.year.split("/").firstOrNull()?.toIntOrNull()
+    }.toSet()
+
+    // Find the first available start year starting from the current year
+    var initialYear = currentYear
+    while (initialYear in takenStartYears) {
+        initialYear++
+    }
+
+    var selectedStartYear by remember { mutableIntStateOf(initialYear) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -479,8 +493,17 @@ fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Decrease start year button
-                    IconButton(onClick = { selectedStartYear-- }) {
+                    // Decrease start year button (skips taken years)
+                    IconButton(onClick = { 
+                        var year = selectedStartYear - 1
+                        // Limit to a reasonable past year, e.g., 2000
+                        while (year in takenStartYears && year > 2000) {
+                            year--
+                        }
+                        if (year !in takenStartYears) {
+                            selectedStartYear = year
+                        }
+                    }) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease")
                     }
                     
@@ -498,8 +521,14 @@ fun AddYearDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
                         )
                     }
                     
-                    // Increase start year button
-                    IconButton(onClick = { selectedStartYear++ }) {
+                    // Increase start year button (skips taken years)
+                    IconButton(onClick = { 
+                        var year = selectedStartYear + 1
+                        while (year in takenStartYears) {
+                            year++
+                        }
+                        selectedStartYear = year
+                    }) {
                         Icon(Icons.Default.Add, contentDescription = "Increase")
                     }
                 }
