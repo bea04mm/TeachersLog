@@ -4,7 +4,6 @@
     <!-- Geral -->
     <string name="back">Voltar</string>
     <string name="menu">Menu</string>
-    <string name="notifications">Notificações</string>
     <string name="save">Guardar</string>
     <string name="cancel">Cancelar</string>
     <string name="edit">Editar</string>
@@ -38,7 +37,6 @@
     <string name="subject_average_label">Média da Disciplina</string>
     <string name="class_average_label">Média da Turma</string>
     <string name="students_count_label">%d Alunos</string>
-    <string name="average_format">Média: %s</string>
     <string name="add_subject">Adicionar Disciplina</string>
     <string name="edit_subject">Editar Disciplina</string>
     <string name="delete_subject_title">Apagar Disciplina</string>
@@ -62,6 +60,19 @@
     <string name="students_roster">LISTA DE ALUNOS</string>
     <string name="process_prefix">Proc: %s</string>
     <string name="class_header">TURMAS</string>
+    <string name="add_student">Adicionar Aluno</string>
+    <string name="edit_student">Editar Aluno</string>
+    <string name="delete_student_title">Apagar Aluno</string>
+    <string name="delete_student_message">Tem a certeza que deseja apagar \'%s\'? Todas as notas associadas também serão apagadas.</string>
+    <string name="student_name">Nome do Aluno</string>
+    <string name="student_number">Número na Turma</string>
+    <string name="student_process">Número de Processo (Opcional)</string>
+    <string name="add_photo">Adicionar Foto</string>
+    <string name="change_photo">Alterar Foto</string>
+    <string name="student_name_required">O nome do aluno é obrigatório</string>
+    <string name="student_number_required">O número do aluno é obrigatório</string>
+    <string name="error_number_exists">Este número de aluno já está a ser usado nesta turma.</string>
+    <string name="error_process_exists">Este número de processo já está registado noutro aluno.</string>
 
     <!-- Avaliação do Aluno -->
     <string name="student_grading">Avaliação do Aluno</string>
@@ -85,13 +96,9 @@
     <string name="edit_profile">Editar Perfil</string>
     <string name="configuration">CONFIGURAÇÃO</string>
     <string name="app_preferences">Preferências da App</string>
-    <string name="app_preferences_desc">Modo escuro, notificações, escala</string>
-    <string name="institutional_access">Acesso Institucional</string>
-    <string name="institutional_access_desc">Ligar a agrupamentos escolares</string>
-    <string name="privacy">Privacidade</string>
-    <string name="privacy_desc">Visibilidade pública e analítica</string>
+    <string name="app_preferences_desc">Modo escuro</string>
     <string name="sign_out">Sair</string>
-    <string name="version_info">Versão 2.4.1 (Build 108)</string>
+    <string name="version_info">Versão 1.1.1 (Build 1)</string>
 
     <!-- Detalhes de Preferências -->
     <string name="language_label">Idioma</string>
@@ -103,15 +110,7 @@
     <string name="appearance">Aparência</string>
     <string name="dark_mode">Modo Escuro</string>
     <string name="dark_mode_desc">Ajustar para ambientes de pouca luz</string>
-    <string name="interface_scale">Escala da Interface</string>
-    <string name="interface_scale_desc">Alterar o tamanho dos elementos</string>
-    <string name="grading">Avaliação</string>
-    <string name="default_grading_scale">Escala de Avaliação Padrão</string>
-    <string name="grading_scale_desc">Sistema principal para novas disciplinas</string>
-    <string name="compact_label">Compacto</string>
     <string name="standard_label">Padrão</string>
-    <string name="large_label">Grande</string>
-    <string name="scale_range_label">Escala 1–5</string>
 
     <!-- Diálogos de Ano Letivo -->
     <string name="academic_years_header">ANOS LETIVOS</string>
@@ -125,14 +124,8 @@
     <string name="account">Conta</string>
     <string name="jane_harrison">Jane Harrison</string>
     <string name="jane_email">jane.harrison@edu-log.com</string>
-    <string name="state_university">Universidade Estadual</string>
     <string name="personal_information">Informações Pessoais</string>
     <string name="first_name">Primeiro Nome</string>
     <string name="last_name">Apelido</string>
     <string name="email">Email</string>
-    <string name="security">Segurança</string>
-    <string name="password">Palavra-passe</string>
-    <string name="password_desc">Alterada há 3 meses</string>
-    <string name="two_factor_auth">Autenticação de Dois Fatores</string>
-    <string name="two_factor_auth_desc">Proteja a sua conta com um código</string>
 </resources>

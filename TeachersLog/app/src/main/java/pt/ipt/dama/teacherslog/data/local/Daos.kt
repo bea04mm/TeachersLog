@@ -104,7 +104,7 @@ interface TeacherDao {
      * @param studentsClassId The ID of the class.
      * @return A [Flow] of [StudentWithGrade].
      */
-    @Query("SELECT s.studentId, s.studentsClassId, s.numberInGroup, s.name, s.processNumber, " +
+    @Query("SELECT s.studentId, s.studentsClassId, s.numberInGroup, s.name, s.processNumber, s.profileImageUrl, " +
            "IFNULL((g.homework * 0.2 + g.participation * 0.1 + g.quizzes * 0.4 + g.projects * 0.3), 0.0) as weightedGrade " +
            "FROM students s LEFT JOIN grades g ON s.studentId = g.studentId " +
            "WHERE s.studentsClassId = :studentsClassId ORDER BY s.numberInGroup ASC")
@@ -125,6 +125,18 @@ interface TeacherDao {
      */
     @Query("SELECT * FROM students WHERE studentId = :studentId")
     suspend fun getStudentById(studentId: Int): Student?
+
+    /**
+     * Checks if a student number already exists in a specific class.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM students WHERE studentsClassId = :classId AND numberInGroup = :number AND studentId != :excludeId)")
+    suspend fun existsNumberInClass(classId: Int, number: Int, excludeId: Int = -1): Boolean
+
+    /**
+     * Checks if a process number already exists globally.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM students WHERE processNumber = :processNumber AND studentId != :excludeId)")
+    suspend fun existsProcessNumber(processNumber: String, excludeId: Int = -1): Boolean
 
     /**
      * Inserts or replaces a subject record.
@@ -179,20 +191,26 @@ interface TeacherDao {
     suspend fun deleteStudentsClass(studentsClass: StudentsClass)
 
     /**
-     * Retrieves a specific class by its unique ID.
-     * @param id The ID of the class.
-     * @return A [Flow] emitting the [StudentsClass].
-     */
-    @Query("SELECT * FROM students_classes WHERE id = :id")
-    fun getStudentsClassById(id: Int): Flow<StudentsClass?>
-
-    /**
      * Inserts or replaces a student record.
      * @param student The [Student] to insert.
      * @return The row ID of the new record.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStudent(student: Student): Long
+
+    /**
+     * Updates an existing student record.
+     * @param student The [Student] with updated values.
+     */
+    @Update
+    suspend fun updateStudent(student: Student)
+
+    /**
+     * Deletes a specific student and their associated grades (via CASCADE).
+     * @param student The [Student] to remove.
+     */
+    @Delete
+    suspend fun deleteStudent(student: Student)
 
     /**
      * Inserts or replaces a grade record.

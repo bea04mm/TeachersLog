@@ -33,7 +33,6 @@ object DatabaseSeeder {
         var year2Id = teacherDao.insertAcademicYear(year2425).toInt()
 
         // If insert returned -1 (conflict), we need to fetch the real ID to avoid FK violations
-        // Though if DB is empty, this shouldn't happen.
         if (year1Id == -1) {
             year1Id = teacherDao.getAllAcademicYears().first().find { it.year == "2023/2024" }?.id ?: 1
         }
@@ -54,12 +53,12 @@ object DatabaseSeeder {
         val grp4Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub4Id, name = "6.ºC")).toInt()
         val grp5Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub3Id, name = "6.ºC")).toInt()
         
-        // --- 4. Students and Grades (via helper) ---
-        seedDataForGroup(teacherDao, grp1Id, 12)
-        seedDataForGroup(teacherDao, grp2Id, 10)
-        seedDataForGroup(teacherDao, grp3Id, 8)
-        seedDataForGroup(teacherDao, grp4Id, 15)
-        seedDataForGroup(teacherDao, grp5Id, 5)
+        // --- 4. Students and Grades (via helper with global offset to ensure unique process numbers) ---
+        seedDataForGroup(teacherDao, grp1Id, 12, 100)
+        seedDataForGroup(teacherDao, grp2Id, 10, 200)
+        seedDataForGroup(teacherDao, grp3Id, 8, 300)
+        seedDataForGroup(teacherDao, grp4Id, 15, 400)
+        seedDataForGroup(teacherDao, grp5Id, 5, 500)
     }
 
     /**
@@ -68,8 +67,9 @@ object DatabaseSeeder {
      * @param dao The [TeacherDao] for database operations.
      * @param studentsClassId The ID of the class to populate.
      * @param count The number of student records to create.
+     * @param processOffset A starting number to ensure global uniqueness of process numbers.
      */
-    private suspend fun seedDataForGroup(dao: TeacherDao, studentsClassId: Int, count: Int) {
+    private suspend fun seedDataForGroup(dao: TeacherDao, studentsClassId: Int, count: Int, processOffset: Int) {
         val names = listOf(
             "Leo Bennett", "Emma Wilson", "Marcus Chen", "Sophia Rodriguez",
             "Lucas Silva", "Ana Martins", "João Pereira", "Bia Santos",
@@ -84,7 +84,7 @@ object DatabaseSeeder {
                     studentsClassId = studentsClassId, 
                     numberInGroup = i + 1,
                     name = name, 
-                    processNumber = if (i % 2 == 0) "PROC-${2000 + i}" else null 
+                    processNumber = if (i % 2 == 0) "PROC-${2000 + processOffset + i}" else null
                 )
             ).toInt()
             

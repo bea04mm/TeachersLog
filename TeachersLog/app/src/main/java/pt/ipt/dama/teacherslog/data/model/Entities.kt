@@ -93,6 +93,10 @@ data class StudentsClass(
  */
 @Entity(
     tableName = "students",
+    indices = [
+        Index(value = ["studentsClassId", "numberInGroup"], unique = true),
+        Index(value = ["processNumber"], unique = true)
+    ],
     foreignKeys = [
         ForeignKey(
             entity = StudentsClass::class,
@@ -204,6 +208,7 @@ data class StudentWithGrade(
     val numberInGroup: Int,
     val name: String,
     val processNumber: String?,
+    val profileImageUrl: String?,
     val weightedGrade: Double
 )
 

@@ -1,5 +1,6 @@
 package pt.ipt.dama.teacherslog.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,24 +13,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.LocaleManager
-import android.content.Context
-import androidx.core.content.edit
 
+/**
+ * AppPreferencesContent is the stateless UI for managing application settings.
+ *
+ * @param darkMode Boolean indicating if dark mode is enabled.
+ * @param currentLang The current language code (e.g., "en", "pt").
+ * @param onToggleDarkMode Callback to switch between light and dark themes.
+ * @param onLanguageChange Callback to update the application language.
+ * @param onBackClick Callback for top bar back button.
+ */
 @Composable
-fun AppPreferencesScreen(
-    viewModel: TeacherViewModel,
+fun AppPreferencesContent(
+    darkMode: Boolean,
+    currentLang: String,
+    onToggleDarkMode: (Boolean) -> Unit,
+    onLanguageChange: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val darkMode by viewModel.isDarkMode.observeAsState(initial = true)
-    val currentLang by viewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
-
     val showLanguageDialog = remember { mutableStateOf(false) }
 
     if (showLanguageDialog.value) {
@@ -39,18 +50,20 @@ fun AppPreferencesScreen(
             text = {
                 Column {
                     LanguageOption(stringResource(R.string.english), "en", currentLang) { 
-                        context.getSharedPreferences("prefs", Context.MODE_PRIVATE).edit { putString("language", "en") }
-                        viewModel.setLanguage("en")
+                        onLanguageChange("en")
                         showLanguageDialog.value = false 
                     }
                     LanguageOption(stringResource(R.string.portuguese), "pt", currentLang) { 
-                        context.getSharedPreferences("prefs", Context.MODE_PRIVATE).edit { putString("language", "pt") }
-                        viewModel.setLanguage("pt")
+                        onLanguageChange("pt")
                         showLanguageDialog.value = false 
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showLanguageDialog.value = false }) { Text(stringResource(R.string.close)) } }
+            confirmButton = { 
+                TextButton(onClick = { showLanguageDialog.value = false }) { 
+                    Text(stringResource(R.string.close)) 
+                } 
+            }
         )
     }
 
@@ -70,7 +83,7 @@ fun AppPreferencesScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Language
+            // Language Selection Section
             item {
                 PreferenceSection(title = stringResource(R.string.language_label), icon = Icons.Default.Language) {
                     TonalCard {
@@ -96,7 +109,7 @@ fun AppPreferencesScreen(
                 }
             }
 
-            // Appearance
+            // Appearance/Theme Section
             item {
                 PreferenceSection(title = stringResource(R.string.appearance), icon = Icons.Default.Palette) {
                     TonalCard {
@@ -104,36 +117,37 @@ fun AppPreferencesScreen(
                             title = stringResource(R.string.dark_mode),
                             subtitle = stringResource(R.string.dark_mode_desc),
                             checked = darkMode,
-                            onCheckedChange = { viewModel.toggleDarkMode(it) }
+                            onCheckedChange = onToggleDarkMode
                         )
-                    }
-                }
-            }
-
-            // Grading
-            item {
-                PreferenceSection(title = stringResource(R.string.grading), icon = Icons.Default.Analytics) {
-                    TonalCard {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = stringResource(R.string.default_grading_scale), style = MaterialTheme.typography.bodyLarge)
-                            Text(text = stringResource(R.string.grading_scale_desc), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(stringResource(R.string.scale_range_label))
-                                    Icon(Icons.Default.ExpandMore, contentDescription = null)
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * AppPreferencesScreen is the stateful container for the preferences UI.
+ */
+@Composable
+fun AppPreferencesScreen(
+    viewModel: TeacherViewModel,
+    onBackClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val darkMode by viewModel.isDarkMode.observeAsState(initial = true)
+    val currentLang by viewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
+
+    AppPreferencesContent(
+        darkMode = darkMode,
+        currentLang = currentLang,
+        onToggleDarkMode = { viewModel.toggleDarkMode(it) },
+        onLanguageChange = { lang ->
+            context.getSharedPreferences("prefs", Context.MODE_PRIVATE).edit { putString("language", lang) }
+            viewModel.setLanguage(lang)
+        },
+        onBackClick = onBackClick
+    )
 }
 
 @Composable
@@ -147,7 +161,7 @@ fun LanguageOption(label: String, code: String, current: String, onClick: () -> 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyLarge)
-        RadioButton(selected = code == current, onClick = onClick)
+        RadioButton(selected = (code == current), onClick = onClick)
     }
 }
 
@@ -161,7 +175,7 @@ fun PreferenceSection(
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) {
             Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = title, style = MaterialTheme.typography.headlineMedium)
+            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
         content()
     }
@@ -186,5 +200,35 @@ fun PreferenceToggle(
             Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Preferences Light Mode")
+@Composable
+fun AppPreferencesPreview() {
+    TeachersLogTheme(darkTheme = false) {
+        AppPreferencesContent(
+            darkMode = false,
+            currentLang = "en",
+            onToggleDarkMode = {},
+            onLanguageChange = {},
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Preferences Dark Mode")
+@Composable
+fun AppPreferencesDarkPreview() {
+    TeachersLogTheme(darkTheme = true) {
+        AppPreferencesContent(
+            darkMode = true,
+            currentLang = "pt",
+            onToggleDarkMode = {},
+            onLanguageChange = {},
+            onBackClick = {}
+        )
     }
 }

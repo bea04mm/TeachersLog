@@ -4,7 +4,6 @@
     <!-- General -->
     <string name="back">Back</string>
     <string name="menu">Menu</string>
-    <string name="notifications">Notifications</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="edit">Edit</string>
@@ -38,7 +37,6 @@
     <string name="subject_average_label">Subject Average</string>
     <string name="class_average_label">Class Average</string>
     <string name="students_count_label">%d Students</string>
-    <string name="average_format">Average: %s</string>
     <string name="add_subject">Add Subject</string>
     <string name="edit_subject">Edit Subject</string>
     <string name="delete_subject_title">Delete Subject</string>
@@ -62,6 +60,19 @@
     <string name="students_roster">STUDENTS ROSTER</string>
     <string name="process_prefix">Proc: %s</string>
     <string name="class_header">CLASSES</string>
+    <string name="add_student">Add Student</string>
+    <string name="edit_student">Edit Student</string>
+    <string name="delete_student_title">Delete Student</string>
+    <string name="delete_student_message">Are you sure you want to delete \'%s\'? This will also delete all associated grades.</string>
+    <string name="student_name">Student Name</string>
+    <string name="student_number">Number in Class</string>
+    <string name="student_process">Process Number (Optional)</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="change_photo">Change Photo</string>
+    <string name="student_name_required">Student name is required</string>
+    <string name="student_number_required">Student number is required</string>
+    <string name="error_number_exists">This student number is already used in this class.</string>
+    <string name="error_process_exists">This process number is already registered to another student.</string>
 
     <!-- Student Grading -->
     <string name="student_grading">Student Grading</string>
@@ -85,13 +96,9 @@
     <string name="edit_profile">Edit Profile</string>
     <string name="configuration">CONFIGURATION</string>
     <string name="app_preferences">App Preferences</string>
-    <string name="app_preferences_desc">Dark mode, notifications, grading scale</string>
-    <string name="institutional_access">Institutional Access</string>
-    <string name="institutional_access_desc">Connect school districts</string>
-    <string name="privacy">Privacy</string>
-    <string name="privacy_desc">Public visibility and analytics</string>
+    <string name="app_preferences_desc">Dark mode</string>
     <string name="sign_out">Sign Out</string>
-    <string name="version_info">Version 2.4.1 (Build 108)</string>
+    <string name="version_info">Version 1.1.1 (Build 1)</string>
 
     <!-- App Preferences Details -->
     <string name="language_label">Language</string>
@@ -103,15 +110,7 @@
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Adjust for low-light environments</string>
-    <string name="interface_scale">Interface Scale</string>
-    <string name="interface_scale_desc">Change the sizing of dashboard</string>
-    <string name="grading">Grading</string>
-    <string name="default_grading_scale">Default Grading Scale</string>
-    <string name="grading_scale_desc">Primary system for new subjects</string>
-    <string name="compact_label">Compact</string>
     <string name="standard_label">Standard</string>
-    <string name="large_label">Large</string>
-    <string name="scale_range_label">1-5 Scale</string>
 
     <!-- Academic Year Dialogs -->
     <string name="academic_years_header">ACADEMIC YEARS</string>
@@ -125,14 +124,8 @@
     <string name="account">Account</string>
     <string name="jane_harrison">Jane Harrison</string>
     <string name="jane_email">jane.harrison@edu-log.com</string>
-    <string name="state_university">State University</string>
     <string name="personal_information">Personal Information</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="email">Email</string>
-    <string name="security">Security</string>
-    <string name="password">Password</string>
-    <string name="password_desc">Last changed 3 months ago</string>
-    <string name="two_factor_auth">Two-Factor Authentication</string>
-    <string name="two_factor_auth_desc">Secure your account with a code</string>
 </resources>
