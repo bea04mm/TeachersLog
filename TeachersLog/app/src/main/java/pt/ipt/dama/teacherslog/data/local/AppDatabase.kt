@@ -18,7 +18,7 @@ import pt.ipt.dama.teacherslog.data.model.*
  */
 @Database(
     entities = [AcademicYear::class, Subject::class, StudentsClass::class, Student::class, Grade::class], 
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -82,6 +82,40 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
     suspend fun getStudentById(studentId: Int): Student? =
         teacherDao.getStudentById(studentId)
 
+    /**
+     * Checks if a student number is already used in a specific class.
+     */
+    suspend fun existsNumberInClass(classId: Int, number: Int, excludeId: Int = -1): Boolean =
+        teacherDao.existsNumberInClass(classId, number, excludeId)
+
+    /**
+     * Checks if a process number is already used globally.
+     */
+    suspend fun existsProcessNumber(processNumber: String, excludeId: Int = -1): Boolean =
+        teacherDao.existsProcessNumber(processNumber, excludeId)
+
+    /**
+     * Inserts a new student into the database.
+     * 
+     * @param student The [Student] entity to insert.
+     * @return The row ID of the newly inserted student.
+     */
+    suspend fun insertStudent(student: Student) = teacherDao.insertStudent(student)
+
+    /**
+     * Updates an existing student's information.
+     * 
+     * @param student The [Student] entity with updated values.
+     */
+    suspend fun updateStudent(student: Student) = teacherDao.updateStudent(student)
+
+    /**
+     * Deletes a student and their cascading data.
+     * 
+     * @param student The [Student] entity to delete.
+     */
+    suspend fun deleteStudent(student: Student) = teacherDao.deleteStudent(student)
+
     // --- Academic Year Operations ---
 
     /**
@@ -152,14 +186,6 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
      * @param studentsClass The [StudentsClass] entity to delete.
      */
     suspend fun deleteStudentsClass(studentsClass: StudentsClass) = teacherDao.deleteStudentsClass(studentsClass)
-
-    /**
-     * Retrieves a class by its unique ID.
-     * 
-     * @param id The unique identifier of the class.
-     * @return A [Flow] emitting the [StudentsClass] or null if it doesn't exist.
-     */
-    fun getStudentsClassById(id: Int): Flow<StudentsClass?> = teacherDao.getStudentsClassById(id)
 
     // --- Grade Operations ---
 
