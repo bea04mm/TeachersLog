@@ -54,6 +54,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 
+    // Image Loading
+    implementation(libs.coil.compose)
+
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
