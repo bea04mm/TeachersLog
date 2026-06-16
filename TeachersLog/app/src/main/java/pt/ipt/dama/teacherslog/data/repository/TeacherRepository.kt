@@ -5,195 +5,231 @@ import pt.ipt.dama.teacherslog.data.local.TeacherDao
 import pt.ipt.dama.teacherslog.data.model.*
 
 /**
- * TeacherRepository acts as the single source of truth for the application's academic data.
+ * TeacherRepository acts as the single source of truth for academic data.
+ * It abstracts access to the [TeacherDao] and manages data flows.
  * 
- * It abstracts access to the [TeacherDao], coordinating data operations between the 
- * local Room database and the rest of the application (typically the ViewModel).
- *
- * @property teacherDao The Data Access Object used to interact with the Room database.
+ * @property teacherDao The DAO used to interact with the Room database.
  */
 class TeacherRepository(private val teacherDao: TeacherDao) {
     
-    /**
-     * A [Flow] emitting the list of all registered academic years, ordered by year descending.
-     */
+    /** Flow emitting all registered academic years. */
     val allAcademicYears: Flow<List<AcademicYear>> = teacherDao.getAllAcademicYears()
     
     /**
-     * Retrieves all subjects and their calculated statistics for a specific academic year.
-     * 
-     * @param yearId The unique identifier of the academic year.
-     * @return A [Flow] emitting a list of [SubjectWithStats].
+     * Fetches semesters for a specific academic year.
+     * @param yearId Parent academic year ID.
      */
-    fun getSubjectsWithStatsForYear(yearId: Int): Flow<List<SubjectWithStats>> =
-        teacherDao.getSubjectsWithStatsForYear(yearId)
+    fun getSemestersForYear(yearId: Int): Flow<List<Semester>> =
+        teacherDao.getSemestersForYear(yearId)
 
     /**
-     * Retrieves the global academic statistics (totals and averages) for a specific year.
-     * 
-     * @param yearId The unique identifier of the academic year.
-     * @return A [Flow] emitting the [GlobalStats].
+     * Inserts a new semester.
+     * @param semester Semester record.
      */
-    fun getGlobalStatsForYear(yearId: Int): Flow<GlobalStats> =
-        teacherDao.getGlobalStatsForYear(yearId)
+    suspend fun insertSemester(semester: Semester) = teacherDao.insertSemester(semester)
+    
+    /**
+     * Deletes a semester.
+     * @param semester Semester record.
+     */
+    suspend fun deleteSemester(semester: Semester) = teacherDao.deleteSemester(semester)
 
     /**
-     * Fetches all student classes across all subjects for a specific academic year.
-     * 
-     * @param yearId The unique identifier of the academic year.
-     * @return A [Flow] emitting a list of [StudentsClassWithStats].
+     * Fetches subjects with stats for a specific semester.
+     * @param semesterId Target semester ID.
      */
-    fun getAllStudentsClassesForYear(yearId: Int): Flow<List<StudentsClassWithStats>> =
-        teacherDao.getAllStudentsClassesForYear(yearId)
+    fun getSubjectsWithStatsForSemester(semesterId: Int): Flow<List<SubjectWithStats>> =
+        teacherDao.getSubjectsWithStatsForSemester(semesterId)
 
     /**
-     * Fetches the classes specifically associated with a single subject.
-     * 
-     * @param subjectId The unique identifier of the subject.
-     * @return A [Flow] emitting a list of [StudentsClassWithStats].
+     * Fetches global stats for a semester.
+     * @param semesterId Target semester ID.
+     */
+    fun getGlobalStatsForSemester(semesterId: Int): Flow<GlobalStats> =
+        teacherDao.getGlobalStatsForSemester(semesterId)
+
+    /**
+     * Retrieves the 3 most recently accessed classes for a specific academic period.
+     * @param semesterId The ID of the semester/period.
+     */
+    fun getRecentClassesForPeriod(semesterId: Int): Flow<List<StudentsClassWithStats>> =
+        teacherDao.getRecentClassesForPeriod(semesterId)
+
+    /**
+     * Fetches classes for a specific subject.
+     * @param subjectId Parent subject ID.
      */
     fun getStudentsClassesForSubject(subjectId: Int): Flow<List<StudentsClassWithStats>> =
         teacherDao.getStudentsClassesForSubject(subjectId)
 
     /**
-     * Retrieves the list of students within a class along with their weighted grades.
-     * 
-     * @param studentsClassId The unique identifier of the student class.
-     * @return A [Flow] emitting a list of [StudentWithGrade].
+     * Fetches students with their weighted grades for a class.
+     * @param studentsClassId Target class ID.
      */
     fun getStudentsWithGradesForStudentsClass(studentsClassId: Int): Flow<List<StudentWithGrade>> =
         teacherDao.getStudentsWithGradesForStudentsClass(studentsClassId)
 
     /**
-     * Fetches the raw grade data for a specific student.
-     * 
-     * @param studentId The unique identifier of the student.
-     * @return The [Grade] object if found, or null otherwise.
+     * Fetches the qualitative grade for a student.
+     * @param studentId Student ID.
      */
     suspend fun getGradeForStudent(studentId: Int): Grade? =
         teacherDao.getGradeForStudent(studentId)
 
     /**
-     * Retrieves basic student information by their ID.
-     * 
-     * @param studentId The unique identifier of the student.
-     * @return The [Student] object if found, or null otherwise.
+     * Fetches basic student info.
+     * @param studentId Student ID.
      */
     suspend fun getStudentById(studentId: Int): Student? =
         teacherDao.getStudentById(studentId)
 
     /**
-     * Checks if a student number is already used in a specific class.
+     * Fetches the scale of a student's class.
+     * @param studentId Student ID.
      */
-    suspend fun existsNumberInClass(classId: Int, number: Int, excludeId: Int = -1): Boolean =
-        teacherDao.existsNumberInClass(classId, number, excludeId)
+    suspend fun getGradingScaleByStudentId(studentId: Int): String? =
+        teacherDao.getGradingScaleByStudentId(studentId)
 
     /**
-     * Checks if a process number is already used globally.
+     * Fetches the scale of a specific class.
+     * @param classId Class ID.
+     */
+    suspend fun getGradingScaleByClassId(classId: Int): String? =
+        teacherDao.getGradingScaleByClassId(classId)
+
+    /**
+     * Checks if a process number exists globally.
+     * @param processNumber Process string.
+     * @param excludeId ID to ignore.
      */
     suspend fun existsProcessNumber(processNumber: String, excludeId: Int = -1): Boolean =
         teacherDao.existsProcessNumber(processNumber, excludeId)
 
     /**
-     * Inserts a new student into the database.
-     * 
-     * @param student The [Student] entity to insert.
-     * @return The row ID of the newly inserted student.
+     * Inserts a student.
+     * @param student Student record.
      */
     suspend fun insertStudent(student: Student) = teacherDao.insertStudent(student)
-
+    
     /**
-     * Updates an existing student's information.
-     * 
-     * @param student The [Student] entity with updated values.
+     * Updates student info.
+     * @param student Updated record.
      */
     suspend fun updateStudent(student: Student) = teacherDao.updateStudent(student)
-
+    
     /**
-     * Deletes a student and their cascading data.
-     * 
-     * @param student The [Student] entity to delete.
+     * Deletes a student.
+     * @param student Record to remove.
      */
     suspend fun deleteStudent(student: Student) = teacherDao.deleteStudent(student)
 
-    // --- Academic Year Operations ---
-
     /**
-     * Inserts a new academic year into the database.
-     * 
-     * @param year The [AcademicYear] entity to insert.
-     * @return The row ID of the newly inserted year.
+     * Inserts a new year.
+     * @param year Record to insert.
      */
     suspend fun insertAcademicYear(year: AcademicYear) = teacherDao.insertAcademicYear(year)
-
+    
     /**
-     * Deletes an academic year and all cascading data (subjects, classes, etc.).
-     * 
-     * @param year The [AcademicYear] entity to delete.
+     * Deletes a year.
+     * @param year Record to remove.
      */
     suspend fun deleteAcademicYear(year: AcademicYear) = teacherDao.deleteAcademicYear(year)
-    
-    // --- Subject Operations ---
 
     /**
-     * Inserts a new subject into the database.
-     * 
-     * @param subject The [Subject] entity to insert.
-     * @return The row ID of the newly inserted subject.
+     * Inserts a subject.
+     * @param subject Record to insert.
      */
     suspend fun insertSubject(subject: Subject) = teacherDao.insertSubject(subject)
-
+    
     /**
-     * Updates an existing subject's information (name, icon, or color).
-     * 
-     * @param subject The [Subject] entity with updated values.
+     * Updates a subject.
+     * @param subject Updated record.
      */
     suspend fun updateSubject(subject: Subject) = teacherDao.updateSubject(subject)
-
+    
     /**
-     * Deletes a subject and its cascading classes and student records.
-     * 
-     * @param subject The [Subject] entity to delete.
+     * Deletes a subject.
+     * @param subject Record to remove.
      */
     suspend fun deleteSubject(subject: Subject) = teacherDao.deleteSubject(subject)
-
+    
     /**
-     * Retrieves a subject by its unique ID.
-     * 
-     * @param subjectId The unique identifier of the subject.
-     * @return A [Flow] emitting the [Subject] or null if it doesn't exist.
+     * Fetches a subject by ID.
+     * @param subjectId Subject identifier.
      */
     fun getSubjectById(subjectId: Int): Flow<Subject?> = teacherDao.getSubjectById(subjectId)
 
     /**
-     * Inserts a new class into the database.
-     * 
-     * @param studentsClass The [StudentsClass] entity to insert.
-     * @return The row ID of the newly inserted class.
+     * Inserts a component.
+     * @param component Criterion to insert.
+     */
+    suspend fun insertGradingComponent(component: GradingComponent) = teacherDao.insertGradingComponent(component)
+
+    /**
+     * Deletes a component.
+     * @param component Record to remove.
+     */
+    suspend fun deleteGradingComponent(component: GradingComponent) = teacherDao.deleteGradingComponent(component)
+    
+    /**
+     * Fetches criteria for a class.
+     * @param classId Class identifier.
+     */
+    fun getGradingComponentsForClass(classId: Int): Flow<List<GradingComponent>> = teacherDao.getGradingComponentsForClass(classId)
+
+    /**
+     * Inserts a class.
+     * @param studentsClass Record to insert.
      */
     suspend fun insertStudentsClass(studentsClass: StudentsClass) = teacherDao.insertStudentsClass(studentsClass)
-
+    
     /**
-     * Updates an existing class information.
-     * 
-     * @param studentsClass The [StudentsClass] entity with updated values.
+     * Updates a class.
+     * @param studentsClass Updated record.
      */
     suspend fun updateStudentsClass(studentsClass: StudentsClass) = teacherDao.updateStudentsClass(studentsClass)
+    
+    /**
+     * Updates the last accessed timestamp for a class.
+     * @param classId Class identifier.
+     */
+    suspend fun updateClassLastAccessed(classId: Int) = 
+        teacherDao.updateClassLastAccessed(classId, System.currentTimeMillis())
 
     /**
-     * Deletes a class and its cascading student records.
-     * 
-     * @param studentsClass The [StudentsClass] entity to delete.
+     * Deletes a class.
+     * @param studentsClass Record to remove.
      */
     suspend fun deleteStudentsClass(studentsClass: StudentsClass) = teacherDao.deleteStudentsClass(studentsClass)
-
-    // --- Grade Operations ---
+    
+    /**
+     * Fetches a class by ID.
+     * @param id Class identifier.
+     */
+    fun getStudentsClassById(id: Int): Flow<StudentsClass?> = teacherDao.getStudentsClassById(id)
 
     /**
-     * Inserts or replaces a student's grade data.
-     * 
-     * @param grade The [Grade] entity to save.
-     * @return The row ID of the saved grade record.
+     * Fetches a class with stats by ID.
+     * @param id Class identifier.
+     */
+    fun getStudentsClassWithStatsById(id: Int): Flow<StudentsClassWithStats?> = 
+        teacherDao.getStudentsClassWithStatsById(id)
+
+    /**
+     * Inserts a component score for a student.
+     * @param score Score record.
+     */
+    suspend fun insertStudentScore(score: StudentScore) = teacherDao.insertStudentScore(score)
+    
+    /**
+     * Fetches component scores for a student.
+     * @param studentId Student identifier.
+     */
+    fun getComponentScoresForStudent(studentId: Int): Flow<List<ComponentScore>> = teacherDao.getComponentScoresForStudent(studentId)
+
+    /**
+     * Inserts a qualitative grade entry.
+     * @param grade Grade record.
      */
     suspend fun insertGrade(grade: Grade) = teacherDao.insertGrade(grade)
 }
