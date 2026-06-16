@@ -83,6 +83,7 @@ fun ClassEditContent(
     val isRootValid = rootWeight == 100
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(if (isEditMode) R.string.edit_class else R.string.add_class),

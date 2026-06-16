@@ -15,9 +15,7 @@ import java.util.Locale
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.data.model.SubjectWithStats
-import pt.ipt.dama.teacherslog.ui.components.SubjectCard
-import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
-import pt.ipt.dama.teacherslog.ui.components.SectionHeader
+import pt.ipt.dama.teacherslog.ui.components.*
 import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
@@ -27,7 +25,7 @@ import pt.ipt.dama.teacherslog.utils.IconMapper
  *
  * It manages:
  * 1. The display of a scrollable list using [LazyColumn].
- * 2. The deletion confirmation dialog state.
+ * 2. The deletion confirmation dialog state using [DeleteConfirmationDialog].
  * 3. The layout for each subject card, including its stats and an options menu.
  *
  * @param subjects The list of [SubjectWithStats] to display.
@@ -50,28 +48,15 @@ fun SubjectsListContent(
     val subjectToDelete = remember { mutableStateOf<Subject?>(null) }
 
     // --- Delete Confirmation Dialog ---
-    if (subjectToDelete.value != null) {
-        AlertDialog(
-            onDismissRequest = { subjectToDelete.value = null },
-            title = { Text(stringResource(R.string.delete_subject_title)) },
-            text = { Text(stringResource(R.string.delete_subject_message, subjectToDelete.value?.name ?: "")) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        // Execute deletion callback and close dialog
-                        subjectToDelete.value?.let { onDeleteSubjectClick(it) }
-                        subjectToDelete.value = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
-                ) {
-                    Text(stringResource(R.string.delete_label))
-                }
+    subjectToDelete.value?.let { subject ->
+        DeleteConfirmationDialog(
+            title = stringResource(R.string.delete_subject_title),
+            message = stringResource(R.string.delete_subject_message, subject.name),
+            onConfirm = {
+                onDeleteSubjectClick(subject)
+                subjectToDelete.value = null
             },
-            dismissButton = {
-                TextButton(onClick = { subjectToDelete.value = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+            onDismiss = { subjectToDelete.value = null }
         )
     }
 

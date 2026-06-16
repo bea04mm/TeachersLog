@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.util.Locale
@@ -172,7 +173,7 @@ fun SectionHeader(
 
 /**
  * TonalCard is a reusable surface container with a subtle background color and low elevation.
- * Uses the project's shapes and surfaceContainerLow for better Dark Mode support.
+ * Uses the project's shapes and surfaceContainer for better visibility and Dark Mode support.
  *
  * @param modifier The [Modifier] to be applied.
  * @param content The Composable content to display inside the card.
@@ -208,7 +209,7 @@ fun StatCard(
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
-    color: androidx.compose.ui.graphics.Color = AppTheme.colors.primary
+    color: Color = AppTheme.colors.primary
 ) {
     TonalCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -258,7 +259,7 @@ fun AcademicSummaryCard(
     name: String,
     averageGrade: Double,
     studentCount: Int,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     averageLabel: String,
     gradingScale: String,
     modifier: Modifier = Modifier,
@@ -272,14 +273,9 @@ fun AcademicSummaryCard(
         else -> " / 5"
     }
 
-    // Determine semantic color based on grade performance using project theme object
-    val maxGradeValue = when(gradingScale) { "20" -> 20.0; "100" -> 100.0; else -> 5.0 }
-    val percentage = (averageGrade / maxGradeValue) * 100.0
-    val performanceColor = when {
-        percentage >= 80.0 -> AppTheme.success
-        percentage >= 50.0 -> AppTheme.warning
-        else -> AppTheme.critical
-    }
+    // Use centralized logic for color and percentage
+    val percentage = AppTheme.calculatePercentage(averageGrade, gradingScale)
+    val performanceColor = AppTheme.getGradeColor(percentage)
 
     TonalCard(
         modifier = modifier.clickable(onClick = onClick)
@@ -368,6 +364,41 @@ fun AcademicSummaryCard(
 }
 
 /**
+ * Reusable dialog for confirming the deletion of any academic item.
+ * 
+ * @param title The title of the dialog.
+ * @param message The confirmation message.
+ * @param onConfirm Callback when the delete button is pressed.
+ * @param onDismiss Callback when the dialog is canceled.
+ */
+@Composable
+fun DeleteConfirmationDialog(
+    title: String,
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+            ) {
+                Text(text = stringResource(R.string.delete_label))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+/**
  * Compatibility wrapper for SubjectCard using the unified [AcademicSummaryCard].
  *
  * @param name The name of the subject.
@@ -385,7 +416,7 @@ fun SubjectCard(
     name: String,
     average: String,
     students: Int,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     gradingScale: String,
     modifier: Modifier = Modifier,
@@ -424,7 +455,7 @@ fun ClassCard(
     name: String,
     studentCount: Int,
     averageGrade: Double,
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     gradingScale: String,
     modifier: Modifier = Modifier,
     iconName: String? = null,

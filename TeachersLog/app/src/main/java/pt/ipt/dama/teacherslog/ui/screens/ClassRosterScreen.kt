@@ -19,13 +19,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.Student
 import pt.ipt.dama.teacherslog.data.model.StudentWithGrade
-import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
-import pt.ipt.dama.teacherslog.ui.components.TonalCard
-import pt.ipt.dama.teacherslog.ui.components.SectionHeader
+import pt.ipt.dama.teacherslog.ui.components.*
 import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.ShakeDetector
@@ -43,14 +42,25 @@ import coil.request.ImageRequest
  */
 @Composable
 fun RandomStudentPopupContent(
+    title: String,
     student: StudentWithGrade,
     onGoToGrading: () -> Unit,
     onClose: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp), 
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            style = AppTheme.typography.headlineSmall
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         Box(
             modifier = Modifier
-                .size(160.dp)
+                .size(150.dp)
                 .clip(AppTheme.circle)
                 .background(AppTheme.colors.surfaceContainerHigh),
             contentAlignment = Alignment.Center
@@ -158,18 +168,14 @@ fun ClassRosterContent(
 
     // --- Random Student Selection Popup ---
     randomStudent.value?.let { student ->
-        AlertDialog(
-            onDismissRequest = { randomStudent.value = null },
-            title = { 
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = stringResource(R.string.random_selection_title), 
-                        style = AppTheme.typography.headlineSmall
-                    ) 
-                }
-            },
-            text = {
+        Dialog(onDismissRequest = { randomStudent.value = null }) {
+            Surface(
+                shape = AppTheme.shapes.extraLarge,
+                color = AppTheme.colors.surfaceContainerHigh,
+                tonalElevation = 6.dp
+            ) {
                 RandomStudentPopupContent(
+                    title = stringResource(R.string.random_selection_title),
                     student = student,
                     onGoToGrading = {
                         onStudentClick(student.studentId, student.name)
@@ -177,28 +183,25 @@ fun ClassRosterContent(
                     },
                     onClose = { randomStudent.value = null }
                 )
-            },
-            confirmButton = {},
-            dismissButton = {}
-        )
+            }
+        }
     }
 
     // --- Deletion Confirmation ---
-    if (studentToDelete.value != null) {
-        AlertDialog(
-            onDismissRequest = { studentToDelete.value = null },
-            title = { Text(stringResource(R.string.delete_student_title)) },
-            text = { Text(stringResource(R.string.delete_student_message, studentToDelete.value?.name ?: "")) },
-            confirmButton = {
-                Button(onClick = { onDeleteStudent(studentToDelete.value!!); studentToDelete.value = null }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)) {
-                    Text(stringResource(R.string.delete_label))
-                }
+    studentToDelete.value?.let { student ->
+        DeleteConfirmationDialog(
+            title = stringResource(R.string.delete_student_title),
+            message = stringResource(R.string.delete_student_message, student.name),
+            onConfirm = {
+                onDeleteStudent(student)
+                studentToDelete.value = null
             },
-            dismissButton = { TextButton(onClick = { studentToDelete.value = null }) { Text(stringResource(R.string.cancel)) } }
+            onDismiss = { studentToDelete.value = null }
         )
     }
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
                 title = className, 
@@ -220,10 +223,6 @@ fun ClassRosterContent(
             }
         }
     ) { paddingValues ->
-        val maxGradeValue = remember(gradingScale) {
-            when(gradingScale) { "20" -> 20f; "100" -> 100f; else -> 5f }
-        }
-
         LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 SectionHeader(
@@ -234,12 +233,8 @@ fun ClassRosterContent(
             }
 
             items(students) { student ->
-                val percentage = (student.weightedGrade.toFloat() / maxGradeValue) * 100f
-                val gradeColor = when {
-                    percentage >= 80f -> AppTheme.success
-                    percentage >= 50f -> AppTheme.warning
-                    else -> AppTheme.critical
-                }
+                val percentage = AppTheme.calculatePercentage(student.weightedGrade, gradingScale)
+                val gradeColor = AppTheme.getGradeColor(percentage)
 
                 TonalCard(modifier = Modifier.clickable { onStudentClick(student.studentId, student.name) }) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -280,7 +275,10 @@ fun ClassRosterContent(
                             IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
                             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
-                                DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { showMenu = false; studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { 
+                                    showMenu = false
+                                    studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) 
+                                }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })
                             }
                         }
                     }

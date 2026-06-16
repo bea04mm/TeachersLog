@@ -68,14 +68,12 @@ fun StudentGradingContent(
         it.score * (it.absoluteWeight / 100.0) 
     }
 
-    val percentage = (totalWeightedGrade.toFloat() / maxGradeValue) * 100f
-    val gradeColor = when {
-        percentage >= 80f -> AppTheme.success // Positive
-        percentage >= 50f -> AppTheme.warning // Warning
-        else -> AppTheme.critical // Critical
-    }
+    // Use centralized logic for color
+    val percentage = AppTheme.calculatePercentage(totalWeightedGrade, gradingScale)
+    val gradeColor = AppTheme.getGradeColor(percentage)
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(R.string.student_grading),

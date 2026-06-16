@@ -76,13 +76,10 @@ fun DashboardContent(
                         icon = Icons.Default.Group,
                         modifier = Modifier.weight(1f)
                     )
-                    // Calculate semantic color for global average using Theme extension
+                    
+                    // Use centralized theme logic for average grade performance
                     val avgPercentage = stats?.globalAverage ?: 0.0
-                    val avgColor = when {
-                        avgPercentage >= 80.0 -> AppTheme.success
-                        avgPercentage >= 50.0 -> AppTheme.warning
-                        else -> AppTheme.critical
-                    }
+                    val avgColor = AppTheme.getGradeColor(avgPercentage)
 
                     StatCard(
                         title = stringResource(R.string.global_average),

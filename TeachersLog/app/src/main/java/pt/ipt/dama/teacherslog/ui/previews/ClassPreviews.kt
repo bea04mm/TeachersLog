@@ -45,6 +45,7 @@ fun RandomStudentPopupPreview() {
     TeachersLogTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
             RandomStudentPopupContent(
+                title = "Random Selection",
                 student = StudentWithGrade(1, 1, 7, "Alice Johnson", "P001", null, 4.5),
                 onGoToGrading = {},
                 onClose = {}

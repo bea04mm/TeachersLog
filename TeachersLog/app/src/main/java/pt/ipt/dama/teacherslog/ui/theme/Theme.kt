@@ -64,14 +64,31 @@ object AppTheme {
      */
     fun parseColor(hex: String): Color = Color(hex.toColorInt())
 
+    /**
+     * Determines the semantic color for a grade based on its percentage (0.0 to 100.0).
+     */
+    @Composable
+    @ReadOnlyComposable
+    fun getGradeColor(percentage: Double): Color = when {
+        percentage >= 80.0 -> success
+        percentage >= 50.0 -> warning
+        else -> critical
+    }
+
+    /**
+     * Calculates the 0-100 percentage of a grade based on its scale.
+     */
+    fun calculatePercentage(grade: Double, scale: String): Double {
+        val max = when (scale) { "20" -> 20.0; "100" -> 100.0; else -> 5.0 }
+        return (grade / max) * 100.0
+    }
+
     // --- Semantic Project Colors ---
     
     val success: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) SuccessLight else SuccessDark
     val warning: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) WarningLight else WarningDark
     val critical: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) CriticalLight else CriticalDark
 }
-
-val warning: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) WarningLight else WarningDark
 
 /**
  * Dark color scheme following Material 3.1 guidelines.

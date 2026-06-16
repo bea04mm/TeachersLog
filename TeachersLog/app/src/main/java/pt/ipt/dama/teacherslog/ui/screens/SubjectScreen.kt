@@ -14,8 +14,7 @@ import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.StudentsClass
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
-import pt.ipt.dama.teacherslog.ui.components.ClassCard
-import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
+import pt.ipt.dama.teacherslog.ui.components.*
 import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
@@ -27,7 +26,7 @@ import pt.ipt.dama.teacherslog.utils.IconMapper
  * It manages:
  * 1. A list of [StudentsClassWithStats] for the selected subject.
  * 2. Navigation entry points for adding and editing classes.
- * 3. Deletion confirmation for classes.
+ * 3. Deletion confirmation for classes using [DeleteConfirmationDialog].
  *
  * @param subjectName Name of the parent subject.
  * @param subjectIcon Optional icon identifier for the subject.
@@ -52,27 +51,20 @@ fun SubjectContent(
     val classToDelete = remember { mutableStateOf<StudentsClass?>(null) }
 
     // --- Deletion Confirmation Dialog ---
-    if (classToDelete.value != null) {
-        AlertDialog(
-            onDismissRequest = { classToDelete.value = null },
-            title = { Text(stringResource(R.string.delete_class_title)) },
-            text = { Text(stringResource(R.string.delete_class_message, classToDelete.value?.name ?: "")) },
-            confirmButton = {
-                Button(
-                    onClick = { 
-                        classToDelete.value?.let { onDeleteClass(it) }
-                        classToDelete.value = null 
-                    }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
-                ) {
-                    Text(stringResource(R.string.delete_label))
-                }
+    classToDelete.value?.let { clazz ->
+        DeleteConfirmationDialog(
+            title = stringResource(R.string.delete_class_title),
+            message = stringResource(R.string.delete_class_message, clazz.name),
+            onConfirm = {
+                onDeleteClass(clazz)
+                classToDelete.value = null
             },
-            dismissButton = { TextButton(onClick = { classToDelete.value = null }) { Text(stringResource(R.string.cancel)) } }
+            onDismiss = { classToDelete.value = null }
         )
     }
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
                 title = subjectName,
@@ -93,12 +85,10 @@ fun SubjectContent(
         ) {
             // Screen Header
             item {
-                Text(
-                    text = stringResource(R.string.class_header), 
-                    style = AppTheme.typography.labelSmall, 
-                    color = AppTheme.colors.primary
+                SectionHeader(
+                    label = stringResource(R.string.class_header),
+                    title = subjectName
                 )
-                Text(text = subjectName, style = AppTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
