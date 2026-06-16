@@ -3,11 +3,8 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,22 +12,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.util.Locale
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import pt.ipt.dama.teacherslog.R
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
  * TeacherTopBar is a standardized TopAppBar for the application.
  * 
- * It dynamically switches its icon based on the title and provides
- * support for both a side menu navigation and a back button.
+ * It provides support for both a side menu navigation and a back button,
+ * and allows for an optional contextual icon next to the title.
  *
  * @param title The text to display as the screen title.
  * @param modifier The [Modifier] to be applied to the TopAppBar.
+ * @param titleIcon Optional icon to display next to the title.
  * @param onNavigationIconClick Callback for the side menu icon. If null, icon is hidden.
  * @param showBackButton Boolean flag to toggle the back button display.
  * @param onBackClick Callback for the back button navigation.
@@ -40,37 +37,30 @@ import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 fun TeacherTopBar(
     title: String,
     modifier: Modifier = Modifier,
+    titleIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     onNavigationIconClick: (() -> Unit)? = null,
     showBackButton: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
-    // Determine the branding/context icon based on the screen title
-    val titleIcon = when {
-        title.contains("Dashboard", true) || title.contains("Teacher", true) -> Icons.Default.Home
-        title.contains("Subjects", true) || title.contains("Classes", true) -> Icons.AutoMirrored.Filled.MenuBook
-        title.contains("Settings", true) || title.contains("Preferences", true) -> Icons.Default.Settings
-        else -> Icons.AutoMirrored.Filled.MenuBook
-    }
-
     TopAppBar(
         modifier = modifier,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Contextual icon with primary theme color
-                Icon(
-                    imageVector = titleIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                // Spacing between icon and title
-                Spacer(modifier = Modifier.width(12.dp))
-                // Bold screen title
+                if (titleIcon != null) {
+                    Icon(
+                        imageVector = titleIcon,
+                        contentDescription = null,
+                        tint = AppTheme.colors.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    // Spacing between icon and title
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                // Bold screen title using project typography
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
+                    style = AppTheme.typography.titleLarge
                 )
             }
         },
@@ -81,7 +71,7 @@ fun TeacherTopBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
                         contentDescription = stringResource(R.string.back),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppTheme.colors.primary
                     )
                 }
             } else if (onNavigationIconClick != null) {
@@ -90,14 +80,14 @@ fun TeacherTopBar(
                     Icon(
                         imageVector = Icons.Default.Menu, 
                         contentDescription = stringResource(R.string.menu),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppTheme.colors.primary
                     )
                 }
             }
         },
         actions = {},
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = AppTheme.colors.surface
         )
     )
 }
@@ -117,46 +107,73 @@ fun TeacherBottomBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        containerColor = AppTheme.colors.surfaceContainer,
+        contentColor = AppTheme.colors.onSurfaceVariant
     ) {
         val navItemColors = NavigationBarItemDefaults.colors(
-            selectedIconColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.primary,
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            selectedIconColor = AppTheme.colors.primary,
+            selectedTextColor = AppTheme.colors.primary,
+            indicatorColor = AppTheme.colors.primaryContainer.copy(alpha = 0.4f),
+            unselectedIconColor = AppTheme.colors.onSurfaceVariant,
+            unselectedTextColor = AppTheme.colors.onSurfaceVariant
         )
 
         // Tab: Dashboard
         NavigationBarItem(
             selected = currentRoute == "dashboard",
             onClick = { onNavigate("dashboard") },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_dashboard), style = MaterialTheme.typography.labelSmall) },
+            icon = { Icon(IconMapper.Dashboard, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_dashboard), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
         // Tab: Subjects/Classes
         NavigationBarItem(
             selected = currentRoute == "subjects",
             onClick = { onNavigate("subjects") },
-            icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_classes), style = MaterialTheme.typography.labelSmall) },
+            icon = { Icon(IconMapper.Subjects, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_classes), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
         // Tab: Settings
         NavigationBarItem(
             selected = currentRoute == "settings",
             onClick = { onNavigate("settings") },
-            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.labelSmall) },
+            icon = { Icon(IconMapper.Settings, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_settings), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
     }
 }
 
 /**
+ * Reusable header for sections, ensuring consistent typography and color.
+ * 
+ * @param label The small label text (subtitle).
+ * @param title The large headline text.
+ * @param modifier The [Modifier] to apply.
+ */
+@Composable
+fun SectionHeader(
+    label: String,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = AppTheme.typography.labelSmall,
+            color = AppTheme.colors.primary
+        )
+        Text(
+            text = title,
+            style = AppTheme.typography.headlineLarge
+        )
+    }
+}
+
+/**
  * TonalCard is a reusable surface container with a subtle background color and low elevation.
+ * Uses the project's shapes and surfaceContainer for better visibility and Dark Mode support.
  *
  * @param modifier The [Modifier] to be applied.
  * @param content The Composable content to display inside the card.
@@ -168,10 +185,11 @@ fun TonalCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = AppTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = AppTheme.colors.surfaceContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         content = content
     )
 }
@@ -191,15 +209,15 @@ fun StatCard(
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.primary
+    color: Color = AppTheme.colors.primary
 ) {
     TonalCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Decorative icon bubble
+            // Decorative icon bubble using project shapes
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AppTheme.shapes.small)
                     .background(color.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -209,15 +227,14 @@ fun StatCard(
             // Descriptive label
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline
+                style = AppTheme.typography.labelSmall,
+                color = AppTheme.colors.outline
             )
             // Primary value
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                style = AppTheme.typography.titleLarge,
+                color = AppTheme.colors.onSurface
             )
         }
     }
@@ -256,6 +273,10 @@ fun AcademicSummaryCard(
         else -> " / 5"
     }
 
+    // Use centralized logic for color and percentage
+    val percentage = AppTheme.calculatePercentage(averageGrade, gradingScale)
+    val performanceColor = AppTheme.getGradeColor(percentage)
+
     TonalCard(
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -284,9 +305,8 @@ fun AcademicSummaryCard(
                         }
                         Text(
                             text = name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = AppTheme.typography.titleMedium,
+                            color = AppTheme.colors.onSurface
                         )
                     }
                     
@@ -306,31 +326,34 @@ fun AcademicSummaryCard(
                     Column {
                         Text(
                             text = averageLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            style = AppTheme.typography.labelSmall,
+                            color = AppTheme.colors.outline
                         )
                         Text(
                             text = String.format(Locale.getDefault(), "%.2f", averageGrade) + suffix,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = AppTheme.typography.titleMedium,
+                            color = performanceColor
                         )
                     }
                     // Student count pill at the bottom right
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = CircleShape
+                        color = AppTheme.colors.surfaceContainerLow,
+                        shape = AppTheme.circle
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = IconMapper.Account, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             // Use the formatted string resource for student count
                             Text(
                                 text = stringResource(R.string.students_count_label, studentCount),
-                                style = MaterialTheme.typography.labelSmall
+                                style = AppTheme.typography.labelSmall
                             )
                         }
                     }
@@ -341,8 +364,43 @@ fun AcademicSummaryCard(
 }
 
 /**
- * Compatibility wrapper for SubjectCard using the unified [AcademicSummaryCard].
+ * Reusable dialog for confirming the deletion of any academic item.
  * 
+ * @param title The title of the dialog.
+ * @param message The confirmation message.
+ * @param onConfirm Callback when the delete button is pressed.
+ * @param onDismiss Callback when the dialog is canceled.
+ */
+@Composable
+fun DeleteConfirmationDialog(
+    title: String,
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = { Text(text = message) },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+            ) {
+                Text(text = stringResource(R.string.delete_label))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+/**
+ * Compatibility wrapper for SubjectCard using the unified [AcademicSummaryCard].
+ *
  * @param name The name of the subject.
  * @param average The average grade string.
  * @param students The total student count.
@@ -381,13 +439,14 @@ fun SubjectCard(
 
 /**
  * Compatibility wrapper for ClassCard using the unified [AcademicSummaryCard].
- * 
+ *
  * @param name The name of the class.
  * @param studentCount The number of students.
  * @param averageGrade The average grade.
  * @param color The branding color.
  * @param gradingScale The grading scale identifier.
  * @param modifier The [Modifier] to be applied.
+ * @param iconName Optional icon identifier string.
  * @param actions Optional action buttons/menu.
  * @param onClick Callback for selection.
  */
@@ -399,6 +458,7 @@ fun ClassCard(
     color: Color,
     gradingScale: String,
     modifier: Modifier = Modifier,
+    iconName: String? = null,
     actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
 ) {
@@ -410,145 +470,8 @@ fun ClassCard(
         averageLabel = stringResource(R.string.class_average_label),
         gradingScale = gradingScale,
         modifier = modifier,
-        icon = null,
+        icon = iconName?.let { IconMapper.getIconByName(it) },
         actions = actions,
         onClick = onClick
     )
-}
-
-// --- Previews ---
-
-/**
- * Visualizes the [TeacherTopBar] in a standard dashboard context.
- */
-@Preview(showBackground = true, name = "Top Bar Preview")
-@Composable
-fun TeacherTopBarPreview() {
-    TeachersLogTheme {
-        TeacherTopBar(title = "Dashboard", onNavigationIconClick = {})
-    }
-}
-
-/**
- * Visualizes the [TeacherBottomBar] with a selected route.
- */
-@Preview(showBackground = true, name = "Bottom Bar Preview")
-@Composable
-fun TeacherBottomBarPreview() {
-    TeachersLogTheme {
-        TeacherBottomBar(currentRoute = "dashboard", onNavigate = {})
-    }
-}
-
-/**
- * Visualizes the [StatCard] with sample numeric data.
- */
-@Preview(showBackground = true, name = "Stat Card Preview")
-@Composable
-fun StatCardPreview() {
-    TeachersLogTheme {
-        StatCard(
-            title = stringResource(R.string.total_students),
-            value = "45",
-            icon = Icons.Default.Group,
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}
-
-/**
- * Visualizes the [SubjectCard] as it would appear in a list.
- */
-@Preview(showBackground = true, name = "Subject Card Preview")
-@Composable
-fun SubjectCardPreview() {
-    TeachersLogTheme {
-        SubjectCard(
-            name = "Mathematics",
-            average = "4.2",
-            students = 12,
-            color = Color(0xFF004AC6),
-            icon = Icons.Default.Functions,
-            gradingScale = "5",
-            modifier = Modifier.padding(16.dp),
-            onClick = {}
-        )
-    }
-}
-
-/**
- * Visualizes the [ClassCard] with its performance metrics.
- */
-@Preview(showBackground = true, name = "Class Card Preview")
-@Composable
-fun ClassCardPreview() {
-    TeachersLogTheme {
-        ClassCard(
-            name = "4.ºA",
-            studentCount = 25,
-            averageGrade = 3.85,
-            color = Color(0xFF006686),
-            gradingScale = "5",
-            modifier = Modifier.padding(16.dp),
-            onClick = {}
-        )
-    }
-}
-
-/**
- * Comprehensive preview showing a combination of common components in a simulated dashboard layout.
- */
-@Preview(showBackground = true, name = "All Components Summary")
-@Composable
-fun CommonComponentsSummaryPreview() {
-    TeachersLogTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            TeacherTopBar(title = "Components Overview", onNavigationIconClick = {})
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                StatCard(
-                    title = stringResource(R.string.total_students),
-                    value = "120",
-                    icon = Icons.Default.Person,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = stringResource(R.string.global_average),
-                    value = "4.1",
-                    icon = Icons.Default.Star,
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-            
-            SubjectCard(
-                name = "Science",
-                average = "3.9",
-                students = 45,
-                color = Color(0xFF006874),
-                icon = Icons.Default.Biotech,
-                gradingScale = "100",
-                onClick = {}
-            )
-            
-            ClassCard(
-                name = "10.ºB",
-                studentCount = 30,
-                averageGrade = 4.5,
-                color = MaterialTheme.colorScheme.tertiary,
-                gradingScale = "20",
-                onClick = {}
-            )
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            TeacherBottomBar(currentRoute = "subjects", onNavigate = {})
-        }
-    }
 }

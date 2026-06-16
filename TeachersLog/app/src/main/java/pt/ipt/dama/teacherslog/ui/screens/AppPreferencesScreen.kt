@@ -13,15 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
-import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
+import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.teacherslog.utils.LocaleManager
 
 /**
@@ -31,7 +29,7 @@ import pt.ipt.dama.teacherslog.utils.LocaleManager
  * @param currentLang The current language code (e.g., "en", "pt").
  * @param onToggleDarkMode Callback to switch between light and dark themes.
  * @param onLanguageChange Callback to update the application language.
- * @param onBackClick Callback for top bar back button.
+ * @param onBackClick Callback for the top bar back button.
  */
 @Composable
 fun AppPreferencesContent(
@@ -68,6 +66,7 @@ fun AppPreferencesContent(
     }
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(R.string.app_preferences),
@@ -96,11 +95,11 @@ fun AppPreferencesContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(text = stringResource(R.string.app_language), style = MaterialTheme.typography.bodyLarge)
+                                Text(text = stringResource(R.string.app_language), style = AppTheme.typography.bodyLarge)
                                 Text(
                                     text = if (currentLang == "pt") stringResource(R.string.portuguese) else stringResource(R.string.english), 
-                                    style = MaterialTheme.typography.bodyMedium, 
-                                    color = MaterialTheme.colorScheme.primary
+                                    style = AppTheme.typography.bodyMedium, 
+                                    color = AppTheme.colors.primary
                                 )
                             }
                             Icon(Icons.Default.Translate, contentDescription = null)
@@ -128,28 +127,39 @@ fun AppPreferencesContent(
 
 /**
  * AppPreferencesScreen is the stateful container for the preferences UI.
+ *
+ * @param settingsViewModel The ViewModel managing global UI settings.
+ * @param onBackClick Callback to return to the previous screen.
  */
 @Composable
 fun AppPreferencesScreen(
-    viewModel: TeacherViewModel,
+    settingsViewModel: SettingsViewModel,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val darkMode by viewModel.isDarkMode.observeAsState(initial = true)
-    val currentLang by viewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
+    val darkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
+    val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
 
     AppPreferencesContent(
         darkMode = darkMode,
         currentLang = currentLang,
-        onToggleDarkMode = { viewModel.toggleDarkMode(it) },
+        onToggleDarkMode = { settingsViewModel.toggleDarkMode(it) },
         onLanguageChange = { lang ->
             context.getSharedPreferences("prefs", Context.MODE_PRIVATE).edit { putString("language", lang) }
-            viewModel.setLanguage(lang)
+            settingsViewModel.setLanguage(lang)
         },
         onBackClick = onBackClick
     )
 }
 
+/**
+ * A selectable row for picking a language.
+ *
+ * @param label Human-readable name of the language.
+ * @param code ISO language code (e.g., "en").
+ * @param current Currently selected language code.
+ * @param onClick Callback when the option is selected.
+ */
 @Composable
 fun LanguageOption(label: String, code: String, current: String, onClick: () -> Unit) {
     Row(
@@ -160,11 +170,18 @@ fun LanguageOption(label: String, code: String, current: String, onClick: () -> 
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, style = AppTheme.typography.bodyLarge)
         RadioButton(selected = (code == current), onClick = onClick)
     }
 }
 
+/**
+ * Standard section for grouping related preferences with an icon.
+ *
+ * @param title Title of the section.
+ * @param icon Icon representing the section's purpose.
+ * @param content The composable content to display within the section.
+ */
 @Composable
 fun PreferenceSection(
     title: String,
@@ -173,14 +190,22 @@ fun PreferenceSection(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) {
-            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(imageVector = icon, contentDescription = null, tint = AppTheme.colors.primary)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = title, style = AppTheme.typography.titleMedium)
         }
         content()
     }
 }
 
+/**
+ * A reusable row containing a title, subtitle, and a toggle switch.
+ *
+ * @param title Primary text for the setting.
+ * @param subtitle Secondary descriptive text.
+ * @param checked Current state of the switch.
+ * @param onCheckedChange Callback when the toggle is flipped.
+ */
 @Composable
 fun PreferenceToggle(
     title: String,
@@ -196,39 +221,9 @@ fun PreferenceToggle(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = title, style = AppTheme.typography.bodyLarge)
+            Text(text = subtitle, style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
-
-// --- Previews ---
-
-@Preview(showBackground = true, name = "Preferences Light Mode")
-@Composable
-fun AppPreferencesPreview() {
-    TeachersLogTheme(darkTheme = false) {
-        AppPreferencesContent(
-            darkMode = false,
-            currentLang = "en",
-            onToggleDarkMode = {},
-            onLanguageChange = {},
-            onBackClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Preferences Dark Mode")
-@Composable
-fun AppPreferencesDarkPreview() {
-    TeachersLogTheme(darkTheme = true) {
-        AppPreferencesContent(
-            darkMode = true,
-            currentLang = "pt",
-            onToggleDarkMode = {},
-            onLanguageChange = {},
-            onBackClick = {}
-        )
     }
 }

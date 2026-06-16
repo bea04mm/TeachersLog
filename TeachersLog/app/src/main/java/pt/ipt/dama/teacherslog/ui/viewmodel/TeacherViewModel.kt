@@ -2,214 +2,94 @@
 
 import android.app.Application
 import androidx.lifecycle.*
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.local.AppDatabase
 import pt.ipt.dama.teacherslog.data.model.*
 import pt.ipt.dama.teacherslog.data.repository.TeacherRepository
-import pt.ipt.dama.teacherslog.utils.LocaleManager
 
 /**
- * TeacherViewModel is the primary ViewModel for the application, responsible for managing
- * academic data (years, subjects, classes, students) and global UI state (theme, language).
+ * TeacherViewModel manages student-specific data including classes, students, and grading.
  *
- * It acts as a bridge between the [TeacherRepository] and the Compose UI, providing
- * lifecycle-aware data streams using [LiveData].
+ * It provides methods for student CRUD operations and manages the state of qualitative
+ * and quantitative evaluation components.
  *
- * @param application The application context, required for database and locale initialization.
+ * @param application The application context, required for database initialization.
  */
 class TeacherViewModel(application: Application) : AndroidViewModel(application) {
     
-    // Repository providing access to the underlying data source
+    // Repository as the single source of truth for student/class data
     private val repository: TeacherRepository
     
-    // --- Global UI State ---
-
-    // Internal state for dark mode preference
-    private val _isDarkMode = MutableLiveData(true)
-    /** Observable state for the dark mode theme. */
-    val isDarkMode: LiveData<Boolean> = _isDarkMode
-
-    // Internal state for the current application language
-    private val _currentLanguage = MutableLiveData(LocaleManager.getLanguage(application))
-    /** Observable state for the current language code (e.g., "en", "pt"). */
-    val currentLanguage: LiveData<String> = _currentLanguage
-
-    // --- Academic Data State ---
-
-    /** List of all registered academic years. */
-    val allAcademicYears: LiveData<List<AcademicYear>>
-    
-    // Internal state for the currently selected academic year ID
-    private val _selectedYearId = MutableLiveData<Int>()
-    /** The ID of the academic year currently being viewed/filtered. */
-    val selectedYearId: LiveData<Int> = _selectedYearId
-
-    /**
-     * Observable list of subjects for the selected year, including calculated statistics.
-     * Automatically updates whenever [selectedYearId] changes.
-     */
-    val subjectsWithStats: LiveData<List<SubjectWithStats>> = _selectedYearId.switchMap { id ->
-        repository.getSubjectsWithStatsForYear(id).asLiveData()
-    }
-
-    /**
-     * Global academic statistics for the selected year.
-     * Automatically updates whenever [selectedYearId] changes.
-     */
-    val globalStats: LiveData<GlobalStats> = _selectedYearId.switchMap { id ->
-        repository.getGlobalStatsForYear(id).asLiveData()
-    }
-
-    /**
-     * All student classes associated with the selected year.
-     * Automatically updates whenever [selectedYearId] changes.
-     */
-    val studentsClassesForYear: LiveData<List<StudentsClassWithStats>> = _selectedYearId.switchMap { id ->
-        repository.getAllStudentsClassesForYear(id).asLiveData()
-    }
-
     init {
-        // Initialize the database and repository
         val database = AppDatabase.getDatabase(application, viewModelScope)
         val teacherDao = database.teacherDao()
         repository = TeacherRepository(teacherDao)
-        
-        // Convert the repository's Flow to LiveData for UI consumption
-        allAcademicYears = repository.allAcademicYears.asLiveData()
-        
-        // Automatically select the first available year if none is selected
-        viewModelScope.launch {
-            repository.allAcademicYears.collectLatest { years ->
-                if (years.isNotEmpty() && (_selectedYearId.value == null)) {
-                    _selectedYearId.value = years.first().id
-                }
-            }
-        }
-    }
-
-    // --- State Management Methods ---
-
-    /**
-     * Toggles the application's dark mode setting.
-     * @param enabled True to enable dark mode, false for light mode.
-     */
-    fun toggleDarkMode(enabled: Boolean) {
-        _isDarkMode.value = enabled
-    }
-
-    /**
-     * Updates the application's current language.
-     * @param languageCode The new language code (e.g., "en" or "pt").
-     */
-    fun setLanguage(languageCode: String) {
-        if (_currentLanguage.value != languageCode) {
-            _currentLanguage.value = languageCode
-        }
-    }
-
-    /**
-     * Changes the currently active academic year.
-     * @param yearId The ID of the year to select.
-     */
-    fun selectYear(yearId: Int) {
-        _selectedYearId.value = yearId
-    }
-
-    // --- Academic Year CRUD Methods ---
-
-    /**
-     * Inserts a new academic year into the database.
-     * @param yearName The name of the year (e.g., "2024/2025").
-     */
-    fun addAcademicYear(yearName: String) {
-        viewModelScope.launch {
-            repository.insertAcademicYear(AcademicYear(year = yearName))
-        }
-    }
-
-    /**
-     * Deletes an academic year and all its associated data.
-     * @param year The [AcademicYear] object to delete.
-     */
-    fun deleteAcademicYear(year: AcademicYear) {
-        viewModelScope.launch {
-            repository.deleteAcademicYear(year)
-        }
-    }
-
-    // --- Subject CRUD Methods ---
-
-    /**
-     * Adds a new subject to the currently selected academic year.
-     * @param name The name of the subject.
-     * @param iconName The name of the icon identifier.
-     * @param colorHex The hex color code for the subject's theme.
-     * @param gradingScale The grading scale identifier (e.g., "5", "20", "100").
-     */
-    fun addSubject(name: String, iconName: String, colorHex: String, gradingScale: String = "5") {
-        val yearId = _selectedYearId.value ?: return
-        viewModelScope.launch {
-            repository.insertSubject(Subject(
-                academicYearId = yearId, 
-                name = name, 
-                iconName = iconName, 
-                colorHex = colorHex,
-                gradingScale = gradingScale
-            ))
-        }
-    }
-
-    /**
-     * Updates an existing subject's information.
-     * @param subject The updated [Subject] object.
-     */
-    fun updateSubject(subject: Subject) {
-        viewModelScope.launch {
-            repository.updateSubject(subject)
-        }
-    }
-
-    /**
-     * Deletes a subject and its associated classes/students.
-     * @param subject The [Subject] object to delete.
-     */
-    fun deleteSubject(subject: Subject) {
-        viewModelScope.launch {
-            repository.deleteSubject(subject)
-        }
-    }
-
-    /**
-     * Retrieves a specific subject by its ID.
-     * @param subjectId The ID of the subject.
-     * @return A [LiveData] stream containing the subject or null if not found.
-     */
-    fun getSubjectById(subjectId: Int): LiveData<Subject?> {
-        return repository.getSubjectById(subjectId).asLiveData()
     }
 
     // --- Student Class CRUD Methods ---
 
     /**
-     * Adds a new class to a specific subject.
-     * @param name The name of the class (e.g., "10-A").
-     * @param subjectId The ID of the parent subject.
+     * Retrieves all grading components (criteria) for a specific class.
+     * @param classId The ID of the student class.
+     * @return A [LiveData] stream containing the list of components.
      */
-    fun addStudentsClass(name: String, subjectId: Int) {
-        viewModelScope.launch {
-            repository.insertStudentsClass(StudentsClass(subjectId = subjectId, name = name))
-        }
+    fun getGradingComponentsForClass(classId: Int): LiveData<List<GradingComponent>> {
+        return repository.getGradingComponentsForClass(classId).asLiveData()
     }
 
     /**
-     * Updates an existing class's information.
-     * @param studentsClass The updated [StudentsClass] object.
+     * Atomic operation to save or update a class along with its hierarchical grading components.
+     * 
+     * @param classId The ID of the class (null for creation).
+     * @param subjectId The parent subject ID.
+     * @param name The class name (e.g., "10-A").
+     * @param gradingScale The scale identifier (e.g., "5", "20").
+     * @param components Flattened list of components (groups and sub-items).
+     * @param parentMap Mapping from component index to its parent's index in the list.
      */
-    fun updateStudentsClass(studentsClass: StudentsClass) {
+    fun upsertClassWithHierarchy(
+        classId: Int?,
+        subjectId: Int,
+        name: String,
+        gradingScale: String,
+        components: List<GradingComponent>,
+        parentMap: Map<Int, Int>
+    ) {
         viewModelScope.launch {
-            repository.updateStudentsClass(studentsClass)
+            // Step 1: Persist the class metadata
+            val cid = if (classId == null) {
+                repository.insertStudentsClass(StudentsClass(
+                    subjectId = subjectId,
+                    name = name,
+                    gradingScale = gradingScale
+                )).toInt()
+            } else {
+                repository.updateStudentsClass(StudentsClass(
+                    id = classId,
+                    subjectId = subjectId,
+                    name = name,
+                    gradingScale = gradingScale
+                ))
+                // Step 2: Clear existing components to prevent orphans in hierarchy changes
+                repository.getGradingComponentsForClass(classId).first().forEach {
+                    repository.deleteGradingComponent(it)
+                }
+                classId
+            }
+
+            // Step 3: Sequential insertion to obtain IDs for children
+            // We use a mapping from UI Index -> New Database ID
+            val insertedIds = mutableMapOf<Int, Int>() 
+            components.forEachIndexed { index, comp ->
+                val parentDbId = parentMap[index]?.let { insertedIds[it] }
+                val newId = repository.insertGradingComponent(comp.copy(
+                    id = 0, // Force new ID generation
+                    classId = cid,
+                    parentId = parentDbId
+                )).toInt()
+                insertedIds[index] = newId
+            }
         }
     }
 
@@ -235,6 +115,24 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * Retrieves a specific class by its ID.
+     * @param classId The unique identifier of the class.
+     * @return A [LiveData] stream containing the class or null.
+     */
+    fun getStudentsClassById(classId: Int): LiveData<StudentsClass?> {
+        return repository.getStudentsClassById(classId).asLiveData()
+    }
+
+    /**
+     * Retrieves a specific class with its statistics and parent subject icon.
+     * @param classId The unique identifier of the class.
+     * @return A [LiveData] stream containing the class with stats or null.
+     */
+    fun getStudentsClassWithStatsById(classId: Int): LiveData<StudentsClassWithStats?> {
+        return repository.getStudentsClassWithStatsById(classId).asLiveData()
+    }
+
+    /**
      * Fetches all students and their calculated grades for a specific class.
      * @param studentsClassId The ID of the class.
      * @return A [LiveData] list of [StudentWithGrade].
@@ -253,14 +151,28 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Checks if a student number is already taken in a specific class.
+     * Retrieves the grading scale identifier for a specific class.
+     * @param classId The ID of the class.
+     * @return The scale identifier string (e.g., "5", "20").
      */
-    suspend fun isNumberTaken(classId: Int, number: Int, excludeId: Int = -1): Boolean {
-        return repository.existsNumberInClass(classId, number, excludeId)
+    suspend fun getGradingScaleForClass(classId: Int): String {
+        return repository.getGradingScaleByClassId(classId) ?: "5"
+    }
+
+    /**
+     * Retrieves the grading scale identifier for a specific student's class.
+     * @param studentId The student ID.
+     * @return The scale identifier string.
+     */
+    suspend fun getGradingScaleForStudent(studentId: Int): String {
+        return repository.getGradingScaleByStudentId(studentId) ?: "5"
     }
 
     /**
      * Checks if a process number is already taken globally.
+     * @param processNumber The process string to verify.
+     * @param excludeId ID of a student to ignore (useful when editing).
+     * @return True if taken, false otherwise.
      */
     suspend fun isProcessNumberTaken(processNumber: String, excludeId: Int = -1): Boolean {
         return repository.existsProcessNumber(processNumber, excludeId)
@@ -269,12 +181,13 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     // --- Student CRUD Methods ---
 
     /**
-     * Adds a new student to a specific class.
-     * @param name The student's full name.
-     * @param number The student's number in the class group.
-     * @param process The optional administrative process number.
-     * @param photoUrl The optional profile image URL or path.
-     * @param classId The ID of the class the student belongs to.
+     * Adds a new student record to the database.
+     * 
+     * @param name Full name.
+     * @param number Roster number.
+     * @param process Admin process number.
+     * @param photoUrl Image URI or path.
+     * @param classId Target class ID.
      */
     fun addStudent(name: String, number: Int, process: String?, photoUrl: String?, classId: Int) {
         viewModelScope.launch {
@@ -289,7 +202,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Updates an existing student's information.
+     * Updates an existing student's record.
      * @param student The updated [Student] object.
      */
     fun updateStudent(student: Student) {
@@ -299,7 +212,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Deletes a student and their associated grades.
+     * Deletes a student and their associated grades/scores.
      * @param student The [Student] object to delete.
      */
     fun deleteStudent(student: Student) {
@@ -308,27 +221,31 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // --- Dashboard Specific Logic ---
+
     /**
-     * Retrieves all students for all classes in the currently selected academic year.
-     * Useful for picking a random student across the entire year.
-     * 
-     * @return A flat list of [StudentWithGrade] objects for the active year.
+     * Observable list of the 3 most recently accessed classes for a specific academic period.
+     * @param semesterId The ID of the semester/period.
+     * @return A [LiveData] stream of [StudentsClassWithStats].
      */
-    suspend fun getAllStudentsForCurrentYear(): List<StudentWithGrade> {
-        val yearId = _selectedYearId.value ?: return emptyList()
-        val classes = repository.getAllStudentsClassesForYear(yearId).first()
-        val allStudents = mutableListOf<StudentWithGrade>()
-        classes.forEach { clazz ->
-            val students = repository.getStudentsWithGradesForStudentsClass(clazz.id).first()
-            allStudents.addAll(students)
+    fun getRecentClassesForPeriod(semesterId: Int): LiveData<List<StudentsClassWithStats>> {
+        return repository.getRecentClassesForPeriod(semesterId).asLiveData()
+    }
+
+    /**
+     * Updates the last accessed timestamp for a class.
+     * @param classId The ID of the class.
+     */
+    fun updateClassLastAccessed(classId: Int) {
+        viewModelScope.launch {
+            repository.updateClassLastAccessed(classId)
         }
-        return allStudents
     }
 
     // --- Grading Management ---
 
     private val _currentGrade = MutableLiveData<Grade?>()
-    /** The grade details for the student currently being edited in the UI. */
+    /** The qualitative grade data (notes) for the student currently being graded. */
     val currentGrade: LiveData<Grade?> = _currentGrade
 
     /**
@@ -342,29 +259,37 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Saves or updates a student's grade in the database.
-     * @param grade The [Grade] object to save.
+     * Retrieves the list of dynamic component scores for a student.
+     * @param studentId The ID of the student.
+     * @return A [LiveData] stream of [ComponentScore] objects.
      */
-    fun saveGrade(grade: Grade) {
+    fun getComponentScoresForStudent(studentId: Int): LiveData<List<ComponentScore>> {
+        return repository.getComponentScoresForStudent(studentId).asLiveData()
+    }
+
+    /**
+     * Saves or updates a student's grades and scores across all components.
+     * 
+     * @param studentId The student receiving the grades.
+     * @param scores The list of [StudentScore] for each grading component.
+     * @param teacherNotes Qualitative notes for the student.
+     */
+    fun saveGrade(studentId: Int, scores: List<StudentScore>, teacherNotes: String) {
         viewModelScope.launch {
-            repository.insertGrade(grade)
+            // Persist qualitative feedback
+            repository.insertGrade(Grade(studentId = studentId, teacherNotes = teacherNotes))
+            // Persist individual component scores
+            scores.forEach { score ->
+                repository.insertStudentScore(score)
+            }
         }
     }
 }
 
 /**
- * Factory class to satisfy Android's ViewModel initialization requirements.
- * Ensures the [TeacherViewModel] is created with the [Application] context.
- * 
- * @param application The application context.
+ * Factory class for [TeacherViewModel].
  */
 class TeacherViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    /**
-     * Creates a new instance of the requested ViewModel class.
-     * 
-     * @param modelClass The class of the ViewModel to create.
-     * @return A newly created ViewModel instance.
-     */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TeacherViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

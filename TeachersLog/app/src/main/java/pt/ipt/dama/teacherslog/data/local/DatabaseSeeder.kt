@@ -4,106 +4,87 @@ import kotlinx.coroutines.flow.first
 import pt.ipt.dama.teacherslog.data.model.*
 
 /**
- * DatabaseSeeder is a utility object responsible for populating the Room database
- * with initial mock data when the application is first launched or when the
- * database is empty.
- * 
- * It creates a hierarchy of data:
- * Academic Years -> Subjects -> Classes -> Students -> Grades.
+ * DatabaseSeeder populates the Room database with initial mock data.
+ * It sets up a complete academic hierarchy for testing and first-run experience.
  */
 object DatabaseSeeder {
 
     /**
      * Seeds the database with initial academic data if no data exists.
      * 
-     * @param teacherDao The Data Access Object used to perform insertions.
+     * @param teacherDao The Data Access Object used for database operations.
      */
     suspend fun seed(teacherDao: TeacherDao) {
-        // Check if there are already academic years registered
+        // Check if there are already academic years registered to maintain idempotency
         val existingYears = teacherDao.getAllAcademicYears().first()
-        // If the database is not empty, do not seed again (idempotency)
         if (existingYears.isNotEmpty()) return
 
         // --- 1. Academic Years ---
-        val year2324 = AcademicYear(year = "2023/2024", isCurrent = false)
-        val year2425 = AcademicYear(year = "2024/2025", isCurrent = true)
+        val year2425Id = teacherDao.insertAcademicYear(AcademicYear(year = "2024/2025", isCurrent = true)).toInt()
+
+        // --- 2. Semesters ---
+        val sem1Id = teacherDao.insertSemester(Semester(academicYearId = year2425Id, name = "1st Semester")).toInt()
+        teacherDao.insertSemester(Semester(academicYearId = year2425Id, name = "2nd Semester"))
+
+        // --- 3. Subjects ---
+        val sub1Id = teacherDao.insertSubject(Subject(semesterId = sem1Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6")).toInt()
+        teacherDao.insertSubject(Subject(semesterId = sem1Id, name = "Science", iconName = "biotech", colorHex = "#006686"))
+
+        // --- 4. Classes with Hierarchical Grading ---
         
-        // Use a safe insert that returns the ID or -1 on conflict
-        var year1Id = teacherDao.insertAcademicYear(year2324).toInt()
-        var year2Id = teacherDao.insertAcademicYear(year2425).toInt()
-
-        // If insert returned -1 (conflict), we need to fetch the real ID to avoid FK violations
-        if (year1Id == -1) {
-            year1Id = teacherDao.getAllAcademicYears().first().find { it.year == "2023/2024" }?.id ?: 1
-        }
-        if (year2Id == -1) {
-            year2Id = teacherDao.getAllAcademicYears().first().find { it.year == "2024/2025" }?.id ?: 2
-        }
-
-        // --- 2. Subjects (Grading scale is now defined here) ---
-        val sub1Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6", gradingScale = "5")).toInt()
-        val sub2Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "Science", iconName = "biotech", colorHex = "#006686", gradingScale = "20")).toInt()
-        val sub3Id = teacherDao.insertSubject(Subject(academicYearId = year2Id, name = "History", iconName = "history_edu", colorHex = "#4E565B", gradingScale = "5")).toInt()
-        val sub4Id = teacherDao.insertSubject(Subject(academicYearId = year1Id, name = "Mathematics", iconName = "functions", colorHex = "#004AC6", gradingScale = "5")).toInt()
-
-        // --- 3. Students Classes (Groups) ---
-        val grp1Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub1Id, name = "4.ºA")).toInt()
-        val grp2Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub1Id, name = "5.ºB")).toInt()
-        val grp3Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub2Id, name = "3.ºA")).toInt()
-        val grp4Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub4Id, name = "6.ºC")).toInt()
-        val grp5Id = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub3Id, name = "6.ºC")).toInt()
+        // Math Class: Grouped Evaluation
+        val mathClassId = teacherDao.insertStudentsClass(StudentsClass(subjectId = sub1Id, name = "10.ºA", gradingScale = "20")).toInt()
         
-        // --- 4. Students and Grades (via helper with global offset to ensure unique process numbers) ---
-        seedDataForGroup(teacherDao, grp1Id, 12, 100)
-        seedDataForGroup(teacherDao, grp2Id, 10, 200)
-        seedDataForGroup(teacherDao, grp3Id, 8, 300)
-        seedDataForGroup(teacherDao, grp4Id, 15, 400)
-        seedDataForGroup(teacherDao, grp5Id, 5, 500)
+        // Root Groups
+        val groupTestsId = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, name = "Tests", weightPercentage = 60)).toInt()
+        val groupWorkId = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, name = "Assignments", weightPercentage = 40)).toInt()
+        
+        // Sub-items for Tests
+        val test1Id = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, parentId = groupTestsId, name = "1st Test", weightPercentage = 50)).toInt()
+        val test2Id = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, parentId = groupTestsId, name = "2nd Test", weightPercentage = 50)).toInt()
+        
+        // Sub-items for Assignments
+        val hw1Id = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, parentId = groupWorkId, name = "Homework", weightPercentage = 40)).toInt()
+        val projId = teacherDao.insertGradingComponent(GradingComponent(classId = mathClassId, parentId = groupWorkId, name = "Final Project", weightPercentage = 60)).toInt()
+
+        // --- 5. Students and Scores ---
+        seedDataForGroup(teacherDao, mathClassId, 10, 100, listOf(test1Id, test2Id, hw1Id, projId), 20.0)
     }
 
     /**
-     * Generates a specified number of students and random grades for a given class.
+     * Generates a set of mock students and random grades for a specific class.
      * 
-     * @param dao The [TeacherDao] for database operations.
-     * @param studentsClassId The ID of the class to populate.
-     * @param count The number of student records to create.
-     * @param processOffset A starting number to ensure global uniqueness of process numbers.
+     * @param dao The DAO for database operations.
+     * @param studentsClassId Target class identifier.
+     * @param count Number of students to create.
+     * @param processOffset Base offset for unique process numbers.
+     * @param components List of grading component identifiers to populate.
+     * @param maxScore Maximum score based on the class scale.
      */
-    private suspend fun seedDataForGroup(dao: TeacherDao, studentsClassId: Int, count: Int, processOffset: Int) {
-        val names = listOf(
-            "Leo Bennett", "Emma Wilson", "Marcus Chen", "Sophia Rodriguez",
-            "Lucas Silva", "Ana Martins", "João Pereira", "Bia Santos",
-            "David Oliveira", "Clara Costa", "Hugo Moreira", "Inês Rocha"
-        )
-        
+    private suspend fun seedDataForGroup(
+        dao: TeacherDao, 
+        studentsClassId: Int, 
+        count: Int, 
+        processOffset: Int,
+        components: List<Int>,
+        maxScore: Double
+    ) {
         for (i in 0 until count) {
-            val name = if (i < names.size) names[i] else "Student ${i + 1}"
-            // Insert student basic info
             val studentId = dao.insertStudent(
                 Student(
                     studentsClassId = studentsClassId, 
                     numberInGroup = i + 1,
-                    name = name, 
-                    processNumber = if (i % 2 == 0) "PROC-${2000 + processOffset + i}" else null
+                    name = "Student ${i + 1}", 
+                    processNumber = "PROC-${2000 + processOffset + i}" 
                 )
             ).toInt()
             
-            // Calculate random grades and manually ensure they never exceed 5.0
-            val randomHomework = (30..50).random() / 10.0
-            val randomQuizzes = (20..50).random() / 10.0
-            val randomProjects = (40..50).random() / 10.0
-            val randomParticipation = (3..5).random()
+            dao.insertGrade(Grade(studentId = studentId, teacherNotes = "Example notes for Student ${i+1}"))
 
-            // Insert a mock grade record with strictly validated values
-            dao.insertGrade(
-                Grade(
-                    studentId = studentId,
-                    homework = if (randomHomework > 5.0) 5.0 else randomHomework,
-                    participation = randomParticipation,
-                    quizzes = if (randomQuizzes > 5.0) 5.0 else randomQuizzes,
-                    projects = if (randomProjects > 5.0) 5.0 else randomProjects
-                )
-            )
+            components.forEach { compId ->
+                val randomScore = ( (maxScore * 0.5 * 10).toInt()..(maxScore * 10).toInt() ).random() / 10.0
+                dao.insertStudentScore(StudentScore(studentId = studentId, componentId = compId, score = randomScore))
+            }
         }
     }
 }

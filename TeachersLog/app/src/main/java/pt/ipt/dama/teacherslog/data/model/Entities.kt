@@ -7,11 +7,10 @@ import androidx.room.Index
 
 /**
  * Represents a full school cycle (e.g., "2024/2025").
- * Serves as the top-level filter for all academic data in the application.
  * 
- * @property id Unique identifier for the academic year (auto-generated).
- * @property year The string representation of the year (e.g., "2024/2025").
- * @property isCurrent Flag indicating if this is the currently active year.
+ * @property id Unique identifier for the academic year.
+ * @property year String representation of the year range.
+ * @property isCurrent Flag indicating if this is the active year.
  */
 @Entity(
     tableName = "academic_years",
@@ -24,19 +23,14 @@ data class AcademicYear(
 )
 
 /**
- * Represents a school subject (e.g., "Mathematics", "Science").
- * Each subject is linked to a specific [AcademicYear].
+ * Represents a semester within an academic year (e.g., "1st Semester").
  * 
- * @property id Unique identifier for the subject (auto-generated).
- * @property academicYearId Foreign key linking to [AcademicYear].
- * @property name The name of the subject.
- * @property iconName The identifier for the icon to be displayed in the UI.
- * @property colorHex The hex code for the subject's theme color.
- * @property gradingScale The grading scale used for this subject (e.g., "5", "20", "100").
+ * @property id Unique identifier for the semester.
+ * @property academicYearId ID of the parent academic year.
+ * @property name Descriptive name of the semester.
  */
 @Entity(
-    tableName = "subjects",
-    indices = [Index(value = ["name", "academicYearId"], unique = true)],
+    tableName = "semesters",
     foreignKeys = [
         ForeignKey(
             entity = AcademicYear::class,
@@ -46,22 +40,49 @@ data class AcademicYear(
         )
     ]
 )
-data class Subject(
+data class Semester(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val academicYearId: Int,
-    val name: String,
-    val iconName: String,
-    val colorHex: String,
-    val gradingScale: String = "5"
+    val name: String // e.g., "1st Semester", "2nd Semester"
 )
 
 /**
- * Represents a specific class of students (StudentsClass) within a [Subject].
- * Named 'StudentsClass' to avoid conflict with java.lang.Class.
+ * Represents a school subject (e.g., "Mathematics").
  * 
- * @property id Unique identifier for the class (auto-generated).
- * @property subjectId Foreign key linking to the parent [Subject].
- * @property name The name of the class (e.g., "10-A").
+ * @property id Unique identifier for the subject.
+ * @property semesterId ID of the parent semester.
+ * @property name Name of the subject.
+ * @property iconName Identifier for the UI icon.
+ * @property colorHex Theme color hex code.
+ */
+@Entity(
+    tableName = "subjects",
+    indices = [Index(value = ["name", "semesterId"], unique = true)],
+    foreignKeys = [
+        ForeignKey(
+            entity = Semester::class,
+            parentColumns = ["id"],
+            childColumns = ["semesterId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
+data class Subject(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val semesterId: Int,
+    val name: String,
+    val iconName: String,
+    val colorHex: String
+)
+
+/**
+ * Represents a specific class of students (e.g., "10-A").
+ * 
+ * @property id Unique identifier for the class.
+ * @property subjectId ID of the parent subject.
+ * @property name Name or designation of the class.
+ * @property gradingScale The grading system used (e.g., "5", "20", "100").
+ * @property lastAccessed Timestamp (ms) of the last user interaction with this class.
  */
 @Entity(
     tableName = "students_classes",
@@ -77,19 +98,55 @@ data class Subject(
 data class StudentsClass(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val subjectId: Int,
-    val name: String
+    val name: String,
+    val gradingScale: String = "5",
+    val lastAccessed: Long = 0
+)
+
+/**
+ * Represents a grading component for a class.
+ * Components can be standalone or nested within a parent component (group).
+ * 
+ * @property id Unique identifier for the component.
+ * @property classId ID of the parent students class.
+ * @property parentId Optional ID of the parent component (for sub-items).
+ * @property name Name of the grading criterion.
+ * @property weightPercentage Weight of this component relative to its siblings.
+ */
+@Entity(
+    tableName = "grading_components",
+    foreignKeys = [
+        ForeignKey(
+            entity = StudentsClass::class,
+            parentColumns = ["id"],
+            childColumns = ["classId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = GradingComponent::class,
+            parentColumns = ["id"],
+            childColumns = ["parentId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
+data class GradingComponent(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val classId: Int,
+    val parentId: Int? = null,
+    val name: String,
+    val weightPercentage: Int
 )
 
 /**
  * Individual student record.
- * A student belongs to a specific [StudentsClass].
  * 
- * @property studentId Unique identifier for the student (auto-generated).
- * @property studentsClassId Foreign key linking to [StudentsClass].
- * @property numberInGroup The student's number within their class roster.
- * @property name The full name of the student.
- * @property processNumber Optional administrative process number.
- * @property profileImageUrl Optional URL or path to the student's profile image.
+ * @property studentId Unique identifier for the student.
+ * @property studentsClassId ID of the class the student belongs to.
+ * @property numberInGroup Student's number in the class list.
+ * @property name Student's full name.
+ * @property processNumber Unique administrative process identifier.
+ * @property profileImageUrl URI or URL to the student's profile photo.
  */
 @Entity(
     tableName = "students",
@@ -116,17 +173,43 @@ data class Student(
 )
 
 /**
- * Performance metrics and qualitative data for a [Student].
- * Links directly to a [Student] record.
+ * Stores the actual score of a student for a leaf grading component.
  * 
- * @property id Unique identifier for the grade record (auto-generated).
- * @property studentId Foreign key linking to the [Student].
- * @property homework Grade for homework and assignments.
- * @property participation Score for classroom participation.
- * @property quizzes Grade for tests and quizzes.
- * @property projects Grade for collaborative projects.
- * @property teacherNotes Qualitative feedback or observations from the teacher.
- * @property tags Categorization tags for the student's performance.
+ * @property studentId ID of the student.
+ * @property componentId ID of the specific leaf grading component.
+ * @property score The numerical grade obtained.
+ */
+@Entity(
+    tableName = "student_scores",
+    primaryKeys = ["studentId", "componentId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = Student::class,
+            parentColumns = ["studentId"],
+            childColumns = ["studentId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = GradingComponent::class,
+            parentColumns = ["id"],
+            childColumns = ["componentId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
+data class StudentScore(
+    val studentId: Int,
+    val componentId: Int,
+    val score: Double
+)
+
+/**
+ * Qualitative data and notes for a student.
+ * 
+ * @property id Unique identifier for the record.
+ * @property studentId ID of the student.
+ * @property teacherNotes Qualitative observations from the teacher.
+ * @property tags Comma-separated labels for the student.
  */
 @Entity(
     tableName = "grades",
@@ -142,85 +225,6 @@ data class Student(
 data class Grade(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val studentId: Int,
-    val homework: Double = 0.0,
-    val participation: Int = 0,
-    val quizzes: Double = 0.0,
-    val projects: Double = 0.0,
     val teacherNotes: String = "",
     val tags: String = ""
-)
-
-// --- Data Transfer Objects (DTOs) for UI ---
-
-/**
- * DTO combining class information with calculated statistics for UI display.
- * 
- * @property id The class ID.
- * @property subjectId The parent subject ID.
- * @property name The class name.
- * @property averageGrade The calculated average grade of all students in this class.
- * @property studentCount The total number of students enrolled in this class.
- * @property gradingScale The scale identifier (e.g., "5", "20", "100").
- */
-data class StudentsClassWithStats(
-    val id: Int,
-    val subjectId: Int,
-    val name: String,
-    val averageGrade: Double,
-    val studentCount: Int,
-    val gradingScale: String
-)
-
-/**
- * DTO combining subject information with aggregated statistics for UI display.
- * 
- * @property id The subject ID.
- * @property name The subject name.
- * @property iconName The display icon identifier.
- * @property colorHex The display theme color.
- * @property studentCount Total students across all classes of this subject.
- * @property averageGrade Aggregated average grade for the subject.
- * @property gradingScale The scale identifier (e.g., "5", "20", "100").
- */
-data class SubjectWithStats(
-    val id: Int,
-    val name: String,
-    val iconName: String,
-    val colorHex: String,
-    val studentCount: Int,
-    val averageGrade: Double,
-    val gradingScale: String
-)
-
-/**
- * DTO for displaying a student within a roster, including their weighted average grade.
- * 
- * @property studentId The student's ID.
- * @property studentsClassId The ID of the class the student belongs to.
- * @property numberInGroup Roster number.
- * @property name Student's name.
- * @property processNumber Admin process number.
- * @property weightedGrade The student's final calculated grade based on weights.
- */
-data class StudentWithGrade(
-    val studentId: Int,
-    val studentsClassId: Int,
-    val numberInGroup: Int,
-    val name: String,
-    val processNumber: String?,
-    val profileImageUrl: String?,
-    val weightedGrade: Double
-)
-
-/**
- * DTO representing global academic metrics for an [AcademicYear].
- * 
- * @property totalStudents Count of all students in the year.
- * @property totalSubjects Count of all subjects in the year.
- * @property globalAverage The overall average grade across all subjects and students.
- */
-data class GlobalStats(
-    val totalStudents: Int,
-    val totalSubjects: Int,
-    val globalAverage: Double
 )

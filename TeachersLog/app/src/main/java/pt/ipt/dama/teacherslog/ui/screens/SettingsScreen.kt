@@ -1,40 +1,40 @@
 package pt.ipt.dama.teacherslog.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.utils.IconMapper
 
+/**
+ * SettingsScreen displays the main configuration options for the user.
+ *
+ * @param onNavigateToAccount Navigation to profile details.
+ * @param onNavigateToPreferences Navigation to theme and language settings.
+ */
 @Composable
-fun SettingsContent(
+fun SettingsScreen(
     onNavigateToAccount: () -> Unit,
     onNavigateToPreferences: () -> Unit
 ) {
     Scaffold(
-        topBar = { 
+        containerColor = AppTheme.colors.background,
+        topBar = {
             TeacherTopBar(
-                title = stringResource(R.string.nav_settings)
-            ) 
+                title = stringResource(R.string.nav_settings),
+                titleIcon = IconMapper.Settings
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -44,131 +44,77 @@ fun SettingsContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // User Profile Summary
+            // Profile Summary Section
             item {
                 TonalCard {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(96.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                            contentAlignment = Alignment.Center
+                        Surface(
+                            modifier = Modifier.size(64.dp),
+                            shape = AppTheme.circle,
+                            color = AppTheme.colors.primaryContainer
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(IconMapper.Account, contentDescription = null, modifier = Modifier.size(32.dp))
+                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = stringResource(R.string.jane_harrison), style = MaterialTheme.typography.headlineMedium)
-                        Text(text = stringResource(R.string.jane_email), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onNavigateToAccount, shape = CircleShape) {
-                            Text(stringResource(R.string.edit_profile))
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = stringResource(R.string.jane_harrison), style = AppTheme.typography.titleLarge)
+                            Text(text = stringResource(R.string.jane_email), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            TextButton(
+                                onClick = onNavigateToAccount,
+                                modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.edit_profile))
+                            }
                         }
                     }
                 }
             }
 
-            // Configuration Categories
+            // General Configuration Section
             item {
-                Column {
-                    Text(
-                        text = stringResource(R.string.configuration),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                Text(text = stringResource(R.string.configuration), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                TonalCard {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.app_preferences)) },
+                        supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
+                        leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
+                        trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                        modifier = Modifier.clickable(onClick = onNavigateToPreferences),
+                        colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                     )
-                    TonalCard {
-                        SettingsItem(
-                            icon = Icons.Default.SettingsSuggest,
-                            title = stringResource(R.string.app_preferences),
-                            subtitle = stringResource(R.string.app_preferences_desc),
-                            onClick = onNavigateToPreferences
-                        )
-                    }
                 }
             }
 
-            // Sign Out
+            // Application Metadata Section
             item {
-                OutlinedButton(
-                    onClick = { /* TODO */ },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.sign_out), style = MaterialTheme.typography.labelSmall)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.version_info),
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TextButton(
+                        onClick = { /* Sign out logic */ },
+                        colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.error)
+                    ) {
+                        Icon(IconMapper.Logout, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.sign_out))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = stringResource(R.string.version_info), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
+                }
             }
         }
-    }
-}
-
-@Composable
-fun SettingsScreen(
-    onNavigateToAccount: () -> Unit,
-    onNavigateToPreferences: () -> Unit
-) {
-    SettingsContent(
-        onNavigateToAccount = onNavigateToAccount,
-        onNavigateToPreferences = onNavigateToPreferences
-    )
-}
-
-@Composable
-fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-        }
-        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsPreview() {
-    TeachersLogTheme {
-        SettingsContent(
-            onNavigateToAccount = {},
-            onNavigateToPreferences = {}
-        )
     }
 }

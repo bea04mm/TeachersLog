@@ -22,17 +22,21 @@
     <string name="total_students">Total de Alunos</string>
     <string name="global_average">Média Global</string>
     <string name="active_subjects">Disciplinas Ativas</string>
+    <string name="recent_classes_title">Turmas Recentes</string>
+    <string name="view_all_subjects_link">Gerir Disciplinas</string>
+    <string name="no_recent_classes">Nenhuma turma acedida recentemente.</string>
     <string name="view_all">Ver Todas</string>
     <string name="pick_random_student">Escolher Aluno Aleatório</string>
+    <string name="random_selection_title">Seleção Aleatória</string>
+    <string name="student_number_label">Aluno n.º %d</string>
+    <string name="go_to_grading">Ir para Avaliação</string>
     <string name="no_students_found">Nenhum aluno encontrado em %s</string>
     <string name="no_classes_available">Nenhuma turma disponível para seleção</string>
 
     <!-- Disciplinas / Turmas -->
     <string name="my_subjects">MINHAS DISCIPLINAS</string>
     <string name="active_curriculum">Currículo Ativo</string>
-    <string name="view_all_classes">Ver Todas as Disciplinas</string>
     <string name="academic_overview">RESUMO ACADÉMICO</string>
-    <string name="all_registered_classes">Todas as Disciplinas Registadas</string>
     <string name="active_year_classes">Turmas do Ano Ativo</string>
     <string name="subject_average_label">Média da Disciplina</string>
     <string name="class_average_label">Média da Turma</string>
@@ -45,11 +49,19 @@
     <string name="select_icon">Selecionar Ícone</string>
     <string name="select_color">Selecionar Cor</string>
     <string name="subject_name_required">O nome da disciplina é obrigatório</string>
+    <string name="grading_components">Componentes de Avaliação</string>
+    <string name="add_component">Adicionar Componente</string>
+    <string name="component_name">Nome (ex: Exame)</string>
+    <string name="weight_percentage">Peso (%)</string>
+    <string name="total_weight">Peso Total: %d%%</string>
+    <string name="error_weight_sum">O peso total deve ser exatamente 100%</string>
     <string name="add_class">Adicionar Turma</string>
     <string name="edit_class">Editar Turma</string>
+    <string name="save_class">Guardar Configuração da Turma</string>
     <string name="delete_class_title">Apagar Turma</string>
     <string name="delete_class_message">Tem a certeza que deseja apagar a turma \'%s\'? Todos os alunos e notas associados serão perdidos permanentemente.</string>
     <string name="class_name">Nome da Turma</string>
+    <string name="class_identity_header">IDENTIDADE DA TURMA</string>
     <string name="class_name_required">O nome da turma é obrigatório</string>
     <string name="grading_scale">Escala de Avaliação</string>
     <string name="scale_5">Escala 0–5</string>
@@ -115,6 +127,17 @@
     <!-- Diálogos de Ano Letivo -->
     <string name="academic_years_header">ANOS LETIVOS</string>
     <string name="add_new_year">Adicionar Novo Ano</string>
+    <string name="add_period">Adicionar Período Académico</string>
+    <string name="all_periods_registered">Todos os tipos de período disponíveis já foram registados para este ano letivo.</string>
+    <string name="select_period_type">Selecione o Tipo de Período:</string>
+    <string name="delete_period_title">Apagar Período Académico</string>
+    <string name="delete_period_message">Tem a certeza que deseja apagar o período \'%s\'? Todas as disciplinas, turmas e notas associadas serão perdidas permanentemente.</string>
+    <string name="period_1st_semester">1.º Semestre</string>
+    <string name="period_2nd_semester">2.º Semestre</string>
+    <string name="period_1st_period">1.º Período</string>
+    <string name="period_2nd_period">2.º Período</string>
+    <string name="period_3rd_period">3.º Período</string>
+    <string name="period_annual">Anual</string>
     <string name="delete_year_title">Apagar Ano Letivo</string>
     <string name="delete_year_message">Tem a certeza que deseja apagar o ano %s? Todos os dados associados (disciplinas, turmas e alunos) serão perdidos permanentemente.</string>
     <string name="year_exists_error">Este ano letivo já existe!</string>

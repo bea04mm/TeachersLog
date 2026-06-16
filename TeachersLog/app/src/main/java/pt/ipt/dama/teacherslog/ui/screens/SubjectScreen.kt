@@ -1,6 +1,5 @@
 ﻿package pt.ipt.dama.teacherslog.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,193 +10,124 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.StudentsClass
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
-import pt.ipt.dama.teacherslog.ui.components.ClassCard
-import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.components.*
+import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
+import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
- * SubjectContent is the stateless UI component that displays the classes within a specific subject.
+ * SubjectContent is the stateless UI component that displays classes for a subject.
  *
  * It manages:
- * 1. The display of the subject name as a header.
- * 2. A scrollable list of classes using [LazyColumn].
- * 3. Individual class cards showing student count and average grade.
- * 4. Dialogs for creating, editing, and deleting classes.
+ * 1. A list of [StudentsClassWithStats] for the selected subject.
+ * 2. Navigation entry points for adding and editing classes.
+ * 3. Deletion confirmation for classes using [DeleteConfirmationDialog].
  *
- * @param subjectName The name of the subject being displayed.
- * @param classes The list of [StudentsClassWithStats] associated with this subject.
- * @param onClassClick Callback when a class card is clicked.
- * @param onAddClass Callback to create a new class.
- * @param onUpdateClass Callback to update an existing class.
- * @param onDeleteClass Callback to delete a class.
- * @param onBackClick Callback for the back button navigation.
+ * @param subjectName Name of the parent subject.
+ * @param subjectIcon Optional icon identifier for the subject.
+ * @param classes List of classes to display.
+ * @param onClassClick Callback when a class is selected for roster view.
+ * @param onAddClassClick Callback to navigate to class creation screen.
+ * @param onEditClassClick Callback to navigate to class editing screen.
+ * @param onDeleteClass Callback to remove a class from the database.
+ * @param onBackClick Callback for back navigation.
  */
 @Composable
 fun SubjectContent(
     subjectName: String,
+    subjectIcon: String?,
     classes: List<StudentsClassWithStats>,
     onClassClick: (Int, String) -> Unit,
-    onAddClass: (String) -> Unit,
-    onUpdateClass: (StudentsClass) -> Unit,
+    onAddClassClick: () -> Unit,
+    onEditClassClick: (Int) -> Unit,
     onDeleteClass: (StudentsClass) -> Unit,
     onBackClick: () -> Unit
 ) {
-    val showAddDialog = remember { mutableStateOf(false) }
-    val classToEdit = remember { mutableStateOf<StudentsClass?>(null) }
     val classToDelete = remember { mutableStateOf<StudentsClass?>(null) }
 
-    // --- Add/Edit Dialog ---
-    if (showAddDialog.value || classToEdit.value != null) {
-        var name by remember { mutableStateOf(classToEdit.value?.name ?: "") }
-        
-        AlertDialog(
-            onDismissRequest = { 
-                showAddDialog.value = false
-                classToEdit.value = null
+    // --- Deletion Confirmation Dialog ---
+    classToDelete.value?.let { clazz ->
+        DeleteConfirmationDialog(
+            title = stringResource(R.string.delete_class_title),
+            message = stringResource(R.string.delete_class_message, clazz.name),
+            onConfirm = {
+                onDeleteClass(clazz)
+                classToDelete.value = null
             },
-            title = { Text(stringResource(if (classToEdit.value == null) R.string.add_class else R.string.edit_class)) },
-            text = {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.class_name)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (name.isNotBlank()) {
-                            if (classToEdit.value == null) {
-                                onAddClass(name)
-                            } else {
-                                onUpdateClass(classToEdit.value!!.copy(name = name))
-                            }
-                            showAddDialog.value = false
-                            classToEdit.value = null
-                        }
-                    },
-                    enabled = name.isNotBlank()
-                ) {
-                    Text(stringResource(R.string.save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { 
-                    showAddDialog.value = false
-                    classToEdit.value = null
-                }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
-    // --- Delete Confirmation Dialog ---
-    if (classToDelete.value != null) {
-        AlertDialog(
-            onDismissRequest = { classToDelete.value = null },
-            title = { Text(stringResource(R.string.delete_class_title)) },
-            text = { Text(stringResource(R.string.delete_class_message, classToDelete.value?.name ?: "")) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        classToDelete.value?.let { onDeleteClass(it) }
-                        classToDelete.value = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(R.string.delete_label))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { classToDelete.value = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+            onDismiss = { classToDelete.value = null }
         )
     }
 
     Scaffold(
-        topBar = {
-            // Standard top bar with the subject name as title and a back button
+        containerColor = AppTheme.colors.background,
+        topBar = { 
             TeacherTopBar(
                 title = subjectName,
-                showBackButton = true,
+                titleIcon = IconMapper.getIconByName(subjectIcon),
+                showBackButton = true, 
                 onBackClick = onBackClick
-            )
+            ) 
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog.value = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_class))
-            }
+        floatingActionButton = { 
+            FloatingActionButton(onClick = onAddClassClick) { 
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_class)) 
+            } 
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), 
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- Header Section ---
+            // Screen Header
             item {
-                Text(
-                    text = stringResource(R.string.class_header),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = subjectName,
-                    style = MaterialTheme.typography.headlineLarge
+                SectionHeader(
+                    label = stringResource(R.string.class_header),
+                    title = subjectName
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // --- Classes List ---
+            // Interactive class cards
             items(classes) { clazz ->
                 ClassCard(
-                    name = clazz.name,
-                    studentCount = clazz.studentCount,
-                    averageGrade = clazz.averageGrade,
-                    color = MaterialTheme.colorScheme.primary,
-                    gradingScale = clazz.gradingScale,
+                    name = clazz.name, 
+                    studentCount = clazz.studentCount, 
+                    averageGrade = clazz.averageGrade, 
+                    color = AppTheme.parseColor(clazz.colorHex),
+                    gradingScale = clazz.gradingScale, 
+                    iconName = clazz.iconName,
                     onClick = { onClassClick(clazz.id, clazz.name) },
                     actions = {
                         var showMenu by remember { mutableStateOf(false) }
                         Box {
-                            Box(
-                                modifier = Modifier
-                                    .clickable { showMenu = true }
-                                    .padding(4.dp)
-                            ) {
-                                Icon(Icons.Default.MoreVert, contentDescription = null)
+                            IconButton(onClick = { showMenu = true }) { 
+                                Icon(Icons.Default.MoreVert, contentDescription = null) 
                             }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
+                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.edit_class)) },
+                                    text = { Text(stringResource(R.string.edit_class)) }, 
                                     onClick = {
                                         showMenu = false
-                                        classToEdit.value = StudentsClass(id = clazz.id, subjectId = clazz.subjectId, name = clazz.name)
-                                    },
+                                        onEditClassClick(clazz.id)
+                                    }, 
                                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.delete_class_title)) },
+                                    text = { Text(stringResource(R.string.delete_class_title)) }, 
                                     onClick = {
                                         showMenu = false
-                                        classToDelete.value = StudentsClass(id = clazz.id, subjectId = clazz.subjectId, name = clazz.name)
-                                    },
+                                        classToDelete.value = StudentsClass(
+                                            id = clazz.id, 
+                                            subjectId = clazz.subjectId, 
+                                            name = clazz.name, 
+                                            gradingScale = clazz.gradingScale
+                                        )
+                                    }, 
                                     leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
                                 )
                             }
@@ -205,83 +135,49 @@ fun SubjectContent(
                     }
                 )
             }
+
+            // Add spacer at the bottom to prevent FAB from overlapping the last item
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
+            }
         }
     }
 }
 
 /**
- * SubjectScreen is the stateful Composable that connects the [TeacherViewModel]
- * to the [SubjectContent] UI.
+ * SubjectScreen connects the ViewModel to the [SubjectContent] UI.
  *
- * @param viewModel The shared [TeacherViewModel] providing class data.
- * @param subjectId The ID of the subject whose classes should be fetched.
- * @param subjectName The name of the subject to display.
- * @param onClassClick Callback when a class is selected.
- * @param onBackClick Callback for navigating back to the previous screen.
+ * @param academicViewModel ViewModel for subject metadata.
+ * @param teacherViewModel Shared ViewModel for class data access.
+ * @param subjectId Current subject context.
+ * @param subjectName Name for the header.
+ * @param onClassClick Navigation to class roster.
+ * @param onAddClassClick Navigation to class creation.
+ * @param onEditClassClick Navigation to class editing.
+ * @param onBackClick Navigation back.
  */
 @Composable
 fun SubjectScreen(
-    viewModel: TeacherViewModel,
+    academicViewModel: AcademicViewModel,
+    teacherViewModel: TeacherViewModel,
     subjectId: Int,
     subjectName: String,
     onClassClick: (Int, String) -> Unit,
+    onAddClassClick: (Int) -> Unit,
+    onEditClassClick: (Int, Int) -> Unit,
     onBackClick: () -> Unit
 ) {
-    // Observe the list of classes for the specific subject from the ViewModel
-    val classes by viewModel.getStudentsClassesForSubject(subjectId).observeAsState(emptyList())
-    
+    val classes by teacherViewModel.getStudentsClassesForSubject(subjectId).observeAsState(emptyList())
+    val subject by academicViewModel.getSubjectById(subjectId).observeAsState()
+
     SubjectContent(
         subjectName = subjectName,
+        subjectIcon = subject?.iconName,
         classes = classes,
         onClassClick = onClassClick,
-        onAddClass = { name -> viewModel.addStudentsClass(name, subjectId) },
-        onUpdateClass = { viewModel.updateStudentsClass(it) },
-        onDeleteClass = { viewModel.deleteStudentsClass(it) },
+        onAddClassClick = { onAddClassClick(subjectId) },
+        onEditClassClick = { classId -> onEditClassClick(subjectId, classId) },
+        onDeleteClass = { teacherViewModel.deleteStudentsClass(it) },
         onBackClick = onBackClick
     )
-}
-
-/**
- * Preview for the [SubjectContent] UI with sample class data in light mode.
- */
-@Preview(showBackground = true, name = "Subject Detail Light Mode")
-@Composable
-fun SubjectPreview() {
-    TeachersLogTheme(darkTheme = false) {
-        SubjectContent(
-            subjectName = "Mathematics",
-            classes = listOf(
-                StudentsClassWithStats(1, 1, "10.ºA", 4.2, 25, "5"),
-                StudentsClassWithStats(2, 1, "10.ºB", 3.8, 22, "20"),
-                StudentsClassWithStats(3, 1, "11.ºA", 4.5, 20, "100")
-            ),
-            onClassClick = { _, _ -> },
-            onAddClass = { _ -> },
-            onUpdateClass = {},
-            onDeleteClass = {},
-            onBackClick = {}
-        )
-    }
-}
-
-/**
- * Dark mode preview for the [SubjectContent] UI.
- */
-@Preview(showBackground = true, name = "Subject Detail Dark Mode")
-@Composable
-fun SubjectDarkPreview() {
-    TeachersLogTheme(darkTheme = true) {
-        SubjectContent(
-            subjectName = "Natural Sciences",
-            classes = listOf(
-                StudentsClassWithStats(4, 2, "8.ºC", 4.0, 18, "5"),
-                StudentsClassWithStats(5, 2, "9.ºA", 3.5, 24, "20")
-            ),
-            onClassClick = { _, _ -> },
-            onAddClass = { _ -> },
-            onUpdateClass = {},
-            onDeleteClass = {},
-            onBackClick = {}
-        )
-    }
 }

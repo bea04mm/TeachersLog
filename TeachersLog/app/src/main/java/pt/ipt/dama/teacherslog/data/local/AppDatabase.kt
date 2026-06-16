@@ -17,8 +17,17 @@ import pt.ipt.dama.teacherslog.data.model.*
  * provides access to the [TeacherDao].
  */
 @Database(
-    entities = [AcademicYear::class, Subject::class, StudentsClass::class, Student::class, Grade::class], 
-    version = 4,
+    entities = [
+        AcademicYear::class, 
+        Semester::class,
+        Subject::class, 
+        GradingComponent::class, 
+        StudentsClass::class, 
+        Student::class, 
+        StudentScore::class,
+        Grade::class
+    ], 
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
