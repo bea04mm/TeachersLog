@@ -1,11 +1,9 @@
 ﻿package pt.ipt.dama.teacherslog.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,7 +11,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import java.util.Locale
@@ -22,8 +19,8 @@ import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.data.model.SubjectWithStats
 import pt.ipt.dama.teacherslog.ui.components.SubjectCard
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
-import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
+import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
+import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
  * SubjectsListContent is the stateless UI component that displays the list of subjects.
@@ -36,7 +33,6 @@ import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
  * @param subjects The list of [SubjectWithStats] to display.
  * @param onMenuClick Callback for when the navigation menu icon is clicked.
  * @param onSubjectClick Callback for when a subject card is clicked.
- * @param onViewAllClassesClick Callback for the 'View All Subjects' button.
  * @param onAddSubjectClick Callback for the Floating Action Button to add a subject.
  * @param onEditSubjectClick Callback for the 'Edit' action in the subject menu.
  * @param onDeleteSubjectClick Callback for the 'Delete' action in the subject menu.
@@ -46,7 +42,6 @@ fun SubjectsListContent(
     subjects: List<SubjectWithStats>,
     onMenuClick: () -> Unit,
     onSubjectClick: (Int, String) -> Unit,
-    onViewAllClassesClick: () -> Unit,
     onAddSubjectClick: () -> Unit,
     onEditSubjectClick: (Int) -> Unit,
     onDeleteSubjectClick: (Subject) -> Unit,
@@ -84,6 +79,7 @@ fun SubjectsListContent(
         topBar = { 
             TeacherTopBar(
                 title = stringResource(R.string.nav_classes),
+                titleIcon = IconMapper.Subjects,
                 onNavigationIconClick = onMenuClick
             ) 
         },
@@ -112,35 +108,13 @@ fun SubjectsListContent(
                     text = stringResource(R.string.active_curriculum),
                     style = MaterialTheme.typography.headlineLarge
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                // Button to view an overview of all classes across subjects
-                OutlinedButton(
-                    onClick = onViewAllClassesClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.School, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.view_all_classes))
-                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // --- Subjects List ---
             items(subjects) { subject ->
                 val subjectColor = Color(subject.colorHex.toColorInt())
-                val subjectIcon = when(subject.iconName) {
-                    "functions" -> Icons.Default.Functions
-                    "biotech" -> Icons.Default.Biotech
-                    "history_edu" -> Icons.Default.HistoryEdu
-                    "language" -> Icons.Default.Language
-                    "brush" -> Icons.Default.Brush
-                    "calculate" -> Icons.Default.Calculate
-                    "code" -> Icons.Default.Code
-                    "menu_book" -> Icons.AutoMirrored.Filled.MenuBook
-                    "music_note" -> Icons.Default.MusicNote
-                    "sports_basketball" -> Icons.Default.SportsBasketball
-                    else -> Icons.Default.HistoryEdu
-                }
+                val subjectIcon = IconMapper.getIconByName(subject.iconName)
 
                 SubjectCard(
                     name = subject.name,
@@ -148,19 +122,18 @@ fun SubjectsListContent(
                     students = subject.studentCount,
                     color = subjectColor,
                     icon = subjectIcon,
-                    gradingScale = subject.gradingScale,
+                    gradingScale = "100", // Subjects show normalized average
                     onClick = { onSubjectClick(subject.id, subject.name) },
                     actions = {
                         // --- Subject Options Menu ---
                         var showMenu by remember { mutableStateOf(false) }
                         Box {
-                            // Custom clickable Box to remove all default IconButton padding
-                            Box(
-                                modifier = Modifier
-                                    .clickable { showMenu = true }
-                                    .padding(4.dp) // Minimal padding just for better touch target
-                            ) {
-                                Icon(Icons.Default.MoreVert, contentDescription = null)
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.outline
+                                )
                             }
                             DropdownMenu(
                                 expanded = showMenu,
@@ -181,8 +154,8 @@ fun SubjectsListContent(
                                         // Set the state to trigger the confirmation dialog
                                         subjectToDelete.value = Subject(
                                             id = subject.id,
+                                            semesterId = 0, // Not needed for deletion
                                             name = subject.name,
-                                            academicYearId = 0, // Not needed for deletion
                                             iconName = subject.iconName,
                                             colorHex = subject.colorHex
                                         )
@@ -194,86 +167,42 @@ fun SubjectsListContent(
                     }
                 )
             }
+            
+            // Add spacer at the bottom to prevent FAB from overlapping the last item
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
+            }
         }
     }
 }
 
 /**
- * SubjectsListScreen is the stateful Composable that connects the [TeacherViewModel]
+ * SubjectsListScreen is the stateful Composable that connects the [AcademicViewModel]
  * to the [SubjectsListContent] UI.
  *
- * @param viewModel The shared [TeacherViewModel] providing the subjects data.
- * @param onMenuClick Callback for the side menu navigation.
+ * @param academicViewModel ViewModel managing academic curriculum.
+ * @param onMenuClick Callback to open drawer.
  * @param onSubjectClick Callback when a subject is selected.
- * @param onViewAllClassesClick Callback to view the global classes list.
- * @param onAddSubjectClick Callback to navigate to the Add Subject screen.
- * @param onEditSubjectClick Callback to navigate to the Edit Subject screen.
+ * @param onAddSubjectClick Callback to navigate to addition.
+ * @param onEditSubjectClick Callback to navigate to editing.
  */
 @Composable
 fun SubjectsListScreen(
-    viewModel: TeacherViewModel,
+    academicViewModel: AcademicViewModel,
     onMenuClick: () -> Unit,
     onSubjectClick: (Int, String) -> Unit,
-    onViewAllClassesClick: () -> Unit,
     onAddSubjectClick: () -> Unit,
     onEditSubjectClick: (Int) -> Unit,
 ) {
-    // Observe subjects with statistics for the currently selected academic year
-    val subjects by viewModel.subjectsWithStats.observeAsState(emptyList())
+    // Observe subjects with statistics for the currently selected academic period
+    val subjects by academicViewModel.subjectsWithStats.observeAsState(emptyList())
     
     SubjectsListContent(
         subjects = subjects,
         onMenuClick = onMenuClick,
         onSubjectClick = onSubjectClick,
-        onViewAllClassesClick = onViewAllClassesClick,
         onAddSubjectClick = onAddSubjectClick,
         onEditSubjectClick = onEditSubjectClick,
-        onDeleteSubjectClick = { viewModel.deleteSubject(it) }
+        onDeleteSubjectClick = { academicViewModel.deleteSubject(it) }
     )
-}
-
-/**
- * Preview for the [SubjectsListContent] UI with sample data.
- */
-@Preview(showBackground = true, name = "Subjects List Light Mode")
-@Composable
-fun SubjectsListPreview() {
-    TeachersLogTheme(darkTheme = false) {
-        SubjectsListContent(
-            subjects = listOf(
-                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2, "5"),
-                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8, "20"),
-                SubjectWithStats(3, "History", "history_edu", "#7D5260", 15, 4.5, "5"),
-                SubjectWithStats(4, "Arts", "brush", "#A03D2F", 10, 4.0, "100")
-            ),
-            onMenuClick = {},
-            onSubjectClick = { _, _ -> },
-            onViewAllClassesClick = {},
-            onAddSubjectClick = {},
-            onEditSubjectClick = {},
-            onDeleteSubjectClick = {}
-        )
-    }
-}
-
-/**
- * Dark mode preview for the [SubjectsListContent] UI.
- */
-@Preview(showBackground = true, name = "Subjects List Dark Mode")
-@Composable
-fun SubjectsListDarkPreview() {
-    TeachersLogTheme(darkTheme = true) {
-        SubjectsListContent(
-            subjects = listOf(
-                SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2, "5"),
-                SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8, "20")
-            ),
-            onMenuClick = {},
-            onSubjectClick = { _, _ -> },
-            onViewAllClassesClick = {},
-            onAddSubjectClick = {},
-            onEditSubjectClick = {},
-            onDeleteSubjectClick = {}
-        )
-    }
 }

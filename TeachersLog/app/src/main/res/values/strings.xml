@@ -22,17 +22,21 @@
     <string name="total_students">Total Students</string>
     <string name="global_average">Global Average</string>
     <string name="active_subjects">Active Subjects</string>
+    <string name="recent_classes_title">Recent Classes</string>
+    <string name="view_all_subjects_link">Manage Subjects</string>
+    <string name="no_recent_classes">No classes accessed recently.</string>
     <string name="view_all">View All</string>
     <string name="pick_random_student">Pick Random Student</string>
+    <string name="random_selection_title">Random Selection</string>
+    <string name="student_number_label">Student #%d</string>
+    <string name="go_to_grading">Go to Grading</string>
     <string name="no_students_found">No students found in %s</string>
     <string name="no_classes_available">No classes available for selection</string>
 
     <!-- Subjects -->
     <string name="my_subjects">MY SUBJECTS</string>
     <string name="active_curriculum">Active Curriculum</string>
-    <string name="view_all_classes">View All Subjects</string>
     <string name="academic_overview">ACADEMIC OVERVIEW</string>
-    <string name="all_registered_classes">All Registered Subjects</string>
     <string name="active_year_classes">Active Year Classes</string>
     <string name="subject_average_label">Subject Average</string>
     <string name="class_average_label">Class Average</string>
@@ -45,11 +49,19 @@
     <string name="select_icon">Select Icon</string>
     <string name="select_color">Select Color</string>
     <string name="subject_name_required">Subject name is required</string>
+    <string name="grading_components">Grading Components</string>
+    <string name="add_component">Add Component</string>
+    <string name="component_name">Name (e.g. Exam)</string>
+    <string name="weight_percentage">Weight (%)</string>
+    <string name="total_weight">Total Weight: %d%%</string>
+    <string name="error_weight_sum">Total weight must be exactly 100%</string>
     <string name="add_class">Add Class</string>
     <string name="edit_class">Edit Class</string>
+    <string name="save_class">Save Class Configuration</string>
     <string name="delete_class_title">Delete Class</string>
     <string name="delete_class_message">Are you sure you want to delete the class \'%s\'? All associated students and grades will be permanently lost.</string>
     <string name="class_name">Class Name</string>
+    <string name="class_identity_header">CLASS IDENTITY</string>
     <string name="class_name_required">Class name is required</string>
     <string name="grading_scale">Grading Scale</string>
     <string name="scale_5">0–5 Scale</string>
@@ -105,7 +117,7 @@
     <string name="app_language">App Language</string>
     <string name="select_language">Select Language</string>
     <string name="english">English</string>
-    <string name="portuguese">Português</string>
+    <string name="portuguese">Portuguese</string>
 
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
@@ -115,6 +127,17 @@
     <!-- Academic Year Dialogs -->
     <string name="academic_years_header">ACADEMIC YEARS</string>
     <string name="add_new_year">Add New Year</string>
+    <string name="add_period">Add Academic Period</string>
+    <string name="all_periods_registered">All available period types have already been registered for this academic year.</string>
+    <string name="select_period_type">Select Period Type:</string>
+    <string name="delete_period_title">Delete Academic Period</string>
+    <string name="delete_period_message">Are you sure you want to delete \'%s\'? All associated subjects, classes, and student grades will be permanently lost.</string>
+    <string name="period_1st_semester">1st Semester</string>
+    <string name="period_2nd_semester">2nd Semester</string>
+    <string name="period_1st_period">1st Period</string>
+    <string name="period_2nd_period">2nd Period</string>
+    <string name="period_3rd_period">3rd Period</string>
+    <string name="period_annual">Annual</string>
     <string name="delete_year_title">Delete Academic Year</string>
     <string name="delete_year_message">Are you sure you want to delete the year %s? All associated data (subjects, classes, and students) will be permanently lost.</string>
     <string name="year_exists_error">This academic year already exists!</string>
