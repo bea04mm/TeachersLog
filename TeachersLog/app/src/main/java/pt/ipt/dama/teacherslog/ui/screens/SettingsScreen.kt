@@ -10,11 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
@@ -29,6 +29,7 @@ fun SettingsScreen(
     onNavigateToPreferences: () -> Unit
 ) {
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(R.string.nav_settings),
@@ -52,8 +53,8 @@ fun SettingsScreen(
                     ) {
                         Surface(
                             modifier = Modifier.size(64.dp),
-                            shape = androidx.compose.foundation.shape.CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer
+                            shape = AppTheme.circle,
+                            color = AppTheme.colors.primaryContainer
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(IconMapper.Account, contentDescription = null, modifier = Modifier.size(32.dp))
@@ -61,8 +62,8 @@ fun SettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = stringResource(R.string.jane_harrison), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text(text = stringResource(R.string.jane_email), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(text = stringResource(R.string.jane_harrison), style = AppTheme.typography.titleLarge)
+                            Text(text = stringResource(R.string.jane_email), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
@@ -81,7 +82,7 @@ fun SettingsScreen(
 
             // General Configuration Section
             item {
-                Text(text = stringResource(R.string.configuration), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(text = stringResource(R.string.configuration), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 TonalCard {
@@ -90,7 +91,8 @@ fun SettingsScreen(
                         supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
                         leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
                         trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = onNavigateToPreferences)
+                        modifier = Modifier.clickable(onClick = onNavigateToPreferences),
+                        colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                     )
                 }
             }
@@ -103,14 +105,14 @@ fun SettingsScreen(
                 ) {
                     TextButton(
                         onClick = { /* Sign out logic */ },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.error)
                     ) {
                         Icon(IconMapper.Logout, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.sign_out))
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = stringResource(R.string.version_info), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    Text(text = stringResource(R.string.version_info), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
                 }
             }
         }

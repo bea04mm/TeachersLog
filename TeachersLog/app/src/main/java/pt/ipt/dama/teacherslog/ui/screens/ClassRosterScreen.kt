@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,11 +15,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
@@ -28,6 +25,8 @@ import pt.ipt.dama.teacherslog.data.model.Student
 import pt.ipt.dama.teacherslog.data.model.StudentWithGrade
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.components.SectionHeader
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.ShakeDetector
 import pt.ipt.dama.teacherslog.utils.IconMapper
@@ -52,8 +51,8 @@ fun RandomStudentPopupContent(
         Box(
             modifier = Modifier
                 .size(160.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .clip(AppTheme.circle)
+                .background(AppTheme.colors.surfaceContainerHigh),
             contentAlignment = Alignment.Center
         ) {
             if (student.profileImageUrl != null) {
@@ -68,32 +67,37 @@ fun RandomStudentPopupContent(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Default.Person, 
+                    imageVector = IconMapper.Account, 
                     contentDescription = null, 
                     modifier = Modifier.size(80.dp),
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = AppTheme.colors.outline
                 )
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = student.name,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Black
+            style = AppTheme.typography.headlineMedium
         )
         Text(
             text = stringResource(R.string.student_number_label, student.numberInGroup),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary
+            style = AppTheme.typography.bodyLarge,
+            color = AppTheme.colors.primary
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            TextButton(onClick = onClose, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.close))
-            }
-            Button(onClick = onGoToGrading, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.go_to_grading))
-            }
+        Spacer(modifier = Modifier.height(32.dp))
+        // Stacked buttons for better centering and prominence
+        Button(
+            onClick = onGoToGrading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.go_to_grading))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(
+            onClick = onClose,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.close))
         }
     }
 }
@@ -156,7 +160,14 @@ fun ClassRosterContent(
     randomStudent.value?.let { student ->
         AlertDialog(
             onDismissRequest = { randomStudent.value = null },
-            title = { Text(text = stringResource(R.string.random_selection_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+            title = { 
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(R.string.random_selection_title), 
+                        style = AppTheme.typography.headlineSmall
+                    ) 
+                }
+            },
             text = {
                 RandomStudentPopupContent(
                     student = student,
@@ -179,7 +190,7 @@ fun ClassRosterContent(
             title = { Text(stringResource(R.string.delete_student_title)) },
             text = { Text(stringResource(R.string.delete_student_message, studentToDelete.value?.name ?: "")) },
             confirmButton = {
-                Button(onClick = { onDeleteStudent(studentToDelete.value!!); studentToDelete.value = null }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                Button(onClick = { onDeleteStudent(studentToDelete.value!!); studentToDelete.value = null }, colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)) {
                     Text(stringResource(R.string.delete_label))
                 }
             },
@@ -200,9 +211,9 @@ fun ClassRosterContent(
             Column(horizontalAlignment = Alignment.End) {
                 SmallFloatingActionButton(
                     onClick = { if (students.isNotEmpty()) randomStudent.value = students.random() },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = CircleShape
+                    containerColor = AppTheme.colors.secondaryContainer,
+                    contentColor = AppTheme.colors.onSecondaryContainer,
+                    shape = AppTheme.circle
                 ) { Icon(Icons.Default.AutoAwesome, contentDescription = stringResource(R.string.pick_random_student)) }
                 Spacer(modifier = Modifier.height(16.dp))
                 FloatingActionButton(onClick = onAddStudentClick) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_student)) }
@@ -215,40 +226,58 @@ fun ClassRosterContent(
 
         LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                Text(text = stringResource(R.string.students_roster), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                Text(text = className, style = MaterialTheme.typography.headlineLarge)
+                SectionHeader(
+                    label = stringResource(R.string.students_roster),
+                    title = className
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             items(students) { student ->
                 val percentage = (student.weightedGrade.toFloat() / maxGradeValue) * 100f
-                val gradeColor = when { percentage >= 80f -> Color(0xFF22C55E); percentage >= 50f -> Color(0xFFF59E0B); else -> Color(0xFFEF4444) }
+                val gradeColor = when {
+                    percentage >= 80f -> AppTheme.success
+                    percentage >= 50f -> AppTheme.warning
+                    else -> AppTheme.critical
+                }
 
                 TonalCard(modifier = Modifier.clickable { onStudentClick(student.studentId, student.name) }) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                            Box(contentAlignment = Alignment.Center) { Text(text = student.numberInGroup.toString(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
+                        Surface(modifier = Modifier.size(32.dp), shape = AppTheme.circle, color = AppTheme.colors.primaryContainer) {
+                            Box(contentAlignment = Alignment.Center) { Text(text = student.numberInGroup.toString(), style = AppTheme.typography.labelMedium, color = AppTheme.colors.onPrimaryContainer) }
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         
-                        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.size(48.dp).clip(AppTheme.circle).background(AppTheme.colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                             if (student.profileImageUrl != null) {
                                 AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(student.profileImageUrl).crossfade(true).build(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                             } else {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+                                Icon(IconMapper.Account, contentDescription = null, tint = AppTheme.colors.outline)
                             }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = student.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(
+                            text = student.name, 
+                            style = AppTheme.typography.titleMedium, 
+                            modifier = Modifier.weight(1f)
+                        )
                         
-                        Surface(color = gradeColor.copy(alpha = 0.1f), shape = CircleShape) {
-                            Text(text = String.format(Locale.getDefault(), "%.2f", student.weightedGrade), modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.titleMedium, color = gradeColor, fontWeight = FontWeight.ExtraBold)
+                        Surface(
+                            color = gradeColor.copy(alpha = 0.1f), 
+                            shape = AppTheme.shapes.extraLarge
+                        ) {
+                            Text(
+                                text = String.format(Locale.getDefault(), "%.2f", student.weightedGrade), 
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), 
+                                style = AppTheme.typography.titleMedium,
+                                color = gradeColor
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
                         var showMenu by remember { mutableStateOf(false) }
                         Box {
-                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.outline) }
+                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
                             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { showMenu = false; studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })

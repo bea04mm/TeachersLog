@@ -9,16 +9,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.data.model.SubjectWithStats
 import pt.ipt.dama.teacherslog.ui.components.SubjectCard
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
+import pt.ipt.dama.teacherslog.ui.components.SectionHeader
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
@@ -62,7 +62,7 @@ fun SubjectsListContent(
                         subjectToDelete.value?.let { onDeleteSubjectClick(it) }
                         subjectToDelete.value = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
                 }
@@ -76,6 +76,7 @@ fun SubjectsListContent(
     }
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
                 title = stringResource(R.string.nav_classes),
@@ -99,21 +100,16 @@ fun SubjectsListContent(
         ) {
             // --- Header Section ---
             item {
-                Text(
-                    text = stringResource(R.string.my_subjects),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stringResource(R.string.active_curriculum),
-                    style = MaterialTheme.typography.headlineLarge
+                SectionHeader(
+                    label = stringResource(R.string.my_subjects),
+                    title = stringResource(R.string.active_curriculum)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // --- Subjects List ---
             items(subjects) { subject ->
-                val subjectColor = Color(subject.colorHex.toColorInt())
+                val subjectColor = AppTheme.parseColor(subject.colorHex)
                 val subjectIcon = IconMapper.getIconByName(subject.iconName)
 
                 SubjectCard(
@@ -132,7 +128,7 @@ fun SubjectsListContent(
                                 Icon(
                                     imageVector = Icons.Default.MoreVert, 
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline
+                                    tint = AppTheme.colors.outline
                                 )
                             }
                             DropdownMenu(

@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -20,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -29,6 +27,7 @@ import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.Student
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 
 /**
@@ -106,14 +105,14 @@ fun StudentEditContent(
             item {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
-                        modifier = Modifier.size(120.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
+                        modifier = Modifier.size(120.dp).clip(AppTheme.circle).background(AppTheme.colors.surfaceContainerHigh)
                             .clickable { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                         contentAlignment = Alignment.Center
                     ) {
                         if (photoUri.isNotBlank()) {
                             AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(photoUri).crossfade(true).build(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                         } else {
-                            Icon(Icons.Default.AddAPhoto, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.outline)
+                            Icon(Icons.Default.AddAPhoto, contentDescription = null, modifier = Modifier.size(40.dp), tint = AppTheme.colors.outline)
                         }
                     }
                     TextButton(onClick = { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
@@ -126,10 +125,10 @@ fun StudentEditContent(
             item {
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text(text = stringResource(R.string.personal_information), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(text = stringResource(R.string.personal_information), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
                         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.student_name)) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                         OutlinedTextField(value = process, onValueChange = { process = it; processError.value = null }, label = { Text(stringResource(R.string.student_process)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = processError.value != null)
-                        processError.value?.let { Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 16.dp)) }
+                        processError.value?.let { Text(text = it, color = AppTheme.colors.error, style = AppTheme.typography.labelSmall, modifier = Modifier.padding(start = 16.dp)) }
                     }
                 }
             }
@@ -138,24 +137,24 @@ fun StudentEditContent(
             item {
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = stringResource(R.string.student_number), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth())
+                        Text(text = stringResource(R.string.student_number), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary, modifier = Modifier.fillMaxWidth())
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                             IconButton(
                                 onClick = { isNumberAutoSet = false; val current = numberStr.toIntOrNull() ?: 1; availableNumbers.lastOrNull { it < current }?.let { numberStr = it.toString(); numberError.value = null } },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                                modifier = Modifier.background(AppTheme.colors.primaryContainer, AppTheme.shapes.extraLarge),
                                 enabled = availableNumbers.any { it < (numberStr.toIntOrNull() ?: 1) }
                             ) { Icon(Icons.Default.Remove, contentDescription = null) }
 
-                            Text(text = numberStr, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 32.dp))
+                            Text(text = numberStr, style = AppTheme.typography.displayMedium, modifier = Modifier.padding(horizontal = 32.dp))
 
                             IconButton(
                                 onClick = { isNumberAutoSet = false; val current = numberStr.toIntOrNull() ?: 0; availableNumbers.firstOrNull { it > current }?.let { numberStr = it.toString(); numberError.value = null } },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                                modifier = Modifier.background(AppTheme.colors.primaryContainer, AppTheme.shapes.extraLarge),
                                 enabled = availableNumbers.any { it > (numberStr.toIntOrNull() ?: 0) }
                             ) { Icon(Icons.Default.Add, contentDescription = null) }
                         }
-                        numberError.value?.let { Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp)) }
+                        numberError.value?.let { Text(text = it, color = AppTheme.colors.error, style = AppTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp)) }
                     }
                 }
             }

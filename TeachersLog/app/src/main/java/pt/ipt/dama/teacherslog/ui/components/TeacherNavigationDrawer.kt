@@ -3,7 +3,6 @@ package pt.ipt.dama.teacherslog.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarToday
@@ -14,11 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.data.model.Semester
+import pt.ipt.dama.teacherslog.ui.theme.*
 
 /**
  * The content displayed inside the side navigation drawer.
@@ -53,11 +52,11 @@ fun TeacherDrawerContent(
 ) {
     // Define shared colors for selected drawer items to match bottom bar indicator
     val drawerItemColors = NavigationDrawerItemDefaults.colors(
-        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-        selectedIconColor = MaterialTheme.colorScheme.primary,
-        selectedTextColor = MaterialTheme.colorScheme.primary,
-        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+        selectedContainerColor = AppTheme.colors.primaryContainer.copy(alpha = 0.4f),
+        selectedIconColor = AppTheme.colors.primary,
+        selectedTextColor = AppTheme.colors.primary,
+        unselectedIconColor = AppTheme.colors.onSurfaceVariant,
+        unselectedTextColor = AppTheme.colors.onSurfaceVariant
     )
 
     ModalDrawerSheet(modifier = Modifier.width(320.dp)) {
@@ -69,8 +68,8 @@ fun TeacherDrawerContent(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.academic_years_header), 
-                    style = MaterialTheme.typography.labelSmall, 
-                    color = MaterialTheme.colorScheme.primary, 
+                    style = AppTheme.typography.labelSmall, 
+                    color = AppTheme.colors.primary, 
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
@@ -83,14 +82,14 @@ fun TeacherDrawerContent(
                                     horizontalArrangement = Arrangement.SpaceBetween, 
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(year.year, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                    Text(year.year, style = if (isSelected) AppTheme.typography.titleMedium else AppTheme.typography.bodyLarge)
                                     // Delete icon shown only for unselected items for safety
                                     if (!isSelected) {
                                         IconButton(onClick = { onYearDelete(year) }, modifier = Modifier.size(24.dp)) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete, 
                                                 contentDescription = "Delete Year", 
-                                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f), 
+                                                tint = AppTheme.colors.error.copy(alpha = 0.6f), 
                                                 modifier = Modifier.size(18.dp)
                                             )
                                         }
@@ -100,7 +99,7 @@ fun TeacherDrawerContent(
                             selected = isSelected,
                             onClick = { onYearSelect(year.id) },
                             icon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = AppTheme.shapes.medium,
                             colors = drawerItemColors
                         )
                     }
@@ -118,8 +117,8 @@ fun TeacherDrawerContent(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "ACADEMIC PERIODS", 
-                    style = MaterialTheme.typography.labelSmall, 
-                    color = MaterialTheme.colorScheme.primary, 
+                    style = AppTheme.typography.labelSmall, 
+                    color = AppTheme.colors.primary, 
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
@@ -132,13 +131,13 @@ fun TeacherDrawerContent(
                                     horizontalArrangement = Arrangement.SpaceBetween, 
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(semester.name, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                    Text(semester.name, style = if (isSelected) AppTheme.typography.titleMedium else AppTheme.typography.bodyLarge)
                                     if (!isSelected) {
                                         IconButton(onClick = { onSemesterDelete(semester) }, modifier = Modifier.size(24.dp)) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete, 
                                                 contentDescription = "Delete Period", 
-                                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f), 
+                                                tint = AppTheme.colors.error.copy(alpha = 0.6f), 
                                                 modifier = Modifier.size(18.dp)
                                             )
                                         }
@@ -148,7 +147,7 @@ fun TeacherDrawerContent(
                             selected = isSelected,
                             onClick = { onSemesterSelect(semester.id) },
                             icon = { Icon(Icons.Default.Bookmark, contentDescription = null) },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = AppTheme.shapes.medium,
                             colors = drawerItemColors
                         )
                     }

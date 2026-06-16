@@ -2,7 +2,6 @@ package pt.ipt.dama.teacherslog.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -12,11 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Calendar
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.AcademicYear
+import pt.ipt.dama.teacherslog.ui.theme.*
 
 /**
  * Stateless content for the Year and Period creation dialog.
@@ -43,8 +42,8 @@ fun AddYearAndPeriodContent(
         Column {
             Text(
                 text = stringResource(R.string.select_starting_year), 
-                style = MaterialTheme.typography.labelMedium, 
-                color = MaterialTheme.colorScheme.primary,
+                style = AppTheme.typography.labelMedium, 
+                color = AppTheme.colors.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Row(
@@ -59,15 +58,14 @@ fun AddYearAndPeriodContent(
                 }) { Icon(Icons.Default.Remove, contentDescription = "Decrease year") }
                 
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer, 
-                    shape = RoundedCornerShape(8.dp), 
+                    color = AppTheme.colors.primaryContainer, 
+                    shape = AppTheme.shapes.small,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Text(
                         text = "$selectedStartYear / ${selectedStartYear + 1}", 
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                        style = MaterialTheme.typography.headlineSmall, 
-                        fontWeight = FontWeight.Bold
+                        style = AppTheme.typography.headlineSmall
                     )
                 }
                 
@@ -83,8 +81,8 @@ fun AddYearAndPeriodContent(
         Column {
             Text(
                 text = stringResource(R.string.select_period_type), 
-                style = MaterialTheme.typography.labelMedium, 
-                color = MaterialTheme.colorScheme.primary,
+                style = AppTheme.typography.labelMedium, 
+                color = AppTheme.colors.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             periodOptions.forEach { optionRes ->
@@ -96,7 +94,7 @@ fun AddYearAndPeriodContent(
                         .padding(vertical = 4.dp)
                 ) {
                     RadioButton(selected = (selectedPeriodOption == optionRes), onClick = { onPeriodChange(optionRes) })
-                    Text(text = stringResource(optionRes), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+                    Text(text = stringResource(optionRes), style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                 }
             }
         }

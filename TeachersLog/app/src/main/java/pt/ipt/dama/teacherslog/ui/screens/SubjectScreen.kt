@@ -9,15 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.StudentsClass
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
 import pt.ipt.dama.teacherslog.ui.components.ClassCard
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
@@ -64,7 +63,7 @@ fun SubjectContent(
                         classToDelete.value?.let { onDeleteClass(it) }
                         classToDelete.value = null 
                     }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
                 }
@@ -96,10 +95,10 @@ fun SubjectContent(
             item {
                 Text(
                     text = stringResource(R.string.class_header), 
-                    style = MaterialTheme.typography.labelSmall, 
-                    color = MaterialTheme.colorScheme.primary
+                    style = AppTheme.typography.labelSmall, 
+                    color = AppTheme.colors.primary
                 )
-                Text(text = subjectName, style = MaterialTheme.typography.headlineLarge)
+                Text(text = subjectName, style = AppTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -109,7 +108,7 @@ fun SubjectContent(
                     name = clazz.name, 
                     studentCount = clazz.studentCount, 
                     averageGrade = clazz.averageGrade, 
-                    color = Color(clazz.colorHex.toColorInt()), 
+                    color = AppTheme.parseColor(clazz.colorHex),
                     gradingScale = clazz.gradingScale, 
                     iconName = clazz.iconName,
                     onClick = { onClassClick(clazz.id, clazz.name) },

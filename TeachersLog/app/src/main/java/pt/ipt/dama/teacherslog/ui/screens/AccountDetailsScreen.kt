@@ -3,7 +3,6 @@ package pt.ipt.dama.teacherslog.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -11,13 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
@@ -62,15 +60,15 @@ fun AccountDetailsScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                .clip(AppTheme.circle)
+                                .background(AppTheme.colors.surfaceContainerHigh),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = IconMapper.Account, 
                                 contentDescription = null, 
                                 modifier = Modifier.size(80.dp), 
-                                tint = MaterialTheme.colorScheme.outline
+                                tint = AppTheme.colors.outline
                             )
                         }
                         // Circular edit FAB overlay
@@ -79,9 +77,9 @@ fun AccountDetailsScreen(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                                .clip(AppTheme.circle)
+                                .background(AppTheme.colors.primary),
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = AppTheme.colors.onPrimary)
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
@@ -89,12 +87,12 @@ fun AccountDetailsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.jane_harrison), 
-                        style = MaterialTheme.typography.headlineMedium
+                        style = AppTheme.typography.headlineMedium
                     )
                     Text(
                         text = stringResource(R.string.jane_email), 
-                        style = MaterialTheme.typography.bodyMedium, 
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = AppTheme.typography.bodyMedium, 
+                        color = AppTheme.colors.onSurfaceVariant
                     )
                 }
             }
@@ -107,14 +105,13 @@ fun AccountDetailsScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .background(AppTheme.colors.surfaceContainerLow)
                                 .padding(16.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.personal_information), 
-                                style = MaterialTheme.typography.bodyLarge, 
-                                fontWeight = FontWeight.Bold, 
-                                color = MaterialTheme.colorScheme.primary
+                                style = AppTheme.typography.bodyLarge, 
+                                color = AppTheme.colors.primary
                             )
                         }
                         // Form Fields
@@ -154,9 +151,9 @@ fun AccountDetailsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
-                                shape = MaterialTheme.shapes.medium
+                                shape = AppTheme.shapes.medium
                             ) {
-                                Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.save))
                             }
                         }
                     }

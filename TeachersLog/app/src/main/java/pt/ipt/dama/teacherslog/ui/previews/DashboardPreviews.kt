@@ -5,7 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import pt.ipt.dama.teacherslog.data.model.GlobalStats
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
 import pt.ipt.dama.teacherslog.ui.screens.DashboardContent
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.theme.*
 
 /**
  * Preview for the [DashboardContent] UI in light mode.

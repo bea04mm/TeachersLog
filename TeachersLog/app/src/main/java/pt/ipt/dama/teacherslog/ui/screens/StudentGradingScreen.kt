@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
@@ -14,19 +13,19 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.*
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
+import pt.ipt.dama.teacherslog.utils.IconMapper
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
@@ -71,9 +70,9 @@ fun StudentGradingContent(
 
     val percentage = (totalWeightedGrade.toFloat() / maxGradeValue) * 100f
     val gradeColor = when {
-        percentage >= 80f -> Color(0xFF22C55E) // Positive
-        percentage >= 50f -> Color(0xFFF59E0B) // Warning
-        else -> Color(0xFFEF4444) // Critical
+        percentage >= 80f -> AppTheme.success // Positive
+        percentage >= 50f -> AppTheme.warning // Warning
+        else -> AppTheme.critical // Critical
     }
 
     Scaffold(
@@ -102,7 +101,7 @@ fun StudentGradingContent(
                     ) {
                         // Profile Photo and Name on the left
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                            Box(modifier = Modifier.size(64.dp).clip(AppTheme.circle).background(AppTheme.colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                                 if (student?.profileImageUrl != null) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(LocalContext.current)
@@ -114,29 +113,29 @@ fun StudentGradingContent(
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
-                                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.outline)
+                                    Icon(IconMapper.Account, contentDescription = null, modifier = Modifier.size(32.dp), tint = AppTheme.colors.outline)
                                 }
                             }
                             
                             Spacer(modifier = Modifier.width(16.dp))
                             
                             Column {
-                                Text(text = student?.name ?: stringResource(R.string.loading), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text(text = student?.name ?: stringResource(R.string.loading), style = AppTheme.typography.titleLarge)
                                 student?.processNumber?.let { 
-                                    Text(text = stringResource(R.string.process_prefix, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline) 
+                                    Text(text = stringResource(R.string.process_prefix, it), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.outline) 
                                 }
                             }
                         }
                         
                         // Student Number and Class on the right
                         Column(horizontalAlignment = Alignment.End) {
-                            Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                            Surface(modifier = Modifier.size(36.dp), shape = AppTheme.shapes.extraLarge, color = AppTheme.colors.primaryContainer) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(text = student?.numberInGroup?.toString() ?: "-", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    Text(text = student?.numberInGroup?.toString() ?: "-", style = AppTheme.typography.titleMedium, color = AppTheme.colors.onPrimaryContainer)
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = className, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                            Text(text = className, style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
                         }
                     }
                 }
@@ -146,10 +145,10 @@ fun StudentGradingContent(
             item {
                 TonalCard {
                     Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = stringResource(R.string.total_grade_weighted), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                        Text(text = stringResource(R.string.total_grade_weighted), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(text = String.format(Locale.getDefault(), "%.2f", totalWeightedGrade), style = MaterialTheme.typography.displayLarge, color = gradeColor, fontWeight = FontWeight.Black)
-                            Text(text = scaleSuffix, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(bottom = 12.dp, start = 4.dp))
+                            Text(text = String.format(Locale.getDefault(), "%.2f", totalWeightedGrade), style = AppTheme.typography.displayLarge, color = gradeColor)
+                            Text(text = scaleSuffix, style = AppTheme.typography.headlineSmall, color = AppTheme.colors.outline, modifier = Modifier.padding(bottom = 12.dp, start = 4.dp))
                         }
                     }
                 }
@@ -161,8 +160,8 @@ fun StudentGradingContent(
                 item {
                     // Category Header with Total Group Weight
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = group.componentName.uppercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                        Text(text = "${group.weight}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(text = group.componentName.uppercase(), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
+                        Text(text = "${group.weight}%", style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -192,9 +191,9 @@ fun StudentGradingContent(
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(imageVector = Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = AppTheme.colors.primary)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = stringResource(R.string.teachers_notes), style = MaterialTheme.typography.titleMedium)
+                            Text(text = stringResource(R.string.teachers_notes), style = AppTheme.typography.titleMedium)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedTextField(
@@ -303,20 +302,20 @@ fun GradeSliderCard(title: String, weight: String, icon: ImageVector, value: Flo
     TonalCard {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = AppTheme.colors.primary, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
+                Text(text = title, style = AppTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = stringResource(R.string.weight_label, weight), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(text = stringResource(R.string.weight_label, weight), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = String.format(Locale.getDefault(), "%.1f", value), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
-                Text(text = scaleSuffix, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                Text(text = String.format(Locale.getDefault(), "%.1f", value), style = AppTheme.typography.headlineMedium, color = AppTheme.colors.primary)
+                Text(text = scaleSuffix, style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
             }
             Slider(value = value, onValueChange = onValueChange, valueRange = 0f..maxGrade, steps = if (maxGrade > 20f) (maxGrade - 1).toInt() else (maxGrade * 10 - 1).toInt())
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                rangeLabels.forEach { Text(text = it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline) }
+                rangeLabels.forEach { Text(text = it, style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline) }
             }
         }
     }

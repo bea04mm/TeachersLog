@@ -13,15 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.GradingComponent
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import java.util.UUID
 
@@ -98,7 +97,7 @@ fun ClassEditContent(
         ) {
             // --- Class Identity ---
             item {
-                Text(text = stringResource(R.string.class_identity_header), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(text = stringResource(R.string.class_identity_header), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.class_name)) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true)
             }
 
@@ -106,11 +105,11 @@ fun ClassEditContent(
             item {
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = stringResource(R.string.grading_scale), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(text = stringResource(R.string.grading_scale), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
                         listOf("5" to R.string.scale_5, "20" to R.string.scale_20, "100" to R.string.scale_100).forEach { (scale, labelRes) ->
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { selectedScale = scale }.padding(vertical = 4.dp)) {
                                 RadioButton(selected = (selectedScale == scale), onClick = { selectedScale = scale })
-                                Text(text = stringResource(labelRes), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+                                Text(text = stringResource(labelRes), style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }
@@ -120,8 +119,12 @@ fun ClassEditContent(
             // --- Hierarchical Components Section ---
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                    Text(text = stringResource(R.string.grading_components), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text(text = "${rootWeight}%", color = if (isRootValid) Color(0xFF22C55E) else Color.Red, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.grading_components), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
+                    Text(
+                        text = "${rootWeight}%", 
+                        color = if (isRootValid) AppTheme.success else AppTheme.critical,
+                        style = AppTheme.typography.titleLarge
+                    )
                 }
             }
 
@@ -222,25 +225,29 @@ fun ComponentRow(
     TonalCard(
         modifier = Modifier.border(
             width = if (!isValid) 2.dp else 0.dp,
-            color = if (!isValid) Color.Red else Color.Transparent,
-            shape = MaterialTheme.shapes.medium
+            color = if (!isValid) AppTheme.critical else AppTheme.transparent,
+            shape = AppTheme.shapes.medium
         )
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (isSubItem) Icon(Icons.Default.SubdirectoryArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+                if (isSubItem) Icon(Icons.Default.SubdirectoryArrowRight, contentDescription = null, tint = AppTheme.colors.outline)
                 OutlinedTextField(value = state.name, onValueChange = { onUpdate(state.copy(name = it)) }, placeholder = { Text(if (isSubItem) "Sub-item Name" else "Group Name") }, modifier = Modifier.weight(1f), singleLine = true)
                 OutlinedTextField(value = state.weight, onValueChange = { if (it.all { c -> c.isDigit() }) onUpdate(state.copy(weight = it)) }, placeholder = { Text("%") }, modifier = Modifier.width(70.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
-                IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, contentDescription = null, tint = AppTheme.colors.error) }
             }
             if (!isSubItem) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onAddSub) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text("Add Sub-item", style = MaterialTheme.typography.labelMedium)
+                        Text("Add Sub-item", style = AppTheme.typography.labelMedium)
                     }
                     if (currentChildSum != null) {
-                        Text(text = "Sub-total: ${currentChildSum}%", color = if (isValid) Color(0xFF22C55E) else Color.Red, style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = "Sub-total: ${currentChildSum}%", 
+                            color = if (isValid) AppTheme.success else AppTheme.critical,
+                            style = AppTheme.typography.labelSmall
+                        )
                     }
                 }
             }

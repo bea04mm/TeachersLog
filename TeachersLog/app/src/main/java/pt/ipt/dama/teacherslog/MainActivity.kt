@@ -31,7 +31,7 @@ import pt.ipt.dama.teacherslog.ui.components.TeacherBottomBar
 import pt.ipt.dama.teacherslog.ui.components.TeacherDrawerContent
 import pt.ipt.dama.teacherslog.ui.components.AddYearAndPeriodDialog
 import pt.ipt.dama.teacherslog.ui.screens.*
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.*
 import pt.ipt.dama.teacherslog.utils.LocaleManager
 
@@ -161,7 +161,7 @@ fun MainApp(
                 title = { Text(stringResource(R.string.add_period)) },
                 text = {
                     Column {
-                        Text(text = stringResource(R.string.select_period_type), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(bottom = 8.dp))
+                        Text(text = stringResource(R.string.select_period_type), style = AppTheme.typography.bodyMedium, modifier = Modifier.padding(bottom = 8.dp))
                         available.forEach { optionRes ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically, 
@@ -188,7 +188,7 @@ fun MainApp(
             confirmButton = {
                 Button(
                     onClick = { academicViewModel.deleteAcademicYear(year); yearToDelete.value = null }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
                 }
@@ -206,7 +206,7 @@ fun MainApp(
             confirmButton = {
                 Button(
                     onClick = { academicViewModel.deleteSemester(semester); periodToDelete.value = null }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
                 }

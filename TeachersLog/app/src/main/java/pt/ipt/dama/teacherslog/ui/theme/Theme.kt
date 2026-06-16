@@ -1,13 +1,80 @@
 package pt.ipt.dama.teacherslog.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 
 /**
- * Dark color scheme for the application, defining the mapping for all Material 3 color roles.
+ * Global shape definitions for the application.
+ */
+private val ProjectShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(28.dp)
+)
+
+/**
+ * AppTheme provides the single entry point for all project-specific design tokens.
+ * It encapsulates Material 3 roles and provides access to custom semantic colors.
+ * Use this instead of MaterialTheme to ensure project-specific styles are applied.
+ */
+object AppTheme {
+    val colors: ColorScheme
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme
+
+    val typography: Typography
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.typography
+
+    val shapes: Shapes
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.shapes
+
+    /**
+     * Standard circular shape.
+     */
+    val circle = CircleShape
+
+    /**
+     * Fully transparent color.
+     */
+    val transparent = Color.Transparent
+
+    /**
+     * Parses a hex color string into a Compose Color object.
+     * @param hex The color string (e.g., "#FFFFFF").
+     * @return The Compose Color object.
+     */
+    fun parseColor(hex: String): Color = Color(hex.toColorInt())
+
+    // --- Semantic Project Colors ---
+    
+    val success: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) SuccessLight else SuccessDark
+    val warning: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) WarningLight else WarningDark
+    val critical: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) CriticalLight else CriticalDark
+}
+
+val warning: Color @Composable @ReadOnlyComposable get() = if (!isSystemInDarkTheme()) WarningLight else WarningDark
+
+/**
+ * Dark color scheme following Material 3.1 guidelines.
  */
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryDark,
@@ -33,10 +100,15 @@ private val DarkColorScheme = darkColorScheme(
     onError = OnErrorDark,
     errorContainer = ErrorContainerDark,
     onErrorContainer = OnErrorContainerDark,
+    surfaceContainerLowest = SurfaceContainerLowestDark,
+    surfaceContainerLow = SurfaceContainerLowDark,
+    surfaceContainer = SurfaceContainerDark,
+    surfaceContainerHigh = SurfaceContainerHighDark,
+    surfaceContainerHighest = SurfaceContainerHighestDark,
 )
 
 /**
- * Light color scheme for the application, defining the mapping for all Material 3 color roles.
+ * Light color scheme following Material 3.1 guidelines.
  */
 private val LightColorScheme = lightColorScheme(
     primary = Primary,
@@ -62,35 +134,30 @@ private val LightColorScheme = lightColorScheme(
     onError = OnError,
     errorContainer = ErrorContainer,
     onErrorContainer = OnErrorContainer,
+    surfaceContainerLowest = SurfaceContainerLowest,
+    surfaceContainerLow = SurfaceContainerLow,
+    surfaceContainer = SurfaceContainer,
+    surfaceContainerHigh = SurfaceContainerHigh,
+    surfaceContainerHighest = SurfaceContainerHighest,
 )
 
 /**
- * TeachersLogTheme defines the global visual style for the application.
+ * Composable theme wrapper for the application.
  *
- * It manages the Material 3 color schemes for both Light and Dark modes,
- * ensuring consistent branding across all UI components.
- * 
- * Note: Status bar and Edge-to-Edge handling is delegated to MainActivity 
- * using the modern enableEdgeToEdge() API for maximum compatibility.
- *
- * @param darkTheme Boolean flag to toggle between Light and Dark color schemes.
- * @param content The Composable content that will inherit this theme.
+ * @param darkTheme Boolean flag to toggle between themes.
+ * @param content Composable tree inheriting this theme.
  */
 @Composable
 fun TeachersLogTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    // Select the appropriate color palette based on the current theme state
-    val colorScheme = when {
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    // Apply the MaterialTheme with the selected colors and predefined typography
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = ProjectShapes,
         content = content
     )
 }

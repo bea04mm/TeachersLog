@@ -12,14 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.*
 import pt.ipt.dama.teacherslog.ui.components.*
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
@@ -40,6 +39,7 @@ fun DashboardContent(
     onClassClick: (Int, String) -> Unit
 ) {
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = { 
             // Branding TopBar with drawer support
             TeacherTopBar(
@@ -58,18 +58,10 @@ fun DashboardContent(
         ) {
             // --- Header Section ---
             item {
-                Column {
-                    Text(
-                        text = stringResource(R.string.academic_dashboard),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = stringResource(R.string.active_overview),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+                SectionHeader(
+                    label = stringResource(R.string.academic_dashboard),
+                    title = stringResource(R.string.active_overview)
+                )
             }
 
             // --- Stats Summary Section ---
@@ -84,12 +76,20 @@ fun DashboardContent(
                         icon = Icons.Default.Group,
                         modifier = Modifier.weight(1f)
                     )
+                    // Calculate semantic color for global average using Theme extension
+                    val avgPercentage = stats?.globalAverage ?: 0.0
+                    val avgColor = when {
+                        avgPercentage >= 80.0 -> AppTheme.success
+                        avgPercentage >= 50.0 -> AppTheme.warning
+                        else -> AppTheme.critical
+                    }
+
                     StatCard(
                         title = stringResource(R.string.global_average),
-                        value = String.format(Locale.getDefault(), "%.1f %%", stats?.globalAverage ?: 0.0),
+                        value = String.format(Locale.getDefault(), "%.1f %%", avgPercentage),
                         icon = Icons.Default.BarChart,
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.secondary
+                        color = avgColor
                     )
                 }
             }
@@ -99,7 +99,7 @@ fun DashboardContent(
                 Column {
                     Text(
                         text = stringResource(R.string.recent_classes_title),
-                        style = MaterialTheme.typography.headlineMedium
+                        style = AppTheme.typography.headlineMedium
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -108,8 +108,8 @@ fun DashboardContent(
                             Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                                 Text(
                                     text = stringResource(R.string.no_recent_classes), 
-                                    style = MaterialTheme.typography.bodyMedium, 
-                                    color = MaterialTheme.colorScheme.outline
+                                    style = AppTheme.typography.bodyMedium,
+                                    color = AppTheme.colors.outline
                                 )
                             }
                         }
@@ -119,7 +119,7 @@ fun DashboardContent(
                                 name = clazz.name,
                                 studentCount = clazz.studentCount,
                                 averageGrade = clazz.averageGrade,
-                                color = Color(clazz.colorHex.toColorInt()),
+                                color = AppTheme.parseColor(clazz.colorHex),
                                 gradingScale = clazz.gradingScale,
                                 iconName = clazz.iconName,
                                 modifier = Modifier.padding(vertical = 6.dp),

@@ -28,7 +28,7 @@ object IconMapper {
     /** Icon for the User Account/Profile destination. */
     val Account = Icons.Default.Person
 
-    /** Icon for the Sign Out action. */
+    /** Icon for the Sign-Out action. */
     val Logout = Icons.AutoMirrored.Filled.Logout
 
     // --- Dynamic Subject Icon Mapping ---

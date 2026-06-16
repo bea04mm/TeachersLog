@@ -13,12 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.teacherslog.utils.LocaleManager
 
@@ -66,6 +66,7 @@ fun AppPreferencesContent(
     }
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(R.string.app_preferences),
@@ -94,11 +95,11 @@ fun AppPreferencesContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(text = stringResource(R.string.app_language), style = MaterialTheme.typography.bodyLarge)
+                                Text(text = stringResource(R.string.app_language), style = AppTheme.typography.bodyLarge)
                                 Text(
                                     text = if (currentLang == "pt") stringResource(R.string.portuguese) else stringResource(R.string.english), 
-                                    style = MaterialTheme.typography.bodyMedium, 
-                                    color = MaterialTheme.colorScheme.primary
+                                    style = AppTheme.typography.bodyMedium, 
+                                    color = AppTheme.colors.primary
                                 )
                             }
                             Icon(Icons.Default.Translate, contentDescription = null)
@@ -169,7 +170,7 @@ fun LanguageOption(label: String, code: String, current: String, onClick: () -> 
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, style = AppTheme.typography.bodyLarge)
         RadioButton(selected = (code == current), onClick = onClick)
     }
 }
@@ -189,9 +190,9 @@ fun PreferenceSection(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) {
-            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(imageVector = icon, contentDescription = null, tint = AppTheme.colors.primary)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = title, style = AppTheme.typography.titleMedium)
         }
         content()
     }
@@ -220,8 +221,8 @@ fun PreferenceToggle(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = title, style = AppTheme.typography.bodyLarge)
+            Text(text = subtitle, style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }

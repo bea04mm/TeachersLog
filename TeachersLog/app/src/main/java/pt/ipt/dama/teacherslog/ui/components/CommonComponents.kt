@@ -3,8 +3,6 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -13,19 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.util.Locale
-import androidx.compose.ui.res.stringResource
 import pt.ipt.dama.teacherslog.R
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
  * TeacherTopBar is a standardized TopAppBar for the application.
  * 
- * It dynamically switches its icon based on the title and provides
- * support for both a side menu navigation and a back button.
+ * It provides support for both a side menu navigation and a back button,
+ * and allows for an optional contextual icon next to the title.
  *
  * @param title The text to display as the screen title.
  * @param modifier The [Modifier] to be applied to the TopAppBar.
@@ -53,18 +50,16 @@ fun TeacherTopBar(
                     Icon(
                         imageVector = titleIcon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = AppTheme.colors.primary,
                         modifier = Modifier.size(24.dp)
                     )
                     // Spacing between icon and title
                     Spacer(modifier = Modifier.width(12.dp))
                 }
-                // Bold screen title
+                // Bold screen title using project typography
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
+                    style = AppTheme.typography.titleLarge
                 )
             }
         },
@@ -75,7 +70,7 @@ fun TeacherTopBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
                         contentDescription = stringResource(R.string.back),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppTheme.colors.primary
                     )
                 }
             } else if (onNavigationIconClick != null) {
@@ -84,14 +79,14 @@ fun TeacherTopBar(
                     Icon(
                         imageVector = Icons.Default.Menu, 
                         contentDescription = stringResource(R.string.menu),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppTheme.colors.primary
                     )
                 }
             }
         },
         actions = {},
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = AppTheme.colors.surface
         )
     )
 }
@@ -111,15 +106,15 @@ fun TeacherBottomBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        containerColor = AppTheme.colors.surfaceContainer,
+        contentColor = AppTheme.colors.onSurfaceVariant
     ) {
         val navItemColors = NavigationBarItemDefaults.colors(
-            selectedIconColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.primary,
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            selectedIconColor = AppTheme.colors.primary,
+            selectedTextColor = AppTheme.colors.primary,
+            indicatorColor = AppTheme.colors.primaryContainer.copy(alpha = 0.4f),
+            unselectedIconColor = AppTheme.colors.onSurfaceVariant,
+            unselectedTextColor = AppTheme.colors.onSurfaceVariant
         )
 
         // Tab: Dashboard
@@ -127,7 +122,7 @@ fun TeacherBottomBar(
             selected = currentRoute == "dashboard",
             onClick = { onNavigate("dashboard") },
             icon = { Icon(IconMapper.Dashboard, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_dashboard), style = MaterialTheme.typography.labelSmall) },
+            label = { Text(stringResource(R.string.nav_dashboard), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
         // Tab: Subjects/Classes
@@ -135,7 +130,7 @@ fun TeacherBottomBar(
             selected = currentRoute == "subjects",
             onClick = { onNavigate("subjects") },
             icon = { Icon(IconMapper.Subjects, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_classes), style = MaterialTheme.typography.labelSmall) },
+            label = { Text(stringResource(R.string.nav_classes), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
         // Tab: Settings
@@ -143,14 +138,41 @@ fun TeacherBottomBar(
             selected = currentRoute == "settings",
             onClick = { onNavigate("settings") },
             icon = { Icon(IconMapper.Settings, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.labelSmall) },
+            label = { Text(stringResource(R.string.nav_settings), style = AppTheme.typography.labelSmall) },
             colors = navItemColors
         )
     }
 }
 
 /**
+ * Reusable header for sections, ensuring consistent typography and color.
+ * 
+ * @param label The small label text (subtitle).
+ * @param title The large headline text.
+ * @param modifier The [Modifier] to apply.
+ */
+@Composable
+fun SectionHeader(
+    label: String,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = AppTheme.typography.labelSmall,
+            color = AppTheme.colors.primary
+        )
+        Text(
+            text = title,
+            style = AppTheme.typography.headlineLarge
+        )
+    }
+}
+
+/**
  * TonalCard is a reusable surface container with a subtle background color and low elevation.
+ * Uses the project's shapes and surfaceContainerLow for better Dark Mode support.
  *
  * @param modifier The [Modifier] to be applied.
  * @param content The Composable content to display inside the card.
@@ -162,10 +184,11 @@ fun TonalCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = AppTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = AppTheme.colors.surfaceContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         content = content
     )
 }
@@ -185,15 +208,15 @@ fun StatCard(
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.primary
+    color: androidx.compose.ui.graphics.Color = AppTheme.colors.primary
 ) {
     TonalCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Decorative icon bubble
+            // Decorative icon bubble using project shapes
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AppTheme.shapes.small)
                     .background(color.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -203,15 +226,14 @@ fun StatCard(
             // Descriptive label
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline
+                style = AppTheme.typography.labelSmall,
+                color = AppTheme.colors.outline
             )
             // Primary value
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                style = AppTheme.typography.titleLarge,
+                color = AppTheme.colors.onSurface
             )
         }
     }
@@ -236,7 +258,7 @@ fun AcademicSummaryCard(
     name: String,
     averageGrade: Double,
     studentCount: Int,
-    color: Color,
+    color: androidx.compose.ui.graphics.Color,
     averageLabel: String,
     gradingScale: String,
     modifier: Modifier = Modifier,
@@ -248,6 +270,15 @@ fun AcademicSummaryCard(
         "20" -> " / 20"
         "100" -> " %"
         else -> " / 5"
+    }
+
+    // Determine semantic color based on grade performance using project theme object
+    val maxGradeValue = when(gradingScale) { "20" -> 20.0; "100" -> 100.0; else -> 5.0 }
+    val percentage = (averageGrade / maxGradeValue) * 100.0
+    val performanceColor = when {
+        percentage >= 80.0 -> AppTheme.success
+        percentage >= 50.0 -> AppTheme.warning
+        else -> AppTheme.critical
     }
 
     TonalCard(
@@ -278,9 +309,8 @@ fun AcademicSummaryCard(
                         }
                         Text(
                             text = name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = AppTheme.typography.titleMedium,
+                            color = AppTheme.colors.onSurface
                         )
                     }
                     
@@ -300,31 +330,34 @@ fun AcademicSummaryCard(
                     Column {
                         Text(
                             text = averageLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            style = AppTheme.typography.labelSmall,
+                            color = AppTheme.colors.outline
                         )
                         Text(
                             text = String.format(Locale.getDefault(), "%.2f", averageGrade) + suffix,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = AppTheme.typography.titleMedium,
+                            color = performanceColor
                         )
                     }
                     // Student count pill at the bottom right
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = CircleShape
+                        color = AppTheme.colors.surfaceContainerLow,
+                        shape = AppTheme.circle
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = IconMapper.Account, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             // Use the formatted string resource for student count
                             Text(
                                 text = stringResource(R.string.students_count_label, studentCount),
-                                style = MaterialTheme.typography.labelSmall
+                                style = AppTheme.typography.labelSmall
                             )
                         }
                     }
@@ -336,7 +369,7 @@ fun AcademicSummaryCard(
 
 /**
  * Compatibility wrapper for SubjectCard using the unified [AcademicSummaryCard].
- * 
+ *
  * @param name The name of the subject.
  * @param average The average grade string.
  * @param students The total student count.
@@ -352,7 +385,7 @@ fun SubjectCard(
     name: String,
     average: String,
     students: Int,
-    color: Color,
+    color: androidx.compose.ui.graphics.Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     gradingScale: String,
     modifier: Modifier = Modifier,
@@ -375,7 +408,7 @@ fun SubjectCard(
 
 /**
  * Compatibility wrapper for ClassCard using the unified [AcademicSummaryCard].
- * 
+ *
  * @param name The name of the class.
  * @param studentCount The number of students.
  * @param averageGrade The average grade.
@@ -391,7 +424,7 @@ fun ClassCard(
     name: String,
     studentCount: Int,
     averageGrade: Double,
-    color: Color,
+    color: androidx.compose.ui.graphics.Color,
     gradingScale: String,
     modifier: Modifier = Modifier,
     iconName: String? = null,

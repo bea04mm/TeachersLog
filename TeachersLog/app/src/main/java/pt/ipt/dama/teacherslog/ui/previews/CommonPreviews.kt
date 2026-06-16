@@ -7,7 +7,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -15,7 +14,7 @@ import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.data.model.Semester
 import pt.ipt.dama.teacherslog.ui.components.*
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.ui.theme.*
 
 /**
  * Visualizes the [TeacherTopBar] in a standard dashboard context.
@@ -66,7 +65,7 @@ fun SubjectCardPreview() {
             name = "Mathematics",
             average = "4.2",
             students = 12,
-            color = Color(0xFF004AC6),
+            color = Primary,
             icon = Icons.Default.Functions,
             gradingScale = "5",
             modifier = Modifier.padding(16.dp),
@@ -86,7 +85,7 @@ fun ClassCardPreview() {
             name = "4.ºA",
             studentCount = 25,
             averageGrade = 3.85,
-            color = Color(0xFF006686),
+            color = Secondary,
             gradingScale = "5",
             modifier = Modifier.padding(16.dp),
             onClick = {}
@@ -154,7 +153,7 @@ fun CommonComponentsSummaryPreview() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(AppTheme.colors.background)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -172,7 +171,7 @@ fun CommonComponentsSummaryPreview() {
                     value = "4.1",
                     icon = Icons.Default.Star,
                     modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.secondary
+                    color = AppTheme.colors.secondary
                 )
             }
             
@@ -180,7 +179,7 @@ fun CommonComponentsSummaryPreview() {
                 name = "Science",
                 average = "3.9",
                 students = 45,
-                color = Color(0xFF006874),
+                color = AppTheme.parseColor("#006874"),
                 icon = Icons.Default.Biotech,
                 gradingScale = "100",
                 onClick = {}
@@ -190,7 +189,7 @@ fun CommonComponentsSummaryPreview() {
                 name = "10.ºB",
                 studentCount = 30,
                 averageGrade = 4.5,
-                color = MaterialTheme.colorScheme.tertiary,
+                color = AppTheme.colors.tertiary,
                 gradingScale = "20",
                 onClick = {}
             )

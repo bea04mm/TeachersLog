@@ -6,19 +6,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
+import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
@@ -88,24 +88,24 @@ fun SubjectEditContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.select_icon), 
-                    style = MaterialTheme.typography.labelMedium, 
-                    color = MaterialTheme.colorScheme.primary
+                    style = AppTheme.typography.labelMedium, 
+                    color = AppTheme.colors.primary
                 )
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(icons) { (iconName, icon) ->
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .clip(CircleShape)
-                                .background(if (selectedIcon == iconName) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                .border(width = 2.dp, color = if (selectedIcon == iconName) MaterialTheme.colorScheme.primary else Color.Transparent, shape = CircleShape)
+                                .clip(AppTheme.shapes.extraLarge)
+                                .background(if (selectedIcon == iconName) AppTheme.colors.primaryContainer else AppTheme.colors.surfaceContainerLow)
+                                .border(width = 2.dp, color = if (selectedIcon == iconName) AppTheme.colors.primary else AppTheme.transparent, shape = AppTheme.shapes.extraLarge)
                                 .clickable { selectedIcon = iconName },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = icon, 
                                 contentDescription = null, 
-                                tint = if (selectedIcon == iconName) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if (selectedIcon == iconName) AppTheme.colors.primary else AppTheme.colors.onSurfaceVariant
                             )
                         }
                     }
@@ -116,18 +116,18 @@ fun SubjectEditContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.select_color), 
-                    style = MaterialTheme.typography.labelMedium, 
-                    color = MaterialTheme.colorScheme.primary
+                    style = AppTheme.typography.labelMedium, 
+                    color = AppTheme.colors.primary
                 )
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(colors) { colorHex ->
-                        val color = Color(colorHex.toColorInt())
+                        val color = AppTheme.parseColor(colorHex)
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .clip(CircleShape)
+                                .clip(AppTheme.shapes.extraLarge)
                                 .background(color)
-                                .border(width = 3.dp, color = if (selectedColor == colorHex) MaterialTheme.colorScheme.onSurface else Color.Transparent, shape = CircleShape)
+                                .border(width = 3.dp, color = if (selectedColor == colorHex) AppTheme.colors.onSurface else AppTheme.transparent, shape = AppTheme.shapes.extraLarge)
                                 .clickable { selectedColor = colorHex }
                         )
                     }
@@ -138,9 +138,11 @@ fun SubjectEditContent(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = { if (name.isNotBlank()) onSave(name, selectedIcon, selectedColor) }, 
-                modifier = Modifier.fillMaxWidth(), 
+                modifier = Modifier.fillMaxWidth().height(56.dp), 
                 enabled = name.isNotBlank()
             ) {
+                Icon(Icons.Default.Save, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.save)) 
             }
         }
