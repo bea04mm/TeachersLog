@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,9 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import pt.ipt.dama.teacherslog.R
-import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
+import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
  * TeacherTopBar is a standardized TopAppBar for the application.
@@ -31,6 +29,7 @@ import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
  *
  * @param title The text to display as the screen title.
  * @param modifier The [Modifier] to be applied to the TopAppBar.
+ * @param titleIcon Optional icon to display next to the title.
  * @param onNavigationIconClick Callback for the side menu icon. If null, icon is hidden.
  * @param showBackButton Boolean flag to toggle the back button display.
  * @param onBackClick Callback for the back button navigation.
@@ -40,31 +39,26 @@ import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 fun TeacherTopBar(
     title: String,
     modifier: Modifier = Modifier,
+    titleIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     onNavigationIconClick: (() -> Unit)? = null,
     showBackButton: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
-    // Determine the branding/context icon based on the screen title
-    val titleIcon = when {
-        title.contains("Dashboard", true) || title.contains("Teacher", true) -> Icons.Default.Home
-        title.contains("Subjects", true) || title.contains("Classes", true) -> Icons.AutoMirrored.Filled.MenuBook
-        title.contains("Settings", true) || title.contains("Preferences", true) -> Icons.Default.Settings
-        else -> Icons.AutoMirrored.Filled.MenuBook
-    }
-
     TopAppBar(
         modifier = modifier,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Contextual icon with primary theme color
-                Icon(
-                    imageVector = titleIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                // Spacing between icon and title
-                Spacer(modifier = Modifier.width(12.dp))
+                if (titleIcon != null) {
+                    Icon(
+                        imageVector = titleIcon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    // Spacing between icon and title
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
                 // Bold screen title
                 Text(
                     text = title,
@@ -132,7 +126,7 @@ fun TeacherBottomBar(
         NavigationBarItem(
             selected = currentRoute == "dashboard",
             onClick = { onNavigate("dashboard") },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+            icon = { Icon(IconMapper.Dashboard, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_dashboard), style = MaterialTheme.typography.labelSmall) },
             colors = navItemColors
         )
@@ -140,7 +134,7 @@ fun TeacherBottomBar(
         NavigationBarItem(
             selected = currentRoute == "subjects",
             onClick = { onNavigate("subjects") },
-            icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
+            icon = { Icon(IconMapper.Subjects, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_classes), style = MaterialTheme.typography.labelSmall) },
             colors = navItemColors
         )
@@ -148,7 +142,7 @@ fun TeacherBottomBar(
         NavigationBarItem(
             selected = currentRoute == "settings",
             onClick = { onNavigate("settings") },
-            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+            icon = { Icon(IconMapper.Settings, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.labelSmall) },
             colors = navItemColors
         )
@@ -388,6 +382,7 @@ fun SubjectCard(
  * @param color The branding color.
  * @param gradingScale The grading scale identifier.
  * @param modifier The [Modifier] to be applied.
+ * @param iconName Optional icon identifier string.
  * @param actions Optional action buttons/menu.
  * @param onClick Callback for selection.
  */
@@ -399,6 +394,7 @@ fun ClassCard(
     color: Color,
     gradingScale: String,
     modifier: Modifier = Modifier,
+    iconName: String? = null,
     actions: @Composable (RowScope.() -> Unit)? = null,
     onClick: () -> Unit
 ) {
@@ -410,145 +406,8 @@ fun ClassCard(
         averageLabel = stringResource(R.string.class_average_label),
         gradingScale = gradingScale,
         modifier = modifier,
-        icon = null,
+        icon = iconName?.let { IconMapper.getIconByName(it) },
         actions = actions,
         onClick = onClick
     )
-}
-
-// --- Previews ---
-
-/**
- * Visualizes the [TeacherTopBar] in a standard dashboard context.
- */
-@Preview(showBackground = true, name = "Top Bar Preview")
-@Composable
-fun TeacherTopBarPreview() {
-    TeachersLogTheme {
-        TeacherTopBar(title = "Dashboard", onNavigationIconClick = {})
-    }
-}
-
-/**
- * Visualizes the [TeacherBottomBar] with a selected route.
- */
-@Preview(showBackground = true, name = "Bottom Bar Preview")
-@Composable
-fun TeacherBottomBarPreview() {
-    TeachersLogTheme {
-        TeacherBottomBar(currentRoute = "dashboard", onNavigate = {})
-    }
-}
-
-/**
- * Visualizes the [StatCard] with sample numeric data.
- */
-@Preview(showBackground = true, name = "Stat Card Preview")
-@Composable
-fun StatCardPreview() {
-    TeachersLogTheme {
-        StatCard(
-            title = stringResource(R.string.total_students),
-            value = "45",
-            icon = Icons.Default.Group,
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}
-
-/**
- * Visualizes the [SubjectCard] as it would appear in a list.
- */
-@Preview(showBackground = true, name = "Subject Card Preview")
-@Composable
-fun SubjectCardPreview() {
-    TeachersLogTheme {
-        SubjectCard(
-            name = "Mathematics",
-            average = "4.2",
-            students = 12,
-            color = Color(0xFF004AC6),
-            icon = Icons.Default.Functions,
-            gradingScale = "5",
-            modifier = Modifier.padding(16.dp),
-            onClick = {}
-        )
-    }
-}
-
-/**
- * Visualizes the [ClassCard] with its performance metrics.
- */
-@Preview(showBackground = true, name = "Class Card Preview")
-@Composable
-fun ClassCardPreview() {
-    TeachersLogTheme {
-        ClassCard(
-            name = "4.ºA",
-            studentCount = 25,
-            averageGrade = 3.85,
-            color = Color(0xFF006686),
-            gradingScale = "5",
-            modifier = Modifier.padding(16.dp),
-            onClick = {}
-        )
-    }
-}
-
-/**
- * Comprehensive preview showing a combination of common components in a simulated dashboard layout.
- */
-@Preview(showBackground = true, name = "All Components Summary")
-@Composable
-fun CommonComponentsSummaryPreview() {
-    TeachersLogTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            TeacherTopBar(title = "Components Overview", onNavigationIconClick = {})
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                StatCard(
-                    title = stringResource(R.string.total_students),
-                    value = "120",
-                    icon = Icons.Default.Person,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = stringResource(R.string.global_average),
-                    value = "4.1",
-                    icon = Icons.Default.Star,
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-            
-            SubjectCard(
-                name = "Science",
-                average = "3.9",
-                students = 45,
-                color = Color(0xFF006874),
-                icon = Icons.Default.Biotech,
-                gradingScale = "100",
-                onClick = {}
-            )
-            
-            ClassCard(
-                name = "10.ºB",
-                studentCount = 30,
-                averageGrade = 4.5,
-                color = MaterialTheme.colorScheme.tertiary,
-                gradingScale = "20",
-                onClick = {}
-            )
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            TeacherBottomBar(currentRoute = "subjects", onNavigate = {})
-        }
-    }
 }
