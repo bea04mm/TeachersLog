@@ -64,6 +64,9 @@ fun ClassEditContent(
     var name by remember { mutableStateOf(initialName) }
     var selectedScale by remember { mutableStateOf(initialScale) }
     val components = remember { mutableStateListOf<ClassComponentEditState>() }
+    
+    val testsLabel = stringResource(R.string.default_component_tests)
+    val assignmentsLabel = stringResource(R.string.default_component_assignments)
 
     // Sync internal state when data becomes available
     LaunchedEffect(initialName, initialScale, initialComponents) {
@@ -73,8 +76,8 @@ fun ClassEditContent(
             components.addAll(initialComponents)
         } else if (components.isEmpty() && !isEditMode) {
             // Default setup for a new class
-            components.add(ClassComponentEditState(name = "Tests", weight = "60"))
-            components.add(ClassComponentEditState(name = "Assignments", weight = "40"))
+            components.add(ClassComponentEditState(name = testsLabel, weight = "60"))
+            components.add(ClassComponentEditState(name = assignmentsLabel, weight = "40"))
         }
     }
 
@@ -233,7 +236,8 @@ fun ComponentRow(
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (isSubItem) Icon(Icons.Default.SubdirectoryArrowRight, contentDescription = null, tint = AppTheme.colors.outline)
-                OutlinedTextField(value = state.name, onValueChange = { onUpdate(state.copy(name = it)) }, placeholder = { Text(if (isSubItem) "Sub-item Name" else "Group Name") }, modifier = Modifier.weight(1f), singleLine = true)
+                val namePlaceholder = if (isSubItem) stringResource(R.string.placeholder_subitem_name) else stringResource(R.string.placeholder_group_name)
+                OutlinedTextField(value = state.name, onValueChange = { onUpdate(state.copy(name = it)) }, placeholder = { Text(namePlaceholder) }, modifier = Modifier.weight(1f), singleLine = true)
                 OutlinedTextField(value = state.weight, onValueChange = { if (it.all { c -> c.isDigit() }) onUpdate(state.copy(weight = it)) }, placeholder = { Text("%") }, modifier = Modifier.width(70.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
                 IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, contentDescription = null, tint = AppTheme.colors.error) }
             }
@@ -241,11 +245,11 @@ fun ComponentRow(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onAddSub) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text("Add Sub-item", style = AppTheme.typography.labelMedium)
+                        Text(stringResource(R.string.add_subitem_label), style = AppTheme.typography.labelMedium)
                     }
                     if (currentChildSum != null) {
                         Text(
-                            text = "Sub-total: ${currentChildSum}%", 
+                            text = stringResource(R.string.subtotal_label, currentChildSum),
                             color = if (isValid) AppTheme.success else AppTheme.critical,
                             style = AppTheme.typography.labelSmall
                         )

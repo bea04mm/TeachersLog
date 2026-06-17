@@ -2,6 +2,8 @@ package pt.ipt.dama.teacherslog.ui.previews
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.MutableLiveData
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
 import pt.ipt.dama.teacherslog.data.model.SubjectWithStats
 import pt.ipt.dama.teacherslog.ui.screens.SubjectContent
@@ -25,7 +27,10 @@ fun SubjectsListPreview() {
             onSubjectClick = { _, _ -> },
             onAddSubjectClick = {},
             onEditSubjectClick = {},
-            onDeleteSubjectClick = {}
+            onDeleteSubjectClick = {},
+            onCloneSubjectClick = { _, _ -> },
+            academicYears = listOf(AcademicYear(1, "2024/2025")),
+            semestersProvider = { _ -> MutableLiveData(emptyList()) }
         )
     }
 }
@@ -48,7 +53,11 @@ fun SubjectPreview() {
             onAddClassClick = {},
             onEditClassClick = {},
             onDeleteClass = {},
-            onBackClick = {}
+            onCloneClassClick = { _, _ -> },
+            onBackClick = {},
+            academicYears = listOf(AcademicYear(1, "2024/2025")),
+            semestersProvider = { _ -> MutableLiveData(emptyList()) },
+            subjectsProvider = { _ -> MutableLiveData(emptyList()) }
         )
     }
 }

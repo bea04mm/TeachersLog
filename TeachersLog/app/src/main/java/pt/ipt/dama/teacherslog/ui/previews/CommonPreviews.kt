@@ -113,9 +113,11 @@ fun TeacherDrawerPreview() {
             selectedSemesterId = 1,
             onYearSelect = {},
             onYearDelete = {},
+            onYearClone = {},
             onAddYear = {},
             onSemesterSelect = {},
             onSemesterDelete = {},
+            onSemesterClone = {},
             onAddPeriod = {}
         )
     }

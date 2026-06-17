@@ -63,8 +63,9 @@ fun SettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = stringResource(R.string.jane_harrison), style = AppTheme.typography.titleLarge)
-                            Text(text = stringResource(R.string.jane_email), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
+                            val fullName = "${stringResource(R.string.default_user_firstname)} ${stringResource(R.string.default_user_lastname)}"
+                            Text(text = fullName, style = AppTheme.typography.titleLarge)
+                            Text(text = stringResource(R.string.default_user_email), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
