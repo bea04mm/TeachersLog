@@ -11,8 +11,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
+import pt.ipt.dama.teacherslog.data.model.Semester
 import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.data.model.SubjectWithStats
 import pt.ipt.dama.teacherslog.ui.components.*
@@ -43,9 +46,13 @@ fun SubjectsListContent(
     onAddSubjectClick: () -> Unit,
     onEditSubjectClick: (Int) -> Unit,
     onDeleteSubjectClick: (Subject) -> Unit,
+    onCloneSubjectClick: (Int, Int) -> Unit,
+    academicYears: List<AcademicYear>,
+    semestersProvider: (Int) -> LiveData<List<Semester>>
 ) {
     // State to hold the subject currently marked for deletion
     val subjectToDelete = remember { mutableStateOf<Subject?>(null) }
+    val subjectToClone = remember { mutableStateOf<SubjectWithStats?>(null) }
 
     // --- Delete Confirmation Dialog ---
     subjectToDelete.value?.let { subject ->
@@ -57,6 +64,20 @@ fun SubjectsListContent(
                 subjectToDelete.value = null
             },
             onDismiss = { subjectToDelete.value = null }
+        )
+    }
+
+    // --- Clone Destination Dialog ---
+    subjectToClone.value?.let { subject ->
+        CloneDestinationDialog(
+            title = stringResource(R.string.clone_subject_title),
+            academicYears = academicYears,
+            semestersProvider = semestersProvider,
+            onConfirm = { targetSemesterId ->
+                onCloneSubjectClick(subject.id, targetSemesterId)
+                subjectToClone.value = null
+            },
+            onDismiss = { subjectToClone.value = null }
         )
     }
 
@@ -129,6 +150,14 @@ fun SubjectsListContent(
                                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.clone_label)) },
+                                    onClick = {
+                                        showMenu = false
+                                        subjectToClone.value = subject
+                                    },
+                                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete_subject_title)) },
                                     onClick = {
                                         showMenu = false
@@ -177,6 +206,7 @@ fun SubjectsListScreen(
 ) {
     // Observe subjects with statistics for the currently selected academic period
     val subjects by academicViewModel.subjectsWithStats.observeAsState(emptyList())
+    val years by academicViewModel.allAcademicYears.observeAsState(emptyList())
     
     SubjectsListContent(
         subjects = subjects,
@@ -184,6 +214,9 @@ fun SubjectsListScreen(
         onSubjectClick = onSubjectClick,
         onAddSubjectClick = onAddSubjectClick,
         onEditSubjectClick = onEditSubjectClick,
-        onDeleteSubjectClick = { academicViewModel.deleteSubject(it) }
+        onDeleteSubjectClick = { academicViewModel.deleteSubject(it) },
+        onCloneSubjectClick = { sourceId, targetId -> academicViewModel.cloneSubject(sourceId, targetId) },
+        academicYears = years,
+        semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) }
     )
 }
