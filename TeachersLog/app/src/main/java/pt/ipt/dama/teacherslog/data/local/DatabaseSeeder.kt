@@ -21,9 +21,11 @@ object DatabaseSeeder {
 
         // --- 1. Academic Years ---
         val year2425Id = teacherDao.insertAcademicYear(AcademicYear(year = "2024/2025", isCurrent = true)).toInt()
+        if (year2425Id == -1) return
 
         // --- 2. Semesters ---
         val sem1Id = teacherDao.insertSemester(Semester(academicYearId = year2425Id, name = "1st Semester")).toInt()
+        if (sem1Id == -1) return
         teacherDao.insertSemester(Semester(academicYearId = year2425Id, name = "2nd Semester"))
 
         // --- 3. Subjects ---
