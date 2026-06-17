@@ -14,7 +14,11 @@ import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 @Composable
 fun SettingsPreview() {
     TeachersLogTheme(darkTheme = false) {
-        SettingsScreen(onNavigateToAccount = {}, onNavigateToPreferences = {})
+        SettingsScreen(
+            onNavigateToAccount = {}, 
+            onNavigateToPreferences = {},
+            onLogout = {}
+        )
     }
 }
 
