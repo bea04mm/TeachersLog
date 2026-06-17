@@ -24,9 +24,9 @@ interface TeacherDao {
     /**
      * Inserts a new academic year.
      * @param year The [AcademicYear] to insert.
-     * @return The row ID of the inserted year.
+     * @return The row ID of the inserted year or -1 if a conflict occurs.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAcademicYear(year: AcademicYear): Long
 
     /**
@@ -66,9 +66,9 @@ interface TeacherDao {
     /**
      * Inserts or replaces an academic period record.
      * @param semester The [Semester] record to save.
-     * @return The row ID of the saved record.
+     * @return The row ID of the saved record or -1 if a conflict occurs.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSemester(semester: Semester): Long
 
     /**
@@ -257,9 +257,9 @@ interface TeacherDao {
     /**
      * Inserts a new subject.
      * @param subject The [Subject] record.
-     * @return Row ID.
+     * @return Row ID or -1 if conflicted.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSubject(subject: Subject): Long
 
     /**
@@ -310,9 +310,9 @@ interface TeacherDao {
     /**
      * Inserts a student class.
      * @param studentsClass The [StudentsClass].
-     * @return Row ID.
+     * @return Row ID or -1 if conflicted.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStudentsClass(studentsClass: StudentsClass): Long
 
     /**
@@ -405,4 +405,84 @@ interface TeacherDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGrade(grade: Grade): Long
+
+    /**
+     * Fetches all subjects for a specific semester without stats.
+     * @param semesterId The ID of the parent semester.
+     * @return A list of [Subject] objects.
+     */
+    @Query("SELECT * FROM subjects WHERE semesterId = :semesterId")
+    suspend fun getSubjectsBySemesterId(semesterId: Int): List<Subject>
+
+    /**
+     * Fetches all subjects for a specific semester as an observable flow.
+     * @param semesterId The ID of the parent semester.
+     * @return A [Flow] emitting lists of [Subject].
+     */
+    @Query("SELECT * FROM subjects WHERE semesterId = :semesterId")
+    fun getSubjectsBySemesterIdFlow(semesterId: Int): Flow<List<Subject>>
+
+    /**
+     * Fetches all classes for a specific subject without stats.
+     * @param subjectId The ID of the parent subject.
+     * @return A list of [StudentsClass] objects.
+     */
+    @Query("SELECT * FROM students_classes WHERE subjectId = :subjectId")
+    suspend fun getClassesBySubjectId(subjectId: Int): List<StudentsClass>
+
+    /**
+     * Fetches all classes for a specific subject as an observable flow.
+     * @param subjectId The ID of the parent subject.
+     * @return A [Flow] emitting lists of [StudentsClass].
+     */
+    @Query("SELECT * FROM students_classes WHERE subjectId = :subjectId")
+    fun getClassesBySubjectIdFlow(subjectId: Int): Flow<List<StudentsClass>>
+
+    /**
+     * Fetches all students for a specific class.
+     * @param classId The ID of the parent class.
+     * @return A list of [Student] objects.
+     */
+    @Query("SELECT * FROM students WHERE studentsClassId = :classId")
+    suspend fun getStudentsByClassId(classId: Int): List<Student>
+
+    /**
+     * Fetches all grading components for a specific class.
+     * @param classId The ID of the parent class.
+     * @return A list of [GradingComponent] objects.
+     */
+    @Query("SELECT * FROM grading_components WHERE classId = :classId")
+    suspend fun getGradingComponentsByClassId(classId: Int): List<GradingComponent>
+
+    /**
+     * Fetches a single class record by ID synchronously.
+     * @param classId The class identifier.
+     * @return The [StudentsClass] or null if not found.
+     */
+    @Query("SELECT * FROM students_classes WHERE id = :classId")
+    suspend fun getStudentsClassByIdSync(classId: Int): StudentsClass?
+
+    /**
+     * Fetches a single subject record by ID synchronously.
+     * @param subjectId The subject identifier.
+     * @return The [Subject] or null if not found.
+     */
+    @Query("SELECT * FROM subjects WHERE id = :subjectId")
+    suspend fun getSubjectByIdSync(subjectId: Int): Subject?
+
+    /**
+     * Fetches a single academic period (semester) by ID synchronously.
+     * @param semesterId The semester identifier.
+     * @return The [Semester] or null if not found.
+     */
+    @Query("SELECT * FROM semesters WHERE id = :semesterId")
+    suspend fun getSemesterByIdSync(semesterId: Int): Semester?
+
+    /**
+     * Fetches all semesters for a specific year synchronously.
+     * @param yearId The ID of the parent academic year.
+     * @return A list of [Semester] objects.
+     */
+    @Query("SELECT * FROM semesters WHERE academicYearId = :yearId")
+    suspend fun getSemestersForYearList(yearId: Int): List<Semester>
 }

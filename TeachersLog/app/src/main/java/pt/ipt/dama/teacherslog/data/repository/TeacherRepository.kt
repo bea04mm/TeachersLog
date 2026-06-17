@@ -228,6 +228,18 @@ class TeacherRepository(private val teacherDao: TeacherDao) {
     fun getComponentScoresForStudent(studentId: Int): Flow<List<ComponentScore>> = teacherDao.getComponentScoresForStudent(studentId)
 
     /**
+     * Fetches subjects for a specific semester without stats.
+     */
+    fun getSubjectsBySemesterId(semesterId: Int): Flow<List<Subject>> =
+        teacherDao.getSubjectsBySemesterIdFlow(semesterId)
+
+    /**
+     * Fetches classes for a specific subject without stats.
+     */
+    fun getClassesBySubjectId(subjectId: Int): Flow<List<StudentsClass>> =
+        teacherDao.getClassesBySubjectIdFlow(subjectId)
+
+    /**
      * Inserts a qualitative grade entry.
      * @param grade Grade record.
      */
