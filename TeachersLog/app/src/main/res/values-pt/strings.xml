@@ -151,4 +151,23 @@
     <string name="first_name">Primeiro Nome</string>
     <string name="last_name">Apelido</string>
     <string name="email">Email</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Bem-vindo ao Diário do Professor</string>
+    <string name="onboarding_1_title">Organize as suas Turmas</string>
+    <string name="onboarding_1_desc">Gira múltiplas disciplinas e turmas com facilidade. Mantenha todas as listas de alunos num só lugar.</string>
+    <string name="onboarding_2_title">Avaliação Eficiente</string>
+    <string name="onboarding_2_desc">Avalie os alunos usando componentes hierárquicos e escalas personalizadas. Calcule médias ponderadas automaticamente.</string>
+    <string name="onboarding_3_title">Ferramentas Inteligentes</string>
+    <string name="onboarding_3_desc">Use funcionalidades como abanar para escolher alunos aleatórios e notas qualitativas para melhor feedback.</string>
+    <string name="next">Próximo</string>
+    <string name="get_started">Começar</string>
+    <string name="skip">Saltar</string>
+
+    <!-- Escolha de Autenticação -->
+    <string name="choose_how_to_continue">Escolha como deseja continuar</string>
+    <string name="sign_in">Iniciar Sessão</string>
+    <string name="create_account">Criar Conta</string>
+    <string name="continue_as_guest">Continuar como Convidado</string>
+    <string name="guest_disclaimer">Como convidado, os seus dados são guardados localmente apenas neste dispositivo.</string>
 </resources>

@@ -22,11 +22,11 @@ interface TeacherDao {
     fun getAllAcademicYears(): Flow<List<AcademicYear>>
 
     /**
-     * Inserts a new academic year. Ignores on conflict.
+     * Inserts a new academic year.
      * @param year The [AcademicYear] to insert.
      * @return The row ID of the inserted year.
      */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAcademicYear(year: AcademicYear): Long
 
     /**

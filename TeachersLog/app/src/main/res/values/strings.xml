@@ -151,4 +151,23 @@
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="email">Email</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Welcome to Teacher\'s Log</string>
+    <string name="onboarding_1_title">Organize Your Classes</string>
+    <string name="onboarding_1_desc">Manage multiple subjects and classes with ease. Keep all your student rosters in one place.</string>
+    <string name="onboarding_2_title">Efficient Grading</string>
+    <string name="onboarding_2_desc">Evaluate students using hierarchical components and custom scales. Calculate weighted averages automatically.</string>
+    <string name="onboarding_3_title">Smart Tools</string>
+    <string name="onboarding_3_desc">Use features like shake-to-pick for random student selection and qualitative notes for better feedback.</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+    <string name="skip">Skip</string>
+
+    <!-- Auth Choice -->
+    <string name="choose_how_to_continue">Choose how you want to continue</string>
+    <string name="sign_in">Sign In</string>
+    <string name="create_account">Create Account</string>
+    <string name="continue_as_guest">Continue as Guest</string>
+    <string name="guest_disclaimer">As a guest, your data is saved locally on this device only.</string>
 </resources>

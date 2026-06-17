@@ -26,7 +26,8 @@ import pt.ipt.dama.teacherslog.utils.IconMapper
 @Composable
 fun SettingsScreen(
     onNavigateToAccount: () -> Unit,
-    onNavigateToPreferences: () -> Unit
+    onNavigateToPreferences: () -> Unit,
+    onLogout: () -> Unit
 ) {
     Scaffold(
         containerColor = AppTheme.colors.background,
@@ -104,7 +105,7 @@ fun SettingsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     TextButton(
-                        onClick = { /* Sign out logic */ },
+                        onClick = onLogout,
                         colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.error)
                     ) {
                         Icon(IconMapper.Logout, contentDescription = null)

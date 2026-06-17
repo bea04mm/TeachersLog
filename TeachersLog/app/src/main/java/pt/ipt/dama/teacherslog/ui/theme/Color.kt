@@ -43,8 +43,8 @@ val SurfaceContainerHigh = Color(0xFFE2E4EB)
 val SurfaceContainerHighest = Color(0xFFD9DBE2)
 
 // --- Dark Palette ---
-val PrimaryDark = Color(0xFFB4C5FF)
-val OnPrimaryDark = Color(0xFF002B75)
+val PrimaryDark = Color(0xFF4D86FF) // A lighter, more vibrant blue for better dark mode visibility
+val OnPrimaryDark = Color(0xFFFFFFFF)
 val PrimaryContainerDark = Color(0xFF003EA8)
 val OnPrimaryContainerDark = Color(0xFFDBE1FF)
 

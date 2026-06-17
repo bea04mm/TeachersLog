@@ -8,6 +8,7 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -31,6 +32,8 @@ import pt.ipt.dama.teacherslog.ui.components.TeacherBottomBar
 import pt.ipt.dama.teacherslog.ui.components.TeacherDrawerContent
 import pt.ipt.dama.teacherslog.ui.components.AddYearAndPeriodDialog
 import pt.ipt.dama.teacherslog.ui.screens.*
+import pt.ipt.dama.teacherslog.ui.screens.auth.OnboardingScreen
+import pt.ipt.dama.teacherslog.ui.screens.auth.WelcomeScreen
 import pt.ipt.dama.teacherslog.ui.theme.*
 import pt.ipt.dama.teacherslog.ui.viewmodel.*
 import pt.ipt.dama.teacherslog.utils.LocaleManager
@@ -45,6 +48,7 @@ import pt.ipt.dama.teacherslog.utils.LocaleManager
 class MainActivity : ComponentActivity() {
     
     // Domain-specific ViewModels initialized via shared factories
+    private val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory(application) }
     private val settingsViewModel: SettingsViewModel by viewModels { SettingsViewModelFactory(application) }
     private val academicViewModel: AcademicViewModel by viewModels { AcademicViewModelFactory(application) }
     private val teacherViewModel: TeacherViewModel by viewModels { TeacherViewModelFactory(application) }
@@ -66,13 +70,20 @@ class MainActivity : ComponentActivity() {
      * @param savedInstanceState Saved state from a previous instance of this activity.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        // Keep splash screen visible until initial state is loaded
+        splashScreen.setKeepOnScreenCondition { authViewModel.isLoading.value }
+        
         setContent {
-            // Observe global state from the specialized SettingsViewModel
+            // Observe global state from ViewModels
             val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(this))
             val isDarkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
+            
+            val onboardingCompleted by authViewModel.onboardingCompleted.observeAsState(initial = false)
+            val isAuthenticated by authViewModel.isAuthenticated.observeAsState(initial = false)
             
             // Provide context-aware locale resources and activity result registry to the tree
             CompositionLocalProvider(
@@ -80,7 +91,21 @@ class MainActivity : ComponentActivity() {
                 LocalActivityResultRegistryOwner provides this
             ) {
                 TeachersLogTheme(darkTheme = isDarkMode) {
-                    MainApp(settingsViewModel, academicViewModel, teacherViewModel)
+                    when {
+                        !onboardingCompleted -> {
+                            OnboardingScreen(onFinished = { authViewModel.completeOnboarding() })
+                        }
+                        !isAuthenticated -> {
+                            WelcomeScreen(
+                                onLoginClick = { authViewModel.login() },
+                                onCreateAccountClick = { authViewModel.login() }, // Placeholder
+                                onGuestClick = { authViewModel.continueAsGuest() }
+                            )
+                        }
+                        else -> {
+                            MainApp(authViewModel, settingsViewModel, academicViewModel, teacherViewModel)
+                        }
+                    }
                 }
             }
         }
@@ -99,6 +124,7 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun MainApp(
+    authViewModel: AuthViewModel,
     settingsViewModel: SettingsViewModel,
     academicViewModel: AcademicViewModel,
     teacherViewModel: TeacherViewModel
@@ -284,7 +310,8 @@ fun MainApp(
                 composable("settings") { 
                     SettingsScreen(
                         onNavigateToAccount = { navController.navigate("account") }, 
-                        onNavigateToPreferences = { navController.navigate("preferences") }
+                        onNavigateToPreferences = { navController.navigate("preferences") },
+                        onLogout = { authViewModel.logout() }
                     ) 
                 }
                 composable("preferences") { AppPreferencesScreen(settingsViewModel) { navController.popBackStack() } }
