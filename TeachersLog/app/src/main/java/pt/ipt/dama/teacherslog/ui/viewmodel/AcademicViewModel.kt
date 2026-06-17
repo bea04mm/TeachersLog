@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.local.AppDatabase
 import pt.ipt.dama.teacherslog.data.model.*
+import pt.ipt.dama.teacherslog.data.repository.CloningRepository
 import pt.ipt.dama.teacherslog.data.repository.TeacherRepository
 import androidx.core.content.edit
 
@@ -22,7 +23,24 @@ import androidx.core.content.edit
 class AcademicViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: TeacherRepository
+    private val cloningRepository: CloningRepository
     private val prefs = application.getSharedPreferences("academic_prefs", Context.MODE_PRIVATE)
+
+    /**
+     * Observable list of semesters for a specific year.
+     * Used for cloning destination selection.
+     */
+    fun getSemestersForYear(yearId: Int): LiveData<List<Semester>> {
+        return repository.getSemestersForYear(yearId).asLiveData()
+    }
+
+    /**
+     * Observable list of subjects for a specific semester.
+     * Used for cloning destination selection.
+     */
+    fun getSubjectsForSemester(semesterId: Int): LiveData<List<Subject>> {
+        return repository.getSubjectsBySemesterId(semesterId).asLiveData()
+    }
 
     /** List of all registered academic years. */
     val allAcademicYears: LiveData<List<AcademicYear>>
@@ -65,6 +83,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
         val database = AppDatabase.getDatabase(application, viewModelScope)
         val teacherDao = database.teacherDao()
         repository = TeacherRepository(teacherDao)
+        cloningRepository = CloningRepository(database, teacherDao)
         
         allAcademicYears = repository.allAcademicYears.asLiveData()
         
@@ -225,6 +244,35 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
      */
     fun getSubjectById(subjectId: Int): LiveData<Subject?> {
         return repository.getSubjectById(subjectId).asLiveData()
+    }
+
+    // --- Cloning Operations ---
+
+    /**
+     * Deep clones a subject to another semester.
+     */
+    fun cloneSubject(sourceId: Int, targetSemesterId: Int) {
+        viewModelScope.launch {
+            cloningRepository.cloneSubject(sourceId, targetSemesterId)
+        }
+    }
+
+    /**
+     * Deep clones an entire semester to another academic year.
+     */
+    fun cloneSemester(sourceId: Int, targetYearId: Int, newName: String? = null) {
+        viewModelScope.launch {
+            cloningRepository.cloneSemester(sourceId, targetYearId, newName)
+        }
+    }
+
+    /**
+     * Deep clones an entire academic year to a new one.
+     */
+    fun cloneAcademicYear(sourceId: Int, newYearName: String) {
+        viewModelScope.launch {
+            cloningRepository.cloneAcademicYear(sourceId, newYearName)
+        }
     }
 }
 

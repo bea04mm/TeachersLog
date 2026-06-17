@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.local.AppDatabase
 import pt.ipt.dama.teacherslog.data.model.*
+import pt.ipt.dama.teacherslog.data.repository.CloningRepository
 import pt.ipt.dama.teacherslog.data.repository.TeacherRepository
 
 /**
@@ -20,11 +21,13 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     
     // Repository as the single source of truth for student/class data
     private val repository: TeacherRepository
+    private val cloningRepository: CloningRepository
     
     init {
         val database = AppDatabase.getDatabase(application, viewModelScope)
         val teacherDao = database.teacherDao()
         repository = TeacherRepository(teacherDao)
+        cloningRepository = CloningRepository(database, teacherDao)
     }
 
     // --- Student Class CRUD Methods ---
@@ -283,6 +286,34 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 repository.insertStudentScore(score)
             }
         }
+    }
+
+    // --- Cloning Operations ---
+
+    /**
+     * Deep clones a class to another subject.
+     */
+    fun cloneClass(sourceId: Int, targetSubjectId: Int) {
+        viewModelScope.launch {
+            cloningRepository.cloneClass(sourceId, targetSubjectId)
+        }
+    }
+
+    /**
+     * Deep clones a student to another class.
+     */
+    fun cloneStudent(sourceId: Int, targetClassId: Int) {
+        viewModelScope.launch {
+            cloningRepository.cloneStudent(sourceId, targetClassId)
+        }
+    }
+
+    /**
+     * Fetches all classes for a specific subject.
+     * Used for cloning destination selection.
+     */
+    fun getClassesForSubject(subjectId: Int): LiveData<List<StudentsClass>> {
+        return repository.getClassesBySubjectId(subjectId).asLiveData()
     }
 }
 

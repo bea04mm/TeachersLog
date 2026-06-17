@@ -31,6 +31,8 @@ import pt.ipt.dama.teacherslog.data.model.Semester
 import pt.ipt.dama.teacherslog.ui.components.TeacherBottomBar
 import pt.ipt.dama.teacherslog.ui.components.TeacherDrawerContent
 import pt.ipt.dama.teacherslog.ui.components.AddYearAndPeriodDialog
+import pt.ipt.dama.teacherslog.ui.components.CloneYearDialog
+import pt.ipt.dama.teacherslog.ui.components.CloneSemesterDestinationDialog
 import pt.ipt.dama.teacherslog.ui.screens.*
 import pt.ipt.dama.teacherslog.ui.screens.auth.OnboardingScreen
 import pt.ipt.dama.teacherslog.ui.screens.auth.WelcomeScreen
@@ -148,6 +150,8 @@ fun MainApp(
     val showAddPeriodDialog = remember { mutableStateOf(false) }
     val yearToDelete = remember { mutableStateOf<AcademicYear?>(null) }
     val periodToDelete = remember { mutableStateOf<Semester?>(null) }
+    val yearToClone = remember { mutableStateOf<AcademicYear?>(null) }
+    val periodToClone = remember { mutableStateOf<Semester?>(null) }
 
     // --- Global Dialog Logic ---
 
@@ -181,6 +185,7 @@ fun MainApp(
                 confirmButton = { Button(onClick = { showAddPeriodDialog.value = false }) { Text(stringResource(R.string.close)) } }
             )
         } else {
+            val context = LocalContext.current
             var selectedOption by remember { mutableIntStateOf(available[0]) }
             AlertDialog(
                 onDismissRequest = { showAddPeriodDialog.value = false },
@@ -199,7 +204,14 @@ fun MainApp(
                         }
                     }
                 },
-                confirmButton = { academicViewModel.addSemester(stringResource(selectedOption)); showAddPeriodDialog.value = false },
+                confirmButton = { 
+                    Button(onClick = { 
+                        academicViewModel.addSemester(context.getString(selectedOption))
+                        showAddPeriodDialog.value = false 
+                    }) {
+                        Text(stringResource(R.string.save))
+                    }
+                },
                 dismissButton = { TextButton(onClick = { showAddPeriodDialog.value = false }) { Text(stringResource(R.string.cancel)) } }
             )
         }
@@ -241,6 +253,33 @@ fun MainApp(
         )
     }
 
+    // Dialog for cloning an academic year
+    yearToClone.value?.let { year ->
+        CloneYearDialog(
+            sourceYear = year,
+            existingYears = academicYears,
+            onConfirm = { newName ->
+                academicViewModel.cloneAcademicYear(year.id, newName)
+                yearToClone.value = null
+            },
+            onDismiss = { yearToClone.value = null }
+        )
+    }
+
+    // Dialog for cloning an academic period (semester)
+    periodToClone.value?.let { semester ->
+        CloneSemesterDestinationDialog(
+            title = stringResource(R.string.clone_item_title, semester.name),
+            academicYears = academicYears,
+            semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) },
+            onConfirm = { targetYearId, newName ->
+                academicViewModel.cloneSemester(semester.id, targetYearId, newName)
+                periodToClone.value = null
+            },
+            onDismiss = { periodToClone.value = null }
+        )
+    }
+
     // --- Main Layout Structure ---
 
     ModalNavigationDrawer(
@@ -254,9 +293,11 @@ fun MainApp(
                 selectedSemesterId = selectedSemesterId,
                 onYearSelect = { academicViewModel.selectYear(it); scope.launch { drawerState.close() } },
                 onYearDelete = { yearToDelete.value = it },
+                onYearClone = { yearToClone.value = it },
                 onAddYear = { showAddYearDialog.value = true },
                 onSemesterSelect = { academicViewModel.selectSemester(it); scope.launch { drawerState.close() } },
                 onSemesterDelete = { periodToDelete.value = it },
+                onSemesterClone = { periodToClone.value = it },
                 onAddPeriod = { showAddPeriodDialog.value = true }
             )
         }
@@ -338,17 +379,18 @@ fun MainApp(
                     ClassEditScreen(teacherViewModel, it.arguments?.getInt("subjectId") ?: 0, it.arguments?.getInt("classId")) { navController.popBackStack() }
                 }
                 
-                composable("students_class/{id}/{name}", arguments = listOf(navArgument("id") { type = NavType.IntType }, navArgument("name") { type = NavType.StringType })) { 
-                    ClassRosterScreen(
-                        viewModel = teacherViewModel,
-                        studentsClassId = it.arguments?.getInt("id") ?: 0,
-                        className = it.arguments?.getString("name") ?: "",
-                        onStudentClick = { id, name -> navController.navigate("grading/$id/${URLEncoder.encode(name, "UTF-8")}/${URLEncoder.encode(it.arguments?.getString("name") ?: "", "UTF-8")}") },
-                        onAddStudentClick = { cid -> navController.navigate("add_student/$cid") },
-                        onEditStudentClick = { cid, sid -> navController.navigate("edit_student/$cid/$sid") },
-                        onBackClick = { navController.popBackStack() }
-                    )
-                }
+                        composable("students_class/{id}/{name}", arguments = listOf(navArgument("id") { type = NavType.IntType }, navArgument("name") { type = NavType.StringType })) { 
+                            ClassRosterScreen(
+                                academicViewModel = academicViewModel,
+                                viewModel = teacherViewModel,
+                                studentsClassId = it.arguments?.getInt("id") ?: 0,
+                                className = it.arguments?.getString("name") ?: "",
+                                onStudentClick = { id, name -> navController.navigate("grading/$id/${URLEncoder.encode(name, "UTF-8")}/${URLEncoder.encode(it.arguments?.getString("name") ?: "", "UTF-8")}") },
+                                onAddStudentClick = { cid -> navController.navigate("add_student/$cid") },
+                                onEditStudentClick = { cid, sid -> navController.navigate("edit_student/$cid/$sid") },
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
                 
                 composable("add_student/{classId}", arguments = listOf(navArgument("classId") { type = NavType.IntType })) { 
                     StudentEditScreen(teacherViewModel, it.arguments?.getInt("classId") ?: 0, null) { navController.popBackStack() }
