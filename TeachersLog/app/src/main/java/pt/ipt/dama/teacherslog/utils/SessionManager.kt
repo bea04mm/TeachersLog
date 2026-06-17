@@ -67,13 +67,13 @@ class SessionManager(private val context: Context) {
     }
 
     /**
-     * Clears all session data (Logout/Reset).
+     * Clears all session data (Logout/Reset) but keeps onboarding status.
      */
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
             preferences[IS_GUEST] = false
             preferences[IS_LOGGED_IN] = false
-            preferences[ONBOARDING_COMPLETED] = false
+            // Keep ONBOARDING_COMPLETED as true so we go to Welcome instead of Tutorial
         }
     }
 }

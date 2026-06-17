@@ -106,7 +106,7 @@ fun StudentGradingContent(
                                             .data(student.profileImageUrl)
                                             .crossfade(true)
                                             .build(),
-                                        contentDescription = "Profile photo",
+                                        contentDescription = stringResource(R.string.cd_profile_photo),
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop
                                     )
@@ -170,7 +170,7 @@ fun StudentGradingContent(
                     item {
                         GradeSliderCard(
                             title = group.componentName, weight = "${group.weight}%", icon = Icons.Default.Analytics, value = group.score.toFloat(), 
-                            maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(group.componentId, it.toDouble()) }, rangeLabels = listOf("0", "Max")
+                            maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(group.componentId, it.toDouble()) }, rangeLabels = listOf(stringResource(R.string.grade_range_min), stringResource(R.string.grade_range_max))
                         )
                     }
                 } else {
@@ -178,7 +178,7 @@ fun StudentGradingContent(
                     items(children) { child ->
                         GradeSliderCard(
                             title = child.componentName, weight = "${child.weight}%", icon = Icons.Default.Analytics, value = child.score.toFloat(),
-                            maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(child.componentId, it.toDouble()) }, rangeLabels = listOf("0", "Max")
+                            maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(child.componentId, it.toDouble()) }, rangeLabels = listOf(stringResource(R.string.grade_range_min), stringResource(R.string.grade_range_max))
                         )
                     }
                 }

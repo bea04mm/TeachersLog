@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Teacher\'s Log</string>
 
-    <!-- General -->
+    <!-- General Actions -->
     <string name="back">Back</string>
     <string name="menu">Menu</string>
     <string name="save">Save</string>
@@ -10,8 +10,11 @@
     <string name="delete_label">Delete</string>
     <string name="close">Close</string>
     <string name="loading">Loading…</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
 
-    <!-- Bottom Navigation -->
+    <!-- Navigation -->
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_classes">Subjects</string>
     <string name="nav_settings">Settings</string>
@@ -33,7 +36,7 @@
     <string name="no_students_found">No students found in %s</string>
     <string name="no_classes_available">No classes available for selection</string>
 
-    <!-- Subjects -->
+    <!-- Subjects & Classes -->
     <string name="my_subjects">MY SUBJECTS</string>
     <string name="active_curriculum">Active Curriculum</string>
     <string name="academic_overview">ACADEMIC OVERVIEW</string>
@@ -67,11 +70,17 @@
     <string name="scale_5">0–5 Scale</string>
     <string name="scale_20">0–20 Scale</string>
     <string name="scale_100">0–100% Scale</string>
+    <string name="class_header">CLASSES</string>
+    <string name="subtotal_label">Sub-total: %d%%</string>
+    <string name="placeholder_subitem_name">Sub-item Name</string>
+    <string name="placeholder_group_name">Group Name</string>
+    <string name="add_subitem_label">Add Sub-item</string>
+    <string name="default_component_tests">Tests</string>
+    <string name="default_component_assignments">Assignments</string>
 
-    <!-- Class Roster -->
+    <!-- Class Roster & Students -->
     <string name="students_roster">STUDENTS ROSTER</string>
     <string name="process_prefix">Proc: %s</string>
-    <string name="class_header">CLASSES</string>
     <string name="add_student">Add Student</string>
     <string name="edit_student">Edit Student</string>
     <string name="delete_student_title">Delete Student</string>
@@ -97,35 +106,12 @@
     <string name="teachers_notes">Teacher\'s Notes</string>
     <string name="save_grades">Save Grades</string>
     <string name="qualitative_feedback_hint">Write qualitative feedback regarding student performance…</string>
-    <string name="max_grade"> / 5.0</string>
-    <string name="low_label">Low</string>
-    <string name="mid_label">Mid</string>
-    <string name="high_label">High</string>
-    <string name="exemplary_label">Exemplary</string>
-    <string name="needs_focus_label">Needs Focus</string>
+    <string name="grade_range_min">0</string>
+    <string name="grade_range_max">Max</string>
 
-    <!-- Settings -->
-    <string name="edit_profile">Edit Profile</string>
-    <string name="configuration">CONFIGURATION</string>
-    <string name="app_preferences">App Preferences</string>
-    <string name="app_preferences_desc">Dark mode</string>
-    <string name="sign_out">Sign Out</string>
-    <string name="version_info">Version 1.1.1 (Build 1)</string>
-
-    <!-- App Preferences Details -->
-    <string name="language_label">Language</string>
-    <string name="app_language">App Language</string>
-    <string name="select_language">Select Language</string>
-    <string name="english">English</string>
-    <string name="portuguese">Portuguese</string>
-
-    <string name="appearance">Appearance</string>
-    <string name="dark_mode">Dark Mode</string>
-    <string name="dark_mode_desc">Adjust for low-light environments</string>
-    <string name="standard_label">Standard</string>
-
-    <!-- Academic Year Dialogs -->
+    <!-- Academic Structure -->
     <string name="academic_years_header">ACADEMIC YEARS</string>
+    <string name="academic_periods_header_label">ACADEMIC PERIODS</string>
     <string name="add_new_year">Add New Year</string>
     <string name="add_period">Add Academic Period</string>
     <string name="all_periods_registered">All available period types have already been registered for this academic year.</string>
@@ -143,16 +129,7 @@
     <string name="year_exists_error">This academic year already exists!</string>
     <string name="select_starting_year">Select the starting year:</string>
 
-    <!-- Account Details -->
-    <string name="account">Account</string>
-    <string name="jane_harrison">Jane Harrison</string>
-    <string name="jane_email">jane.harrison@edu-log.com</string>
-    <string name="personal_information">Personal Information</string>
-    <string name="first_name">First Name</string>
-    <string name="last_name">Last Name</string>
-    <string name="email">Email</string>
-
-    <!-- Onboarding -->
+    <!-- Authentication & Onboarding -->
     <string name="welcome_title">Welcome to Teacher\'s Log</string>
     <string name="onboarding_1_title">Organize Your Classes</string>
     <string name="onboarding_1_desc">Manage multiple subjects and classes with ease. Keep all your student rosters in one place.</string>
@@ -160,14 +137,50 @@
     <string name="onboarding_2_desc">Evaluate students using hierarchical components and custom scales. Calculate weighted averages automatically.</string>
     <string name="onboarding_3_title">Smart Tools</string>
     <string name="onboarding_3_desc">Use features like shake-to-pick for random student selection and qualitative notes for better feedback.</string>
-    <string name="next">Next</string>
-    <string name="get_started">Get Started</string>
-    <string name="skip">Skip</string>
-
-    <!-- Auth Choice -->
     <string name="choose_how_to_continue">Choose how you want to continue</string>
     <string name="sign_in">Sign In</string>
     <string name="create_account">Create Account</string>
     <string name="continue_as_guest">Continue as Guest</string>
     <string name="guest_disclaimer">As a guest, your data is saved locally on this device only.</string>
+
+    <!-- Settings & Account -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="configuration">CONFIGURATION</string>
+    <string name="app_preferences">App Preferences</string>
+    <string name="app_preferences_desc">Dark mode</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="version_info">Version 1.1.1 (Build 1)</string>
+    <string name="language_label">Language</string>
+    <string name="app_language">App Language</string>
+    <string name="select_language">Select Language</string>
+    <string name="english">English</string>
+    <string name="portuguese">Portuguese</string>
+    <string name="appearance">Appearance</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Adjust for low-light environments</string>
+    <string name="account">Account</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="email">Email</string>
+    <string name="default_user_firstname">Jane</string>
+    <string name="default_user_lastname">Harrison</string>
+    <string name="default_user_email">jane.h@school.edu</string>
+
+    <!-- Cloning -->
+    <string name="clone_label">Clone</string>
+    <string name="clone_item_title">Clone %s</string>
+    <string name="clone_subject_title">Clone Subject</string>
+    <string name="clone_class_title">Clone Class</string>
+    <string name="clone_student_title">Clone Student</string>
+    <string name="clone_destination_label">Select Destination Period:</string>
+    <string name="clone_destination_class_label">Select Destination Subject:</string>
+    <string name="target_period_name_label">Target Period Name:</string>
+    <string name="clone_success">Cloned successfully!</string>
+    <string name="copy_suffix"> (Copy)</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="cd_decrease_year">Decrease year</string>
+    <string name="cd_increase_year">Increase year</string>
+    <string name="cd_profile_photo">Profile photo</string>
 </resources>

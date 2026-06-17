@@ -28,9 +28,13 @@ fun AccountDetailsScreen(
     onBackClick: () -> Unit
 ) {
     // Local UI state for form fields
-    var firstName by remember { mutableStateOf("Jane") }
-    var lastName by remember { mutableStateOf("Harrison") }
-    var email by remember { mutableStateOf("jane.h@school.edu") }
+    val defaultFirstName = stringResource(R.string.default_user_firstname)
+    val defaultLastName = stringResource(R.string.default_user_lastname)
+    val defaultEmail = stringResource(R.string.default_user_email)
+
+    var firstName by remember { mutableStateOf(defaultFirstName) }
+    var lastName by remember { mutableStateOf(defaultLastName) }
+    var email by remember { mutableStateOf(defaultEmail) }
 
     Scaffold(
         topBar = {
@@ -86,11 +90,11 @@ fun AccountDetailsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = stringResource(R.string.jane_harrison), 
+                        text = "$firstName $lastName", 
                         style = AppTheme.typography.headlineMedium
                     )
                     Text(
-                        text = stringResource(R.string.jane_email), 
+                        text = email,
                         style = AppTheme.typography.bodyMedium, 
                         color = AppTheme.colors.onSurfaceVariant
                     )

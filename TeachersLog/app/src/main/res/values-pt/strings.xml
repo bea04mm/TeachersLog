@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Diário do Professor</string>
 
-    <!-- Geral -->
+    <!-- General Actions -->
     <string name="back">Voltar</string>
     <string name="menu">Menu</string>
     <string name="save">Guardar</string>
@@ -10,13 +10,16 @@
     <string name="delete_label">Apagar</string>
     <string name="close">Fechar</string>
     <string name="loading">A carregar…</string>
+    <string name="skip">Saltar</string>
+    <string name="next">Próximo</string>
+    <string name="get_started">Começar</string>
 
-    <!-- Navegação Inferior -->
+    <!-- Navigation -->
     <string name="nav_dashboard">Painel</string>
     <string name="nav_classes">Disciplinas</string>
     <string name="nav_settings">Definições</string>
 
-    <!-- Painel Principal -->
+    <!-- Dashboard -->
     <string name="academic_dashboard">PAINEL ACADÉMICO</string>
     <string name="active_overview">Resumo Ativo</string>
     <string name="total_students">Total de Alunos</string>
@@ -33,7 +36,7 @@
     <string name="no_students_found">Nenhum aluno encontrado em %s</string>
     <string name="no_classes_available">Nenhuma turma disponível para seleção</string>
 
-    <!-- Disciplinas / Turmas -->
+    <!-- Subjects & Classes -->
     <string name="my_subjects">MINHAS DISCIPLINAS</string>
     <string name="active_curriculum">Currículo Ativo</string>
     <string name="academic_overview">RESUMO ACADÉMICO</string>
@@ -67,11 +70,17 @@
     <string name="scale_5">Escala 0–5</string>
     <string name="scale_20">Escala 0–20</string>
     <string name="scale_100">Escala 0–100%</string>
+    <string name="class_header">TURMAS</string>
+    <string name="subtotal_label">Sub-total: %d%%</string>
+    <string name="placeholder_subitem_name">Nome do Sub-item</string>
+    <string name="placeholder_group_name">Nome do Grupo</string>
+    <string name="add_subitem_label">Adicionar Sub-item</string>
+    <string name="default_component_tests">Testes</string>
+    <string name="default_component_assignments">Trabalhos</string>
 
-    <!-- Lista de Turma -->
+    <!-- Class Roster & Students -->
     <string name="students_roster">LISTA DE ALUNOS</string>
     <string name="process_prefix">Proc: %s</string>
-    <string name="class_header">TURMAS</string>
     <string name="add_student">Adicionar Aluno</string>
     <string name="edit_student">Editar Aluno</string>
     <string name="delete_student_title">Apagar Aluno</string>
@@ -86,7 +95,7 @@
     <string name="error_number_exists">Este número de aluno já está a ser usado nesta turma.</string>
     <string name="error_process_exists">Este número de processo já está registado noutro aluno.</string>
 
-    <!-- Avaliação do Aluno -->
+    <!-- Student Grading -->
     <string name="student_grading">Avaliação do Aluno</string>
     <string name="total_grade_weighted">NOTA TOTAL (PONDERADA)</string>
     <string name="weight_label">Peso: %s</string>
@@ -97,35 +106,12 @@
     <string name="teachers_notes">Notas do Professor</string>
     <string name="save_grades">Guardar Notas</string>
     <string name="qualitative_feedback_hint">Escreva feedback qualitativo sobre o desempenho do aluno…</string>
-    <string name="max_grade"> / 5.0</string>
-    <string name="low_label">Baixa</string>
-    <string name="mid_label">Média</string>
-    <string name="high_label">Alta</string>
-    <string name="exemplary_label">Exemplar</string>
-    <string name="needs_focus_label">Precisa de Foco</string>
+    <string name="grade_range_min">0</string>
+    <string name="grade_range_max">Máx</string>
 
-    <!-- Definições -->
-    <string name="edit_profile">Editar Perfil</string>
-    <string name="configuration">CONFIGURAÇÃO</string>
-    <string name="app_preferences">Preferências da App</string>
-    <string name="app_preferences_desc">Modo escuro</string>
-    <string name="sign_out">Sair</string>
-    <string name="version_info">Versão 1.1.1 (Build 1)</string>
-
-    <!-- Detalhes de Preferências -->
-    <string name="language_label">Idioma</string>
-    <string name="app_language">Idioma da App</string>
-    <string name="select_language">Selecionar Idioma</string>
-    <string name="english">Inglês</string>
-    <string name="portuguese">Português</string>
-
-    <string name="appearance">Aparência</string>
-    <string name="dark_mode">Modo Escuro</string>
-    <string name="dark_mode_desc">Ajustar para ambientes de pouca luz</string>
-    <string name="standard_label">Padrão</string>
-
-    <!-- Diálogos de Ano Letivo -->
+    <!-- Academic Structure -->
     <string name="academic_years_header">ANOS LETIVOS</string>
+    <string name="academic_periods_header_label">PERÍODOS ACADÉMICOS</string>
     <string name="add_new_year">Adicionar Novo Ano</string>
     <string name="add_period">Adicionar Período Académico</string>
     <string name="all_periods_registered">Todos os tipos de período disponíveis já foram registados para este ano letivo.</string>
@@ -143,16 +129,7 @@
     <string name="year_exists_error">Este ano letivo já existe!</string>
     <string name="select_starting_year">Selecione o ano de início:</string>
 
-    <!-- Detalhes da Conta -->
-    <string name="account">Conta</string>
-    <string name="jane_harrison">Jane Harrison</string>
-    <string name="jane_email">jane.harrison@edu-log.com</string>
-    <string name="personal_information">Informações Pessoais</string>
-    <string name="first_name">Primeiro Nome</string>
-    <string name="last_name">Apelido</string>
-    <string name="email">Email</string>
-
-    <!-- Onboarding -->
+    <!-- Authentication & Onboarding -->
     <string name="welcome_title">Bem-vindo ao Diário do Professor</string>
     <string name="onboarding_1_title">Organize as suas Turmas</string>
     <string name="onboarding_1_desc">Gira múltiplas disciplinas e turmas com facilidade. Mantenha todas as listas de alunos num só lugar.</string>
@@ -160,14 +137,50 @@
     <string name="onboarding_2_desc">Avalie os alunos usando componentes hierárquicos e escalas personalizadas. Calcule médias ponderadas automaticamente.</string>
     <string name="onboarding_3_title">Ferramentas Inteligentes</string>
     <string name="onboarding_3_desc">Use funcionalidades como abanar para escolher alunos aleatórios e notas qualitativas para melhor feedback.</string>
-    <string name="next">Próximo</string>
-    <string name="get_started">Começar</string>
-    <string name="skip">Saltar</string>
-
-    <!-- Escolha de Autenticação -->
     <string name="choose_how_to_continue">Escolha como deseja continuar</string>
     <string name="sign_in">Iniciar Sessão</string>
     <string name="create_account">Criar Conta</string>
     <string name="continue_as_guest">Continuar como Convidado</string>
     <string name="guest_disclaimer">Como convidado, os seus dados são guardados localmente apenas neste dispositivo.</string>
+
+    <!-- Settings & Account -->
+    <string name="edit_profile">Editar Perfil</string>
+    <string name="configuration">CONFIGURAÇÃO</string>
+    <string name="app_preferences">Preferências da App</string>
+    <string name="app_preferences_desc">Modo escuro</string>
+    <string name="sign_out">Sair</string>
+    <string name="version_info">Versão 1.1.1 (Build 1)</string>
+    <string name="language_label">Idioma</string>
+    <string name="app_language">Idioma da App</string>
+    <string name="select_language">Selecionar Idioma</string>
+    <string name="english">Inglês</string>
+    <string name="portuguese">Português</string>
+    <string name="appearance">Aparência</string>
+    <string name="dark_mode">Modo Escuro</string>
+    <string name="dark_mode_desc">Ajustar para ambientes de pouca luz</string>
+    <string name="account">Conta</string>
+    <string name="personal_information">Informações Pessoais</string>
+    <string name="first_name">Primeiro Nome</string>
+    <string name="last_name">Apelido</string>
+    <string name="email">Email</string>
+    <string name="default_user_firstname">Joana</string>
+    <string name="default_user_lastname">Silva</string>
+    <string name="default_user_email">joana.s@escola.edu</string>
+
+    <!-- Cloning -->
+    <string name="clone_label">Clonar</string>
+    <string name="clone_item_title">Clonar %s</string>
+    <string name="clone_subject_title">Clonar Disciplina</string>
+    <string name="clone_class_title">Clonar Turma</string>
+    <string name="clone_student_title">Clonar Aluno</string>
+    <string name="clone_destination_label">Selecione o Período de Destino:</string>
+    <string name="clone_destination_class_label">Selecione a Disciplina de Destino:</string>
+    <string name="target_period_name_label">Nome do Período de Destino:</string>
+    <string name="clone_success">Clonado com sucesso!</string>
+    <string name="copy_suffix"> (Cópia)</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="cd_decrease_year">Diminuir ano</string>
+    <string name="cd_increase_year">Aumentar ano</string>
+    <string name="cd_profile_photo">Foto de perfil</string>
 </resources>

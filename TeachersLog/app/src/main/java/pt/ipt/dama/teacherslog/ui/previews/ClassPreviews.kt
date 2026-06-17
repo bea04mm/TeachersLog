@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.MutableLiveData
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
 import pt.ipt.dama.teacherslog.data.model.StudentWithGrade
 import pt.ipt.dama.teacherslog.ui.screens.ClassEditContent
 import pt.ipt.dama.teacherslog.ui.screens.ClassRosterContent
@@ -31,7 +33,12 @@ fun ClassRosterPreview() {
             onAddStudentClick = {},
             onEditStudentClick = {},
             onDeleteStudent = {},
-            onBackClick = {}
+            onCloneStudentClick = { _, _ -> },
+            onBackClick = {},
+            academicYears = listOf(AcademicYear(1, "2024/2025")),
+            semestersProvider = { _ -> MutableLiveData(emptyList()) },
+            subjectsProvider = { _ -> MutableLiveData(emptyList()) },
+            classesProvider = { _ -> MutableLiveData(emptyList()) }
         )
     }
 }

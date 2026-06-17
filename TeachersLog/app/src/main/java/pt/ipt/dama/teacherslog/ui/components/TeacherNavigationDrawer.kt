@@ -8,8 +8,10 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,9 +47,11 @@ fun TeacherDrawerContent(
     selectedSemesterId: Int?,
     onYearSelect: (Int) -> Unit,
     onYearDelete: (AcademicYear) -> Unit,
+    onYearClone: (AcademicYear) -> Unit,
     onAddYear: () -> Unit,
     onSemesterSelect: (Int) -> Unit,
     onSemesterDelete: (Semester) -> Unit,
+    onSemesterClone: (Semester) -> Unit,
     onAddPeriod: () -> Unit
 ) {
     // Define shared colors for selected drawer items to match bottom bar indicator
@@ -83,15 +87,39 @@ fun TeacherDrawerContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(year.year, style = if (isSelected) AppTheme.typography.titleMedium else AppTheme.typography.bodyLarge)
-                                    // Delete icon shown only for unselected items for safety
-                                    if (!isSelected) {
-                                        IconButton(onClick = { onYearDelete(year) }, modifier = Modifier.size(24.dp)) {
+                                    // Actions: Show direct Clone if selected, or Menu if not
+                                    if (isSelected) {
+                                        IconButton(onClick = { onYearClone(year) }, modifier = Modifier.size(24.dp)) {
                                             Icon(
-                                                imageVector = Icons.Default.Delete, 
-                                                contentDescription = "Delete Year", 
-                                                tint = AppTheme.colors.error.copy(alpha = 0.6f), 
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "Clone Year",
+                                                tint = AppTheme.colors.primary,
                                                 modifier = Modifier.size(18.dp)
                                             )
+                                        }
+                                    } else {
+                                        var showMenu by remember { mutableStateOf(false) }
+                                        Box {
+                                            IconButton(onClick = { showMenu = true }, modifier = Modifier.size(24.dp)) {
+                                                Icon(
+                                                    imageVector = Icons.Default.MoreVert,
+                                                    contentDescription = "Options",
+                                                    tint = AppTheme.colors.outline,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.clone_label)) },
+                                                    onClick = { showMenu = false; onYearClone(year) },
+                                                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.delete_label)) },
+                                                    onClick = { showMenu = false; onYearDelete(year) },
+                                                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -116,7 +144,7 @@ fun TeacherDrawerContent(
             // Occupies the other 50% of the vertical space
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "ACADEMIC PERIODS", 
+                    text = stringResource(R.string.academic_periods_header_label),
                     style = AppTheme.typography.labelSmall, 
                     color = AppTheme.colors.primary, 
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -132,14 +160,38 @@ fun TeacherDrawerContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(semester.name, style = if (isSelected) AppTheme.typography.titleMedium else AppTheme.typography.bodyLarge)
-                                    if (!isSelected) {
-                                        IconButton(onClick = { onSemesterDelete(semester) }, modifier = Modifier.size(24.dp)) {
+                                    if (isSelected) {
+                                        IconButton(onClick = { onSemesterClone(semester) }, modifier = Modifier.size(24.dp)) {
                                             Icon(
-                                                imageVector = Icons.Default.Delete, 
-                                                contentDescription = "Delete Period", 
-                                                tint = AppTheme.colors.error.copy(alpha = 0.6f), 
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "Clone Period",
+                                                tint = AppTheme.colors.primary,
                                                 modifier = Modifier.size(18.dp)
                                             )
+                                        }
+                                    } else {
+                                        var showMenu by remember { mutableStateOf(false) }
+                                        Box {
+                                            IconButton(onClick = { showMenu = true }, modifier = Modifier.size(24.dp)) {
+                                                Icon(
+                                                    imageVector = Icons.Default.MoreVert,
+                                                    contentDescription = "Options",
+                                                    tint = AppTheme.colors.outline,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.clone_label)) },
+                                                    onClick = { showMenu = false; onSemesterClone(semester) },
+                                                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(R.string.delete_label)) },
+                                                    onClick = { showMenu = false; onSemesterDelete(semester) },
+                                                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                                                )
+                                            }
                                         }
                                     }
                                 }

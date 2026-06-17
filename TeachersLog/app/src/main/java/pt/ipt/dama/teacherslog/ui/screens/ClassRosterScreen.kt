@@ -20,12 +20,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.LiveData
 import java.util.Locale
 import pt.ipt.dama.teacherslog.R
-import pt.ipt.dama.teacherslog.data.model.Student
-import pt.ipt.dama.teacherslog.data.model.StudentWithGrade
+import pt.ipt.dama.teacherslog.data.model.*
 import pt.ipt.dama.teacherslog.ui.components.*
 import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.teacherslog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.teacherslog.utils.ShakeDetector
 import pt.ipt.dama.teacherslog.utils.IconMapper
@@ -140,11 +141,32 @@ fun ClassRosterContent(
     onAddStudentClick: () -> Unit,
     onEditStudentClick: (Int) -> Unit,
     onDeleteStudent: (Student) -> Unit,
-    onBackClick: () -> Unit
+    onCloneStudentClick: (Int, Int) -> Unit,
+    onBackClick: () -> Unit,
+    academicYears: List<AcademicYear>,
+    semestersProvider: (Int) -> LiveData<List<Semester>>,
+    subjectsProvider: (Int) -> LiveData<List<Subject>>,
+    classesProvider: (Int) -> LiveData<List<StudentsClass>>
 ) {
     val studentToDelete = remember { mutableStateOf<Student?>(null) }
+    val studentToClone = remember { mutableStateOf<StudentWithGrade?>(null) }
     val randomStudent = remember { mutableStateOf<StudentWithGrade?>(null) }
     val context = LocalContext.current
+
+    // --- Clone Destination Dialog ---
+    studentToClone.value?.let { student ->
+        CloneStudentDestinationDialog(
+            academicYears = academicYears,
+            semestersProvider = semestersProvider,
+            subjectsProvider = subjectsProvider,
+            classesProvider = classesProvider,
+            onConfirm = { targetClassId ->
+                onCloneStudentClick(student.studentId, targetClassId)
+                studentToClone.value = null
+            },
+            onDismiss = { studentToClone.value = null }
+        )
+    }
 
     // --- Shake Detection Setup ---
     DisposableEffect(students) {
@@ -275,6 +297,7 @@ fun ClassRosterContent(
                             IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
                             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.clone_label)) }, onClick = { showMenu = false; studentToClone.value = student }, leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { 
                                     showMenu = false
                                     studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) 
@@ -294,6 +317,7 @@ fun ClassRosterContent(
  */
 @Composable
 fun ClassRosterScreen(
+    academicViewModel: AcademicViewModel,
     viewModel: TeacherViewModel,
     studentsClassId: Int,
     className: String,
@@ -304,6 +328,7 @@ fun ClassRosterScreen(
 ) {
     val students by viewModel.getStudentsWithGradesForStudentsClass(studentsClassId).observeAsState(emptyList())
     val classWithStats by viewModel.getStudentsClassWithStatsById(studentsClassId).observeAsState()
+    val years by academicViewModel.allAcademicYears.observeAsState(emptyList())
     var gradingScale by remember { mutableStateOf("5") }
 
     LaunchedEffect(studentsClassId) {
@@ -320,6 +345,11 @@ fun ClassRosterScreen(
         onAddStudentClick = { onAddStudentClick(studentsClassId) },
         onEditStudentClick = { id -> onEditStudentClick(studentsClassId, id) },
         onDeleteStudent = { viewModel.deleteStudent(it) },
-        onBackClick = onBackClick
+        onCloneStudentClick = { sourceId, targetId -> viewModel.cloneStudent(sourceId, targetId) },
+        onBackClick = onBackClick,
+        academicYears = years,
+        semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) },
+        subjectsProvider = { semesterId -> academicViewModel.getSubjectsForSemester(semesterId) },
+        classesProvider = { subjectId -> viewModel.getClassesForSubject(subjectId) }
     )
 }

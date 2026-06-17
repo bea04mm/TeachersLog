@@ -11,7 +11,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
 import pt.ipt.dama.teacherslog.R
+import pt.ipt.dama.teacherslog.data.model.AcademicYear
+import pt.ipt.dama.teacherslog.data.model.Semester
+import pt.ipt.dama.teacherslog.data.model.Subject
 import pt.ipt.dama.teacherslog.data.model.StudentsClass
 import pt.ipt.dama.teacherslog.data.model.StudentsClassWithStats
 import pt.ipt.dama.teacherslog.ui.components.*
@@ -46,9 +50,14 @@ fun SubjectContent(
     onAddClassClick: () -> Unit,
     onEditClassClick: (Int) -> Unit,
     onDeleteClass: (StudentsClass) -> Unit,
-    onBackClick: () -> Unit
+    onCloneClassClick: (Int, Int) -> Unit,
+    onBackClick: () -> Unit,
+    academicYears: List<AcademicYear>,
+    semestersProvider: (Int) -> LiveData<List<Semester>>,
+    subjectsProvider: (Int) -> LiveData<List<Subject>>
 ) {
     val classToDelete = remember { mutableStateOf<StudentsClass?>(null) }
+    val classToClone = remember { mutableStateOf<StudentsClassWithStats?>(null) }
 
     // --- Deletion Confirmation Dialog ---
     classToDelete.value?.let { clazz ->
@@ -60,6 +69,20 @@ fun SubjectContent(
                 classToDelete.value = null
             },
             onDismiss = { classToDelete.value = null }
+        )
+    }
+
+    // --- Clone Destination Dialog ---
+    classToClone.value?.let { clazz ->
+        CloneClassDestinationDialog(
+            academicYears = academicYears,
+            semestersProvider = semestersProvider,
+            subjectsProvider = subjectsProvider,
+            onConfirm = { targetSubjectId ->
+                onCloneClassClick(clazz.id, targetSubjectId)
+                classToClone.value = null
+            },
+            onDismiss = { classToClone.value = null }
         )
     }
 
@@ -118,6 +141,14 @@ fun SubjectContent(
                                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
                                 )
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.clone_label)) },
+                                    onClick = {
+                                        showMenu = false
+                                        classToClone.value = clazz
+                                    },
+                                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                                )
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete_class_title)) }, 
                                     onClick = {
                                         showMenu = false
@@ -169,6 +200,7 @@ fun SubjectScreen(
 ) {
     val classes by teacherViewModel.getStudentsClassesForSubject(subjectId).observeAsState(emptyList())
     val subject by academicViewModel.getSubjectById(subjectId).observeAsState()
+    val years by academicViewModel.allAcademicYears.observeAsState(emptyList())
 
     SubjectContent(
         subjectName = subjectName,
@@ -178,6 +210,10 @@ fun SubjectScreen(
         onAddClassClick = { onAddClassClick(subjectId) },
         onEditClassClick = { classId -> onEditClassClick(subjectId, classId) },
         onDeleteClass = { teacherViewModel.deleteStudentsClass(it) },
-        onBackClick = onBackClick
+        onCloneClassClick = { sourceId, targetId -> teacherViewModel.cloneClass(sourceId, targetId) },
+        onBackClick = onBackClick,
+        academicYears = years,
+        semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) },
+        subjectsProvider = { semesterId -> academicViewModel.getSubjectsForSemester(semesterId) }
     )
 }
