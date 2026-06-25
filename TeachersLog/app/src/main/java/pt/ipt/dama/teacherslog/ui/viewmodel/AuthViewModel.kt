@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pt.ipt.dama.teacherslog.data.remote.NetworkClient
+import pt.ipt.dama.teacherslog.data.remote.models.LoginRequest
+import pt.ipt.dama.teacherslog.data.remote.models.RegisterRequest
+import pt.ipt.dama.teacherslog.data.repository.AuthRepository
 import pt.ipt.dama.teacherslog.utils.SessionManager
 
 /**
@@ -18,12 +22,25 @@ import pt.ipt.dama.teacherslog.utils.SessionManager
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sessionManager = SessionManager(application)
+    private val authRepository = AuthRepository(NetworkClient.apiService, sessionManager)
 
-    val onboardingCompleted = sessionManager.onboardingCompleted.asLiveData()
+    // Expose flows directly for more reliable Compose observation
+    val onboardingCompletedFlow = sessionManager.onboardingCompleted
+    val isAuthenticatedFlow = sessionManager.isAuthenticated
+
+    val isGuest = sessionManager.isGuest.asLiveData()
     val isAuthenticated = sessionManager.isAuthenticated.asLiveData()
+    val isSyncEnabled = sessionManager.isSyncEnabled.asLiveData()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _authError = MutableStateFlow<String?>(null)
+    val authError: StateFlow<String?> = _authError.asStateFlow()
+
+    private val _justLoggedIn = MutableStateFlow(false)
+    /** Transient state to trigger post-login logic like data conflict checks. */
+    val justLoggedIn: StateFlow<Boolean> = _justLoggedIn.asStateFlow()
 
     init {
         // Simple delay to ensure splash screen shows and state is loaded
@@ -52,12 +69,42 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Persists login status and enters the app.
+     * Registers a new user via AWS API.
      */
-    fun login() {
+    fun register(name: String, email: String, pass: String, sync: Boolean) {
         viewModelScope.launch {
-            sessionManager.login()
+            _isLoading.value = true
+            val result = authRepository.register(RegisterRequest(email, pass, name, sync))
+            if (result.isSuccess) {
+                _justLoggedIn.value = true
+            } else {
+                _authError.value = result.exceptionOrNull()?.message
+            }
+            _isLoading.value = false
         }
+    }
+
+    /**
+     * Authenticates the user via AWS API.
+     */
+    fun login(email: String, pass: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = authRepository.login(LoginRequest(email, pass))
+            if (result.isSuccess) {
+                _justLoggedIn.value = true
+            } else {
+                _authError.value = result.exceptionOrNull()?.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Resets the just logged in flag after logic is handled.
+     */
+    fun clearJustLoggedIn() {
+        _justLoggedIn.value = false
     }
 
     /**
@@ -65,8 +112,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun logout() {
         viewModelScope.launch {
-            sessionManager.clearSession()
+            authRepository.logout()
         }
+    }
+
+    fun clearError() {
+        _authError.value = null
     }
 }
 
