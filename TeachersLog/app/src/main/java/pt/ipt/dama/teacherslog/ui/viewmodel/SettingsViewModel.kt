@@ -1,12 +1,18 @@
 package pt.ipt.dama.teacherslog.ui.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import pt.ipt.dama.teacherslog.data.local.AppDatabase
+import pt.ipt.dama.teacherslog.data.remote.NetworkClient
+import pt.ipt.dama.teacherslog.data.repository.AuthRepository
+import pt.ipt.dama.teacherslog.data.repository.SyncRepository
 import pt.ipt.dama.teacherslog.utils.LocaleManager
+import pt.ipt.dama.teacherslog.utils.SessionManager
 
 /**
  * SettingsViewModel manages global UI state such as theme preferences and application language.
@@ -14,6 +20,10 @@ import pt.ipt.dama.teacherslog.utils.LocaleManager
  * @param application The application context, used for locale initialization.
  */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val sessionManager = SessionManager(application)
+    private val syncRepository: SyncRepository
+    private val authRepository = AuthRepository(NetworkClient.apiService, sessionManager)
 
     // Internal state for dark mode preference
     private val _isDarkMode = MutableLiveData(true)
@@ -24,6 +34,29 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _currentLanguage = MutableLiveData(LocaleManager.getLanguage(application))
     /** Observable state for the current language code (e.g., "en", "pt"). */
     val currentLanguage: LiveData<String> = _currentLanguage
+
+    /** Observable state for synchronization preference. */
+    val isSyncEnabled: LiveData<Boolean> = sessionManager.isSyncEnabled.asLiveData()
+
+    /** Observable state for the current user's name. */
+    val userName: LiveData<String> = sessionManager.userName.asLiveData()
+
+    /** Observable state for the current user's email. */
+    val userEmail: LiveData<String> = sessionManager.userEmail.asLiveData()
+
+    /** Observable state for guest status. */
+    val isGuest: LiveData<Boolean> = sessionManager.isGuest.asLiveData()
+
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
+    private val _syncMessage = MutableStateFlow<String?>(null)
+    val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
+
+    init {
+        val database = AppDatabase.getDatabase(application)
+        syncRepository = SyncRepository(database, database.teacherDao(), NetworkClient.apiService, sessionManager)
+    }
 
     /**
      * Toggles the application's dark mode setting.
@@ -40,6 +73,71 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun setLanguage(languageCode: String) {
         if (_currentLanguage.value != languageCode) {
             _currentLanguage.value = languageCode
+        }
+    }
+
+    /**
+     * Toggles the data synchronization setting and syncs it with AWS.
+     * @param enabled True to enable sync, false to disable.
+     */
+    fun toggleSync(enabled: Boolean) {
+        viewModelScope.launch {
+            sessionManager.setSyncEnabled(enabled)
+            val email = sessionManager.userEmail.first()
+            if (email.isNotBlank()) {
+                authRepository.updateSyncPreference(email, enabled)
+            }
+        }
+    }
+
+    /**
+     * Downloads the latest backup from AWS and overwrites the local database.
+     * Updates [isSyncing] and [syncMessage] during the process.
+     */
+    fun restoreFromCloud() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            _syncMessage.value = null
+            val result = syncRepository.downloadFromCloud()
+            if (result.isSuccess) {
+                _syncMessage.value = "Restore complete! Please restart or refresh screens."
+            } else {
+                _syncMessage.value = "Restore failed: ${result.exceptionOrNull()?.message}"
+            }
+            _isSyncing.value = false
+        }
+    }
+
+    /**
+     * Clears the current synchronization result message.
+     */
+    fun clearSyncMessage() {
+        _syncMessage.value = null
+    }
+
+    /**
+     * Updates the user's profile information in the local session manager.
+     * @param name The new display name.
+     * @param email The new email address.
+     */
+    fun updateProfile(name: String, email: String) {
+        viewModelScope.launch {
+            sessionManager.updateProfile(name, email)
+        }
+    }
+
+    /**
+     * Permanently deletes the user account from AWS and the local device.
+     * Redirects to the welcome/onboarding screen upon success via state change.
+     */
+    fun deleteAccount() {
+        viewModelScope.launch {
+            val email = sessionManager.userEmail.first()
+            if (email.isNotBlank()) {
+                _isSyncing.value = true
+                authRepository.deleteAccount(email)
+                _isSyncing.value = false
+            }
         }
     }
 }

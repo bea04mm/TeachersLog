@@ -1,7 +1,5 @@
 ﻿package pt.ipt.dama.teacherslog.ui.screens
 
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -32,13 +34,15 @@ import pt.ipt.dama.teacherslog.utils.ShakeDetector
 import pt.ipt.dama.teacherslog.utils.IconMapper
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import android.hardware.Sensor
+import android.hardware.SensorManager
 
 /**
- * Stateless content for the Random Student Selection dialog.
- * Extracted for better preview support and consistent design.
- *
- * @param student The student selected randomly.
- * @param onGoToGrading Callback to navigate to the evaluation screen.
+ * Component for the student selection popup when a shake is detected or triggered manually.
+ * 
+ * @param title Header text for the popup.
+ * @param student The selected [StudentWithGrade] to display.
+ * @param onGoToGrading Callback to navigate to the student's grading screen.
  * @param onClose Callback to dismiss the popup.
  */
 @Composable
@@ -51,19 +55,17 @@ fun RandomStudentPopupContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 12.dp), 
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = title,
-            style = AppTheme.typography.headlineSmall
-        )
+        Text(text = title, style = AppTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(24.dp))
+        
         Box(
             modifier = Modifier
-                .size(150.dp)
+                .size(120.dp)
                 .clip(AppTheme.circle)
-                .background(AppTheme.colors.surfaceContainerHigh),
+                .background(AppTheme.colors.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             if (student.profileImageUrl != null) {
@@ -78,14 +80,15 @@ fun RandomStudentPopupContent(
                 )
             } else {
                 Icon(
-                    imageVector = IconMapper.Account, 
+                    IconMapper.Account, 
                     contentDescription = null, 
-                    modifier = Modifier.size(80.dp),
-                    tint = AppTheme.colors.outline
+                    modifier = Modifier.size(64.dp),
+                    tint = AppTheme.colors.primary
                 )
             }
         }
-        Spacer(modifier = Modifier.height(24.dp))
+        
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = student.name,
             style = AppTheme.typography.headlineMedium
@@ -116,27 +119,34 @@ fun RandomStudentPopupContent(
 /**
  * ClassRosterContent is the stateless UI component that displays the roster of students.
  *
- * It manages:
- * 1. A scrollable student list with calculated grades.
- * 2. Shake-to-pick student feature registration.
- * 3. Conditional rendering of the random selection and deletion dialogs.
- *
  * @param className The name of the class being displayed.
- * @param classIcon Optional icon identifier inherited from parent subject.
- * @param students The list of [StudentWithGrade] in the class.
- * @param gradingScale The active grading scale for this class (e.g., "5", "20").
- * @param onStudentClick Callback when a student is selected for detailed grading.
- * @param onAddStudentClick Callback to navigate to student creation screen.
- * @param onEditStudentClick Callback to navigate to student editing screen.
- * @param onDeleteStudent Callback to remove a student record.
- * @param onBackClick Callback for back navigation.
+ * @param classIcon Optional icon name for the class header.
+ * @param students List of [StudentWithGrade] in the current class.
+ * @param gradingScale The grading scale identifier (e.g., "5", "20").
+ * @param isRefreshing Boolean state for the pull-to-refresh UI.
+ * @param onRefresh Callback to trigger cloud data synchronization.
+ * @param onStudentClick Callback when a student card is selected.
+ * @param onAddStudentClick Callback to navigate to the student creation form.
+ * @param onEditStudentClick Callback to navigate to the student editing form.
+ * @param onDeleteStudent Callback to remove a student from the local database.
+ * @param onCloneStudentClick Callback to duplicate a student to another class.
+ * @param onBackClick Callback for navigating back to the previous screen.
+ * @param academicYears Data for the cloning destination selection.
+ * @param semestersProvider Provider for semesters based on a year.
+ * @param subjectsProvider Provider for subjects based on a semester.
+ * @param classesProvider Provider for classes based on a subject.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassRosterContent(
     className: String,
     classIcon: String?,
     students: List<StudentWithGrade>,
     gradingScale: String,
+    isRefreshing: Boolean,
+    isGuest: Boolean,
+    syncEnabled: Boolean,
+    onRefresh: () -> Unit,
     onStudentClick: (Int, String) -> Unit,
     onAddStudentClick: () -> Unit,
     onEditStudentClick: (Int) -> Unit,
@@ -151,8 +161,10 @@ fun ClassRosterContent(
     val studentToDelete = remember { mutableStateOf<Student?>(null) }
     val studentToClone = remember { mutableStateOf<StudentWithGrade?>(null) }
     val randomStudent = remember { mutableStateOf<StudentWithGrade?>(null) }
+    val pullToRefreshState = rememberPullToRefreshState()
     val context = LocalContext.current
 
+    // ... (dialogs stay same) ...
     // --- Clone Destination Dialog ---
     studentToClone.value?.let { student ->
         CloneStudentDestinationDialog(
@@ -245,69 +257,94 @@ fun ClassRosterContent(
             }
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item {
-                SectionHeader(
-                    label = stringResource(R.string.students_roster),
-                    title = className
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+        val content = @Composable {
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item {
+                    SectionHeader(
+                        label = stringResource(R.string.students_roster),
+                        title = className
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            items(students) { student ->
-                val percentage = AppTheme.calculatePercentage(student.weightedGrade, gradingScale)
-                val gradeColor = AppTheme.getGradeColor(percentage)
+                items(students) { student ->
+                    val percentage = AppTheme.calculatePercentage(student.weightedGrade, gradingScale)
+                    val gradeColor = AppTheme.getGradeColor(percentage)
 
-                TonalCard(modifier = Modifier.clickable { onStudentClick(student.studentId, student.name) }) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(modifier = Modifier.size(32.dp), shape = AppTheme.circle, color = AppTheme.colors.primaryContainer) {
-                            Box(contentAlignment = Alignment.Center) { Text(text = student.numberInGroup.toString(), style = AppTheme.typography.labelMedium, color = AppTheme.colors.onPrimaryContainer) }
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
-                        Box(modifier = Modifier.size(48.dp).clip(AppTheme.circle).background(AppTheme.colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                            if (student.profileImageUrl != null) {
-                                AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(student.profileImageUrl).crossfade(true).build(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                            } else {
-                                Icon(IconMapper.Account, contentDescription = null, tint = AppTheme.colors.outline)
+                    TonalCard(modifier = Modifier.clickable { onStudentClick(student.studentId, student.name) }) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(modifier = Modifier.size(32.dp), shape = AppTheme.circle, color = AppTheme.colors.primaryContainer) {
+                                Box(contentAlignment = Alignment.Center) { Text(text = student.numberInGroup.toString(), style = AppTheme.typography.labelMedium, color = AppTheme.colors.onPrimaryContainer) }
                             }
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = student.name, 
-                            style = AppTheme.typography.titleMedium, 
-                            modifier = Modifier.weight(1f)
-                        )
-                        
-                        Surface(
-                            color = gradeColor.copy(alpha = 0.1f), 
-                            shape = AppTheme.shapes.extraLarge
-                        ) {
+                            Spacer(modifier = Modifier.width(12.dp))
+                            
+                            Box(modifier = Modifier.size(48.dp).clip(AppTheme.circle).background(AppTheme.colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                                if (student.profileImageUrl != null) {
+                                    AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(student.profileImageUrl).crossfade(true).build(), contentDescription = stringResource(R.string.cd_profile_photo), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                } else {
+                                    Icon(IconMapper.Account, contentDescription = null, tint = AppTheme.colors.outline)
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
                             Text(
-                                text = String.format(Locale.getDefault(), "%.2f", student.weightedGrade), 
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), 
-                                style = AppTheme.typography.titleMedium,
-                                color = gradeColor
+                                text = student.name, 
+                                style = AppTheme.typography.titleMedium, 
+                                modifier = Modifier.weight(1f)
                             )
-                        }
+                            
+                            Surface(
+                                color = gradeColor.copy(alpha = 0.1f), 
+                                shape = AppTheme.shapes.extraLarge
+                            ) {
+                                Text(
+                                    text = String.format(Locale.getDefault(), "%.2f", student.weightedGrade), 
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), 
+                                    style = AppTheme.typography.titleMedium,
+                                    color = gradeColor
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.width(8.dp))
-                        var showMenu by remember { mutableStateOf(false) }
-                        Box {
-                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
-                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                                DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
-                                DropdownMenuItem(text = { Text(stringResource(R.string.clone_label)) }, onClick = { showMenu = false; studentToClone.value = student }, leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) })
-                                DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { 
-                                    showMenu = false
-                                    studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) 
-                                }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })
+                            Spacer(modifier = Modifier.width(8.dp))
+                            var showMenu by remember { mutableStateOf(false) }
+                            Box {
+                                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
+                                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.clone_label)) }, onClick = { showMenu = false; studentToClone.value = student }, leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { 
+                                        showMenu = false
+                                        studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) 
+                                    }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })
+                                }
                             }
                         }
                     }
                 }
+                item { Spacer(modifier = Modifier.height(120.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(120.dp)) }
+        }
+
+        Box(modifier = Modifier.padding(paddingValues)) {
+            if (isGuest || !syncEnabled) {
+                content()
+            } else {
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                    state = pullToRefreshState,
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            state = pullToRefreshState,
+                            isRefreshing = isRefreshing,
+                            containerColor = AppTheme.colors.surface,
+                            color = AppTheme.colors.primary,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                    }
+                ) {
+                    content()
+                }
+            }
         }
     }
 }
@@ -319,6 +356,7 @@ fun ClassRosterContent(
 fun ClassRosterScreen(
     academicViewModel: AcademicViewModel,
     viewModel: TeacherViewModel,
+    authViewModel: pt.ipt.dama.teacherslog.ui.viewmodel.AuthViewModel,
     studentsClassId: Int,
     className: String,
     onStudentClick: (Int, String) -> Unit,
@@ -329,6 +367,9 @@ fun ClassRosterScreen(
     val students by viewModel.getStudentsWithGradesForStudentsClass(studentsClassId).observeAsState(emptyList())
     val classWithStats by viewModel.getStudentsClassWithStatsById(studentsClassId).observeAsState()
     val years by academicViewModel.allAcademicYears.observeAsState(emptyList())
+    val isRefreshing by academicViewModel.isRefreshing.collectAsState()
+    val isGuest by authViewModel.isGuest.observeAsState(initial = false)
+    val syncEnabled by authViewModel.isSyncEnabled.observeAsState(initial = false)
     var gradingScale by remember { mutableStateOf("5") }
 
     LaunchedEffect(studentsClassId) {
@@ -341,6 +382,10 @@ fun ClassRosterScreen(
         classIcon = classWithStats?.iconName,
         students = students,
         gradingScale = gradingScale,
+        isRefreshing = isRefreshing,
+        isGuest = isGuest,
+        syncEnabled = syncEnabled,
+        onRefresh = { academicViewModel.refreshData() },
         onStudentClick = onStudentClick,
         onAddStudentClick = { onAddStudentClick(studentsClassId) },
         onEditStudentClick = { id -> onEditStudentClick(studentsClassId, id) },

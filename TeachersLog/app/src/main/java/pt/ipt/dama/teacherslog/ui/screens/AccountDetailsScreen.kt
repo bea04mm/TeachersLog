@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,6 +17,7 @@ import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
 import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
@@ -25,16 +27,48 @@ import pt.ipt.dama.teacherslog.utils.IconMapper
  */
 @Composable
 fun AccountDetailsScreen(
+    viewModel: SettingsViewModel,
     onBackClick: () -> Unit
 ) {
     // Local UI state for form fields
-    val defaultFirstName = stringResource(R.string.default_user_firstname)
-    val defaultLastName = stringResource(R.string.default_user_lastname)
-    val defaultEmail = stringResource(R.string.default_user_email)
+    val userName by viewModel.userName.observeAsState("")
+    val userEmail by viewModel.userEmail.observeAsState("")
+    val isDeleting by viewModel.isSyncing.collectAsState()
 
-    var firstName by remember { mutableStateOf(defaultFirstName) }
-    var lastName by remember { mutableStateOf(defaultLastName) }
-    var email by remember { mutableStateOf(defaultEmail) }
+    AccountDetailsContent(
+        userName = userName,
+        userEmail = userEmail,
+        isDeleting = isDeleting,
+        onSave = { name, email -> viewModel.updateProfile(name, email) },
+        onDeleteAccount = { viewModel.deleteAccount() },
+        onBackClick = onBackClick
+    )
+}
+
+/**
+ * Stateless content for [AccountDetailsScreen] to enable previews and easier testing.
+ */
+@Composable
+fun AccountDetailsContent(
+    userName: String,
+    userEmail: String,
+    isDeleting: Boolean,
+    onSave: (String, String) -> Unit,
+    onDeleteAccount: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    val showDeleteDialog = remember { mutableStateOf(false) }
+
+    // Sync local state when LiveData emits
+    LaunchedEffect(userName, userEmail) {
+        val parts = userName.split(" ")
+        firstName = parts.firstOrNull() ?: ""
+        lastName = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""
+        email = userEmail
+    }
 
     Scaffold(
         topBar = {
@@ -53,6 +87,25 @@ fun AccountDetailsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            if (showDeleteDialog.value) {
+                item {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog.value = false },
+                        title = { Text(stringResource(R.string.delete_account_confirm_title)) },
+                        text = { Text(stringResource(R.string.delete_account_confirm_message)) },
+                        confirmButton = {
+                            Button(
+                                onClick = { onDeleteAccount(); showDeleteDialog.value = false },
+                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+                            ) { Text(stringResource(R.string.delete_label)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteDialog.value = false }) { Text(stringResource(R.string.cancel)) }
+                        }
+                    )
+                }
+            }
+
             // --- Profile Header Section ---
             item {
                 Column(
@@ -151,13 +204,51 @@ fun AccountDetailsScreen(
                             )
                             // Save Button
                             Button(
-                                onClick = onBackClick,
+                                onClick = { 
+                                    onSave("$firstName $lastName", email)
+                                    onBackClick() 
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
-                                shape = AppTheme.shapes.medium
+                                shape = AppTheme.shapes.medium,
+                                enabled = firstName.isNotBlank() && email.isNotBlank()
                             ) {
                                 Text(stringResource(R.string.save))
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- Danger Zone Section ---
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = AppTheme.colors.error, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = stringResource(R.string.danger_zone), style = AppTheme.typography.labelMedium, color = AppTheme.colors.error)
+                    }
+                    TonalCard {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.delete_account), style = AppTheme.typography.titleMedium, color = AppTheme.colors.error)
+                                Text(text = stringResource(R.string.delete_account_desc), style = AppTheme.typography.bodySmall, color = AppTheme.colors.outline)
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            if (isDeleting) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = AppTheme.colors.error)
+                            } else {
+                                Button(
+                                    onClick = { showDeleteDialog.value = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error),
+                                    shape = AppTheme.shapes.medium
+                                ) {
+                                    Text(stringResource(R.string.delete_label))
+                                }
                             }
                         }
                     }

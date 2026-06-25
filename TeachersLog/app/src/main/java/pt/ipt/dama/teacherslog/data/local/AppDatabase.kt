@@ -4,10 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.model.*
 
 /**
@@ -48,10 +44,9 @@ abstract class AppDatabase : RoomDatabase() {
          * database is created throughout the application lifecycle.
          *
          * @param context The application context.
-         * @param scope A [CoroutineScope] for background operations (like database seeding).
          * @return The [AppDatabase] instance.
          */
-        fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
+        fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
@@ -60,45 +55,9 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 // In development, destructive migration is used to simplify schema changes
                 .fallbackToDestructiveMigration(true)
-                // Add a callback to populate the database with initial data
-                .addCallback(AppDatabaseCallback(scope))
                 .build()
                 INSTANCE = instance
                 instance
-            }
-        }
-
-        /**
-         * Internal callback used to trigger database seeding when the database is created or opened.
-         */
-        private class AppDatabaseCallback(
-            private val scope: CoroutineScope
-        ) : Callback() {
-            /**
-             * Triggered when the database is first created.
-             */
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                seedDatabase()
-            }
-
-            /**
-             * Triggered every time the database is opened.
-             */
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                seedDatabase()
-            }
-
-            /**
-             * Launches a coroutine to populate the database with mock data via [DatabaseSeeder].
-             */
-            private fun seedDatabase() {
-                INSTANCE?.let { database ->
-                    scope.launch(Dispatchers.IO) {
-                        DatabaseSeeder.seed(database.teacherDao())
-                    }
-                }
             }
         }
     }

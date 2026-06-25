@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -15,6 +17,7 @@ import pt.ipt.dama.teacherslog.R
 import pt.ipt.dama.teacherslog.ui.components.TeacherTopBar
 import pt.ipt.dama.teacherslog.ui.components.TonalCard
 import pt.ipt.dama.teacherslog.ui.theme.*
+import pt.ipt.dama.teacherslog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.teacherslog.utils.IconMapper
 
 /**
@@ -25,6 +28,33 @@ import pt.ipt.dama.teacherslog.utils.IconMapper
  */
 @Composable
 fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onNavigateToAccount: () -> Unit,
+    onNavigateToPreferences: () -> Unit,
+    onLogout: () -> Unit
+) {
+    val userName by viewModel.userName.observeAsState("")
+    val userEmail by viewModel.userEmail.observeAsState("")
+    val isGuest by viewModel.isGuest.observeAsState(false)
+
+    SettingsContent(
+        userName = userName,
+        userEmail = userEmail,
+        isGuest = isGuest,
+        onNavigateToAccount = onNavigateToAccount,
+        onNavigateToPreferences = onNavigateToPreferences,
+        onLogout = onLogout
+    )
+}
+
+/**
+ * Stateless content for [SettingsScreen] to enable previews and easier testing.
+ */
+@Composable
+fun SettingsContent(
+    userName: String,
+    userEmail: String,
+    isGuest: Boolean,
     onNavigateToAccount: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onLogout: () -> Unit
@@ -63,19 +93,25 @@ fun SettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            val fullName = "${stringResource(R.string.default_user_firstname)} ${stringResource(R.string.default_user_lastname)}"
-                            Text(text = fullName, style = AppTheme.typography.titleLarge)
-                            Text(text = stringResource(R.string.default_user_email), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
+                            val displayName = if (isGuest) stringResource(R.string.continue_as_guest) else userName
+                            val displayEmail = if (isGuest) stringResource(R.string.guest_disclaimer) else userEmail
+
+                            Text(text = displayName, style = AppTheme.typography.titleLarge)
+                            Text(text = displayEmail, style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            TextButton(
-                                onClick = onNavigateToAccount,
-                                modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(stringResource(R.string.edit_profile))
+                            if (isGuest) {
+                                // Guest label or empty space, removed the button as requested
+                            } else {
+                                TextButton(
+                                    onClick = onNavigateToAccount,
+                                    modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
+                                ) {
+                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.edit_profile))
+                                }
                             }
                         }
                     }
@@ -105,15 +141,27 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TextButton(
-                        onClick = onLogout,
-                        colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.error)
-                    ) {
-                        Icon(IconMapper.Logout, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.sign_out))
+                    if (isGuest) {
+                        Button(
+                            onClick = onLogout,
+                            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary)
+                        ) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.create_account_login))
+                        }
+                    } else {
+                        TextButton(
+                            onClick = onLogout,
+                            colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.error)
+                        ) {
+                            Icon(IconMapper.Logout, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.sign_out))
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(text = stringResource(R.string.version_info), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
                 }
             }

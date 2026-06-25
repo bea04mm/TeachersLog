@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.LiveData
 import java.util.Calendar
 import pt.ipt.dama.teacherslog.R
@@ -116,12 +117,14 @@ fun AddYearAndPeriodContent(
  * @param onDismiss Callback executed when the dialog is canceled.
  * @param onAdd Callback triggered when the "Save" button is pressed with valid data.
  * @param existingYears List of existing years used to prevent duplicate start years.
+ * @param isMandatory If true, the dialog cannot be dismissed without adding data.
  */
 @Composable
 fun AddYearAndPeriodDialog(
     onDismiss: () -> Unit,
     onAdd: (String, String) -> Unit,
-    existingYears: List<AcademicYear>
+    existingYears: List<AcademicYear>,
+    isMandatory: Boolean = false
 ) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     // Extract registered start years to calculate the next logical available year
@@ -141,17 +144,31 @@ fun AddYearAndPeriodDialog(
 
     val context = LocalContext.current
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isMandatory) onDismiss() },
+        properties = DialogProperties(
+            dismissOnBackPress = !isMandatory,
+            dismissOnClickOutside = !isMandatory
+        ),
         title = { Text(stringResource(R.string.add_new_year)) },
         text = {
-            AddYearAndPeriodContent(
-                selectedStartYear = selectedStartYear,
-                takenStartYears = takenStartYears,
-                periodOptions = periodOptions,
-                selectedPeriodOption = selectedPeriodOption,
-                onYearChange = { selectedStartYear = it },
-                onPeriodChange = { selectedPeriodOption = it }
-            )
+            Column {
+                if (isMandatory) {
+                    Text(
+                        text = "Welcome! To start, please create your first academic year and period.",
+                        style = AppTheme.typography.bodyMedium,
+                        color = AppTheme.colors.primary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+                AddYearAndPeriodContent(
+                    selectedStartYear = selectedStartYear,
+                    takenStartYears = takenStartYears,
+                    periodOptions = periodOptions,
+                    selectedPeriodOption = selectedPeriodOption,
+                    onYearChange = { selectedStartYear = it },
+                    onPeriodChange = { selectedPeriodOption = it }
+                )
+            }
         },
         confirmButton = { 
             Button(onClick = { onAdd("$selectedStartYear/${selectedStartYear + 1}", context.getString(selectedPeriodOption)) }) {
@@ -159,9 +176,11 @@ fun AddYearAndPeriodDialog(
             } 
         },
         dismissButton = { 
-            TextButton(onClick = onDismiss) { 
-                Text(stringResource(R.string.cancel)) 
-            } 
+            if (!isMandatory) {
+                TextButton(onClick = onDismiss) { 
+                    Text(stringResource(R.string.cancel)) 
+                }
+            }
         }
     )
 }

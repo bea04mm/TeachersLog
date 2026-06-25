@@ -29,6 +29,10 @@ fun ClassRosterPreview() {
                 StudentWithGrade(2, 1, 2, "Bob Smith", "P002", null, 3.2)
             ),
             gradingScale = "5",
+            isRefreshing = false,
+            isGuest = false,
+            syncEnabled = true,
+            onRefresh = {},
             onStudentClick = { _, _ -> },
             onAddStudentClick = {},
             onEditStudentClick = {},

@@ -23,6 +23,10 @@ fun SubjectsListPreview() {
                 SubjectWithStats(1, "Mathematics", "functions", "#004AC6", 12, 4.2),
                 SubjectWithStats(2, "Natural Sciences", "biotech", "#006686", 8, 3.8)
             ),
+            isRefreshing = false,
+            isGuest = false,
+            syncEnabled = true,
+            onRefresh = {},
             onMenuClick = {},
             onSubjectClick = { _, _ -> },
             onAddSubjectClick = {},
@@ -49,6 +53,10 @@ fun SubjectPreview() {
                 StudentsClassWithStats(1, 1, "10.ºA", 85.0, 25, "100", "#004AC6", "functions"),
                 StudentsClassWithStats(2, 1, "11.ºB", 4.2, 22, "5", "#004AC6", "functions")
             ),
+            isRefreshing = false,
+            isGuest = false,
+            syncEnabled = true,
+            onRefresh = {},
             onClassClick = { _, _ -> },
             onAddClassClick = {},
             onEditClassClick = {},

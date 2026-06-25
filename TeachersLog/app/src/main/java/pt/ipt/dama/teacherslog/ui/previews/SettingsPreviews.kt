@@ -2,19 +2,23 @@ package pt.ipt.dama.teacherslog.ui.previews
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import pt.ipt.dama.teacherslog.ui.screens.AccountDetailsScreen
+import pt.ipt.dama.teacherslog.ui.screens.AccountDetailsContent
 import pt.ipt.dama.teacherslog.ui.screens.AppPreferencesContent
-import pt.ipt.dama.teacherslog.ui.screens.SettingsScreen
+import pt.ipt.dama.teacherslog.ui.screens.SettingsContent
 import pt.ipt.dama.teacherslog.ui.theme.TeachersLogTheme
 
 /**
- * Preview for the [SettingsScreen] hub in light mode.
+ * Preview for the [SettingsContent] hub in light mode.
+ * Uses the stateless Content component to avoid ViewModel cast issues in previews.
  */
 @Preview(showBackground = true, name = "Settings Hub Light")
 @Composable
 fun SettingsPreview() {
     TeachersLogTheme(darkTheme = false) {
-        SettingsScreen(
+        SettingsContent(
+            userName = "John Doe",
+            userEmail = "john.doe@ipt.pt",
+            isGuest = false,
             onNavigateToAccount = {}, 
             onNavigateToPreferences = {},
             onLogout = {}
@@ -32,20 +36,35 @@ fun AppPreferencesPreview() {
         AppPreferencesContent(
             darkMode = false,
             currentLang = "en",
+            syncEnabled = true,
+            isGuest = false,
+            isSyncing = false,
+            syncMessage = null,
             onToggleDarkMode = {},
             onLanguageChange = {},
+            onToggleSync = {},
+            onRestoreClick = {},
+            onClearSyncMessage = {},
             onBackClick = {}
         )
     }
 }
 
 /**
- * Preview for the [AccountDetailsScreen] in light mode.
+ * Preview for the [AccountDetailsContent] in light mode.
+ * Uses the stateless Content component to avoid ViewModel cast issues in previews.
  */
 @Preview(showBackground = true, name = "Account Details Light")
 @Composable
 fun AccountDetailsPreview() {
     TeachersLogTheme(darkTheme = false) {
-        AccountDetailsScreen(onBackClick = {})
+        AccountDetailsContent(
+            userName = "John Doe",
+            userEmail = "john.doe@ipt.pt",
+            isDeleting = false,
+            onSave = { _, _ -> },
+            onDeleteAccount = {},
+            onBackClick = {}
+        )
     }
 }

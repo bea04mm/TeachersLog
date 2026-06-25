@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -84,9 +85,14 @@ class MainActivity : ComponentActivity() {
             val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(this))
             val isDarkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
             
-            val onboardingCompleted by authViewModel.onboardingCompleted.observeAsState(initial = false)
-            val isAuthenticated by authViewModel.isAuthenticated.observeAsState(initial = false)
+            val onboardingCompleted by authViewModel.onboardingCompletedFlow.collectAsState(initial = false)
+            val isAuthenticated by authViewModel.isAuthenticatedFlow.collectAsState(initial = false)
             
+            // Log for debugging (only in debug builds)
+            LaunchedEffect(onboardingCompleted, isAuthenticated) {
+                android.util.Log.d("TeachersLog", "onboardingCompleted: $onboardingCompleted, isAuthenticated: $isAuthenticated")
+            }
+
             // Provide context-aware locale resources and activity result registry to the tree
             CompositionLocalProvider(
                 LocalContext provides LocaleManager.updateResources(this, currentLang),
@@ -99,8 +105,7 @@ class MainActivity : ComponentActivity() {
                         }
                         !isAuthenticated -> {
                             WelcomeScreen(
-                                onLoginClick = { authViewModel.login() },
-                                onCreateAccountClick = { authViewModel.login() }, // Placeholder
+                                authViewModel = authViewModel,
                                 onGuestClick = { authViewModel.continueAsGuest() }
                             )
                         }
@@ -140,13 +145,46 @@ fun MainApp(
     val snackbarHostState = remember { SnackbarHostState() }
     
     // Global academic state observation
-    val academicYears by academicViewModel.allAcademicYears.observeAsState(emptyList())
+    val academicYears by academicViewModel.allAcademicYears.observeAsState()
     val selectedYearId by academicViewModel.selectedYearId.observeAsState()
     val semesters by academicViewModel.semesters.observeAsState(emptyList())
     val selectedSemesterId by academicViewModel.selectedSemesterId.observeAsState()
 
+    val isGuest by authViewModel.isGuest.observeAsState(initial = false)
+    val isAuthenticated by authViewModel.isAuthenticated.observeAsState(initial = false)
+    val justLoggedIn by authViewModel.justLoggedIn.collectAsState()
+    val showSyncChoiceDialog = rememberSaveable { mutableStateOf(false) }
+
+    // Logic to detect first login with existing data
+    LaunchedEffect(isAuthenticated, isGuest, academicYears, justLoggedIn) {
+        val years = academicYears ?: return@LaunchedEffect
+        // Show conflict dialog only if just logged in (transient state) and local data exists
+        if (isAuthenticated && !isGuest && justLoggedIn) {
+            if (years.isNotEmpty()) {
+                showSyncChoiceDialog.value = true
+            } else {
+                // If no local data, we could auto-restore or just clear the flag
+                authViewModel.clearJustLoggedIn()
+            }
+        }
+    }
+
     // Dialog and deletion visibility states
     val showAddYearDialog = remember { mutableStateOf(false) }
+    val isYearMandatory = remember { mutableStateOf(false) }
+
+    // Enforce initial setup if database is empty (after initial load)
+    LaunchedEffect(academicYears) {
+        academicYears?.let { years ->
+            if (years.isEmpty()) {
+                isYearMandatory.value = true
+                showAddYearDialog.value = true
+            } else {
+                isYearMandatory.value = false
+            }
+        }
+    }
+
     val showAddPeriodDialog = remember { mutableStateOf(false) }
     val yearToDelete = remember { mutableStateOf<AcademicYear?>(null) }
     val periodToDelete = remember { mutableStateOf<Semester?>(null) }
@@ -154,6 +192,32 @@ fun MainApp(
     val periodToClone = remember { mutableStateOf<Semester?>(null) }
 
     // --- Global Dialog Logic ---
+
+    // Dialog for choosing between local data or cloud restore after login
+    if (showSyncChoiceDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showSyncChoiceDialog.value = false },
+            title = { Text(stringResource(R.string.sync_choice_title)) },
+            text = { Text(stringResource(R.string.sync_choice_message)) },
+            confirmButton = {
+                Button(
+                    onClick = { 
+                        settingsViewModel.restoreFromCloud()
+                        showSyncChoiceDialog.value = false 
+                        authViewModel.clearJustLoggedIn()
+                    }
+                ) { Text(stringResource(R.string.restore_cloud_data)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showSyncChoiceDialog.value = false 
+                        authViewModel.clearJustLoggedIn()
+                    }
+                ) { Text(stringResource(R.string.keep_local_data)) }
+            }
+        )
+    }
 
     // Atomic dialog for adding a new Year + its initial Period
     if (showAddYearDialog.value) {
@@ -163,7 +227,8 @@ fun MainApp(
                 academicViewModel.addYearWithPeriod(yearName, periodName)
                 showAddYearDialog.value = false
             },
-            existingYears = academicYears
+            existingYears = academicYears ?: emptyList(),
+            isMandatory = isYearMandatory.value
         )
     }
 
@@ -257,7 +322,7 @@ fun MainApp(
     yearToClone.value?.let { year ->
         CloneYearDialog(
             sourceYear = year,
-            existingYears = academicYears,
+            existingYears = academicYears ?: emptyList(),
             onConfirm = { newName ->
                 academicViewModel.cloneAcademicYear(year.id, newName)
                 yearToClone.value = null
@@ -270,7 +335,7 @@ fun MainApp(
     periodToClone.value?.let { semester ->
         CloneSemesterDestinationDialog(
             title = stringResource(R.string.clone_item_title, semester.name),
-            academicYears = academicYears,
+            academicYears = academicYears ?: emptyList(),
             semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) },
             onConfirm = { targetYearId, newName ->
                 academicViewModel.cloneSemester(semester.id, targetYearId, newName)
@@ -287,7 +352,7 @@ fun MainApp(
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             TeacherDrawerContent(
-                academicYears = academicYears,
+                academicYears = academicYears ?: emptyList(),
                 selectedYearId = selectedYearId,
                 semesters = semesters,
                 selectedSemesterId = selectedSemesterId,
@@ -329,6 +394,7 @@ fun MainApp(
                     DashboardScreen(
                         academicViewModel = academicViewModel,
                         teacherViewModel = teacherViewModel,
+                        authViewModel = authViewModel,
                         onMenuClick = { scope.launch { drawerState.open() } },
                         onClassClick = { id, name -> navController.navigate("students_class/$id/${URLEncoder.encode(name, "UTF-8")}") }
                     )
@@ -336,6 +402,7 @@ fun MainApp(
                 composable("subjects") {
                     SubjectsListScreen(
                         academicViewModel = academicViewModel,
+                        authViewModel = authViewModel,
                         onMenuClick = { scope.launch { drawerState.open() } },
                         onSubjectClick = { id, name -> navController.navigate("subject/$id/${URLEncoder.encode(name, "UTF-8")}") },
                         onAddSubjectClick = { navController.navigate("add_subject") },
@@ -350,18 +417,20 @@ fun MainApp(
                 }
                 composable("settings") { 
                     SettingsScreen(
+                        viewModel = settingsViewModel,
                         onNavigateToAccount = { navController.navigate("account") }, 
                         onNavigateToPreferences = { navController.navigate("preferences") },
                         onLogout = { authViewModel.logout() }
                     ) 
                 }
                 composable("preferences") { AppPreferencesScreen(settingsViewModel) { navController.popBackStack() } }
-                composable("account") { AccountDetailsScreen { navController.popBackStack() } }
+                composable("account") { AccountDetailsScreen(settingsViewModel) { navController.popBackStack() } }
                 
                 composable("subject/{id}/{name}", arguments = listOf(navArgument("id") { type = NavType.IntType }, navArgument("name") { type = NavType.StringType })) { 
                     SubjectScreen(
                         academicViewModel = academicViewModel,
                         teacherViewModel = teacherViewModel,
+                        authViewModel = authViewModel,
                         subjectId = it.arguments?.getInt("id") ?: 0,
                         subjectName = it.arguments?.getString("name") ?: "",
                         onClassClick = { id, name -> navController.navigate("students_class/$id/${URLEncoder.encode(name, "UTF-8")}") },
@@ -383,11 +452,12 @@ fun MainApp(
                             ClassRosterScreen(
                                 academicViewModel = academicViewModel,
                                 viewModel = teacherViewModel,
+                                authViewModel = authViewModel,
                                 studentsClassId = it.arguments?.getInt("id") ?: 0,
                                 className = it.arguments?.getString("name") ?: "",
-                                onStudentClick = { id, name -> navController.navigate("grading/$id/${URLEncoder.encode(name, "UTF-8")}/${URLEncoder.encode(it.arguments?.getString("name") ?: "", "UTF-8")}") },
-                                onAddStudentClick = { cid -> navController.navigate("add_student/$cid") },
-                                onEditStudentClick = { cid, sid -> navController.navigate("edit_student/$cid/$sid") },
+                                onStudentClick = { id: Int, name: String -> navController.navigate("grading/$id/${URLEncoder.encode(name, "UTF-8")}/${URLEncoder.encode(it.arguments?.getString("name") ?: "", "UTF-8")}") },
+                                onAddStudentClick = { cid: Int -> navController.navigate("add_student/$cid") },
+                                onEditStudentClick = { cid: Int, sid: Int -> navController.navigate("edit_student/$cid/$sid") },
                                 onBackClick = { navController.popBackStack() }
                             )
                         }

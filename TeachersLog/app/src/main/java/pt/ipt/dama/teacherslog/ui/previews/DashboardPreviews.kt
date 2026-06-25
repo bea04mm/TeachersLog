@@ -20,6 +20,10 @@ fun DashboardPreview() {
                 StudentsClassWithStats(2, 1, "11.ºB", 3.8, 22, "20", "#006686", "biotech")
             ),
             stats = GlobalStats(20, 2, 85.0),
+            isRefreshing = false,
+            isGuest = false,
+            syncEnabled = true,
+            onRefresh = {},
             onMenuClick = {},
             onClassClick = { _, _ -> }
         )
@@ -39,6 +43,10 @@ fun DashboardDarkPreview() {
                 StudentsClassWithStats(2, 1, "11.ºB", 3.8, 22, "20", "#006686", "biotech")
             ),
             stats = GlobalStats(20, 2, 85.0),
+            isRefreshing = false,
+            isGuest = false,
+            syncEnabled = true,
+            onRefresh = {},
             onMenuClick = {},
             onClassClick = { _, _ -> }
         )
