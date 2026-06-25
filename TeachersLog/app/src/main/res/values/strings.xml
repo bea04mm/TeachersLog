@@ -140,7 +140,7 @@
     <string name="choose_how_to_continue">Choose how you want to continue</string>
     <string name="sign_in">Sign In</string>
     <string name="create_account">Create Account</string>
-    <string name="continue_as_guest">Continue as Guest</string>
+    <string name="continue_as_guest">Guest</string>
     <string name="guest_disclaimer">As a guest, your data is saved locally on this device only.</string>
 
     <!-- Settings & Account -->
@@ -158,6 +158,23 @@
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Adjust for low-light environments</string>
+    <string name="sync_label">Data Synchronization</string>
+    <string name="sync_desc">Backup your classes and students to AWS</string>
+    <string name="data_management_label">DATA MANAGEMENT</string>
+    <string name="restore_from_cloud">Restore from Cloud</string>
+    <string name="restore_desc">Download your last backup and overwrite local data</string>
+    <string name="restore_confirm_title">Confirm Restore</string>
+    <string name="restore_confirm_message">This will DELETE all current local data and replace it with your cloud backup. This action cannot be undone. Are you sure?</string>
+    <string name="restore_success">Restore complete! Your data has been updated.</string>
+    <string name="sync_choice_title">Data Conflict</string>
+    <string name="sync_choice_message">You have data on this device. Would you like to keep it and upload it to your account, or discard it and restore your cloud backup?</string>
+    <string name="keep_local_data">Keep Local Data</string>
+    <string name="restore_cloud_data">Restore Cloud Data</string>
+    <string name="danger_zone">DANGER ZONE</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_account_desc">Permanently delete your account and all data from AWS. This cannot be undone.</string>
+    <string name="delete_account_confirm_title">Delete Account?</string>
+    <string name="delete_account_confirm_message">Are you absolutely sure you want to delete your account? All your cloud backups will be permanently erased. Local data will remain until you clear app cache.</string>
     <string name="account">Account</string>
     <string name="personal_information">Personal Information</string>
     <string name="first_name">First Name</string>
@@ -183,4 +200,5 @@
     <string name="cd_decrease_year">Decrease year</string>
     <string name="cd_increase_year">Increase year</string>
     <string name="cd_profile_photo">Profile photo</string>
+    <string name="create_account_login">Create Account / Login</string>
 </resources>

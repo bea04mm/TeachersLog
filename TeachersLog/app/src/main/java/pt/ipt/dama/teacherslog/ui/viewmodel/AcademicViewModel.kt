@@ -3,12 +3,19 @@ package pt.ipt.dama.teacherslog.ui.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.local.AppDatabase
 import pt.ipt.dama.teacherslog.data.model.*
+import pt.ipt.dama.teacherslog.data.remote.NetworkClient
 import pt.ipt.dama.teacherslog.data.repository.CloningRepository
+import pt.ipt.dama.teacherslog.data.repository.SyncRepository
 import pt.ipt.dama.teacherslog.data.repository.TeacherRepository
+import pt.ipt.dama.teacherslog.utils.SessionManager
 import androidx.core.content.edit
 
 /**
@@ -24,6 +31,8 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
 
     private val repository: TeacherRepository
     private val cloningRepository: CloningRepository
+    private val syncRepository: SyncRepository
+    private val sessionManager: SessionManager
     private val prefs = application.getSharedPreferences("academic_prefs", Context.MODE_PRIVATE)
 
     /**
@@ -80,10 +89,12 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     }
 
     init {
-        val database = AppDatabase.getDatabase(application, viewModelScope)
+        val database = AppDatabase.getDatabase(application)
         val teacherDao = database.teacherDao()
         repository = TeacherRepository(teacherDao)
         cloningRepository = CloningRepository(database, teacherDao)
+        sessionManager = SessionManager(application)
+        syncRepository = SyncRepository(database, teacherDao, NetworkClient.apiService, sessionManager)
         
         allAcademicYears = repository.allAcademicYears.asLiveData()
         
@@ -154,6 +165,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
             if (yId != -1L) {
                 repository.insertSemester(Semester(academicYearId = yId.toInt(), name = periodName))
                 selectYear(yId.toInt())
+                triggerSync()
             }
         }
     }
@@ -168,6 +180,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
                 prefs.edit { remove("last_year_id") }
             }
             repository.deleteAcademicYear(year)
+            triggerSync()
         }
     }
 
@@ -181,6 +194,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
         val yearId = _selectedYearId.value ?: return
         viewModelScope.launch {
             repository.insertSemester(Semester(academicYearId = yearId, name = name))
+            triggerSync()
         }
     }
 
@@ -194,6 +208,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
                 prefs.edit { remove("last_period_id") }
             }
             repository.deleteSemester(semester)
+            triggerSync()
         }
     }
 
@@ -214,6 +229,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
                 iconName = iconName, 
                 colorHex = colorHex
             ))
+            triggerSync()
         }
     }
 
@@ -224,6 +240,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     fun updateSubject(subject: Subject) {
         viewModelScope.launch {
             repository.updateSubject(subject)
+            triggerSync()
         }
     }
 
@@ -234,6 +251,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     fun deleteSubject(subject: Subject) {
         viewModelScope.launch {
             repository.deleteSubject(subject)
+            triggerSync()
         }
     }
 
@@ -254,6 +272,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     fun cloneSubject(sourceId: Int, targetSemesterId: Int) {
         viewModelScope.launch {
             cloningRepository.cloneSubject(sourceId, targetSemesterId)
+            triggerSync()
         }
     }
 
@@ -263,6 +282,7 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     fun cloneSemester(sourceId: Int, targetYearId: Int, newName: String? = null) {
         viewModelScope.launch {
             cloningRepository.cloneSemester(sourceId, targetYearId, newName)
+            triggerSync()
         }
     }
 
@@ -272,6 +292,41 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     fun cloneAcademicYear(sourceId: Int, newYearName: String) {
         viewModelScope.launch {
             cloningRepository.cloneAcademicYear(sourceId, newYearName)
+            triggerSync()
+        }
+    }
+
+    private val _isRefreshing = MutableStateFlow(false)
+    /** Observable state for the pull-to-refresh indicator. */
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    /**
+     * Refreshes data by downloading the latest backup from the cloud if sync is enabled.
+     * Triggered by Pull-to-Refresh actions in the UI.
+     */
+    fun refreshData() {
+        viewModelScope.launch {
+            sessionManager.isSyncEnabled.first().let { enabled ->
+                if (enabled) {
+                    _isRefreshing.value = true
+                    syncRepository.downloadFromCloud()
+                    _isRefreshing.value = false
+                }
+            }
+        }
+    }
+
+    /**
+     * Triggers a cloud backup (snapshot upload) if synchronization is enabled.
+     * Called automatically after local database mutations.
+     */
+    private fun triggerSync() {
+        viewModelScope.launch {
+            // Use first() instead of collect/collectLatest to avoid persistent observation
+            val enabled = sessionManager.isSyncEnabled.first()
+            if (enabled) {
+                syncRepository.uploadToCloud()
+            }
         }
     }
 }

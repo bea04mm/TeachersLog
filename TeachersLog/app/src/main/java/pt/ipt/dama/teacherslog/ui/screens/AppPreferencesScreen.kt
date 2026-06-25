@@ -27,19 +27,62 @@ import pt.ipt.dama.teacherslog.utils.LocaleManager
  *
  * @param darkMode Boolean indicating if dark mode is enabled.
  * @param currentLang The current language code (e.g., "en", "pt").
+ * @param syncEnabled Boolean indicating if cloud sync is active.
+ * @param isGuest Boolean indicating if user is in guest mode (limits sync options).
+ * @param isSyncing Boolean indicating if a cloud operation is in progress.
+ * @param syncMessage Optional feedback message from the last sync operation.
  * @param onToggleDarkMode Callback to switch between light and dark themes.
  * @param onLanguageChange Callback to update the application language.
+ * @param onToggleSync Callback to enable/disable background sync.
+ * @param onRestoreClick Callback to trigger cloud backup restoration.
+ * @param onClearSyncMessage Callback to dismiss the sync feedback notification.
  * @param onBackClick Callback for the top bar back button.
  */
 @Composable
 fun AppPreferencesContent(
     darkMode: Boolean,
     currentLang: String,
+    syncEnabled: Boolean,
+    isGuest: Boolean,
+    isSyncing: Boolean,
+    syncMessage: String?,
     onToggleDarkMode: (Boolean) -> Unit,
     onLanguageChange: (String) -> Unit,
+    onToggleSync: (Boolean) -> Unit,
+    onRestoreClick: () -> Unit,
+    onClearSyncMessage: () -> Unit,
     onBackClick: () -> Unit
 ) {
     val showLanguageDialog = remember { mutableStateOf(false) }
+    val showRestoreDialog = remember { mutableStateOf(false) }
+
+    if (showRestoreDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showRestoreDialog.value = false },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
+            text = { Text(stringResource(R.string.restore_confirm_message)) },
+            confirmButton = {
+                Button(
+                    onClick = { onRestoreClick(); showRestoreDialog.value = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+                ) { Text(stringResource(R.string.restore_from_cloud)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreDialog.value = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (syncMessage != null) {
+        AlertDialog(
+            onDismissRequest = onClearSyncMessage,
+            title = { Text("Sync Notification") },
+            text = { Text(syncMessage) },
+            confirmButton = {
+                Button(onClick = onClearSyncMessage) { Text(stringResource(R.string.close)) }
+            }
+        )
+    }
 
     if (showLanguageDialog.value) {
         AlertDialog(
@@ -121,6 +164,32 @@ fun AppPreferencesContent(
                     }
                 }
             }
+
+            // Data Sync Section
+            if (!isGuest) {
+                item {
+                    PreferenceSection(title = stringResource(R.string.data_management_label), icon = Icons.Default.CloudSync) {
+                        TonalCard {
+                            Column {
+                                PreferenceToggle(
+                                    title = stringResource(R.string.sync_label),
+                                    subtitle = stringResource(R.string.sync_desc),
+                                    checked = syncEnabled,
+                                    onCheckedChange = onToggleSync
+                                )
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                                PreferenceAction(
+                                    title = stringResource(R.string.restore_from_cloud),
+                                    subtitle = stringResource(R.string.restore_desc),
+                                    icon = Icons.Default.CloudDownload,
+                                    isLoading = isSyncing,
+                                    onClick = { showRestoreDialog.value = true }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -139,17 +208,60 @@ fun AppPreferencesScreen(
     val context = LocalContext.current
     val darkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
     val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
+    val syncEnabled by settingsViewModel.isSyncEnabled.observeAsState(initial = false)
+    val isGuest by settingsViewModel.isGuest.observeAsState(initial = false)
+    val isSyncing by settingsViewModel.isSyncing.collectAsState()
+    val syncMessage by settingsViewModel.syncMessage.collectAsState()
 
     AppPreferencesContent(
         darkMode = darkMode,
         currentLang = currentLang,
+        syncEnabled = syncEnabled,
+        isGuest = isGuest,
+        isSyncing = isSyncing,
+        syncMessage = syncMessage,
         onToggleDarkMode = { settingsViewModel.toggleDarkMode(it) },
         onLanguageChange = { lang ->
             context.getSharedPreferences("prefs", Context.MODE_PRIVATE).edit { putString("language", lang) }
             settingsViewModel.setLanguage(lang)
         },
+        onToggleSync = { settingsViewModel.toggleSync(it) },
+        onRestoreClick = { settingsViewModel.restoreFromCloud() },
+        onClearSyncMessage = { settingsViewModel.clearSyncMessage() },
         onBackClick = onBackClick
     )
+}
+
+/**
+ * A reusable row containing a title, subtitle, and an action icon (or loading spinner).
+ */
+@Composable
+fun PreferenceAction(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isLoading, onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = AppTheme.typography.bodyLarge)
+            Text(text = subtitle, style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(imageVector = icon, contentDescription = null, tint = AppTheme.colors.primary)
+        }
+    }
 }
 
 /**

@@ -6,8 +6,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.ipt.dama.teacherslog.data.local.AppDatabase
 import pt.ipt.dama.teacherslog.data.model.*
+import pt.ipt.dama.teacherslog.data.remote.NetworkClient
 import pt.ipt.dama.teacherslog.data.repository.CloningRepository
+import pt.ipt.dama.teacherslog.data.repository.SyncRepository
 import pt.ipt.dama.teacherslog.data.repository.TeacherRepository
+import pt.ipt.dama.teacherslog.utils.SessionManager
 
 /**
  * TeacherViewModel manages student-specific data including classes, students, and grading.
@@ -22,12 +25,16 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     // Repository as the single source of truth for student/class data
     private val repository: TeacherRepository
     private val cloningRepository: CloningRepository
+    private val syncRepository: SyncRepository
+    private val sessionManager: SessionManager
     
     init {
-        val database = AppDatabase.getDatabase(application, viewModelScope)
+        val database = AppDatabase.getDatabase(application)
         val teacherDao = database.teacherDao()
         repository = TeacherRepository(teacherDao)
         cloningRepository = CloningRepository(database, teacherDao)
+        sessionManager = SessionManager(application)
+        syncRepository = SyncRepository(database, teacherDao, NetworkClient.apiService, sessionManager)
     }
 
     // --- Student Class CRUD Methods ---
@@ -93,6 +100,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 )).toInt()
                 insertedIds[index] = newId
             }
+            triggerSync()
         }
     }
 
@@ -103,6 +111,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun deleteStudentsClass(studentsClass: StudentsClass) {
         viewModelScope.launch {
             repository.deleteStudentsClass(studentsClass)
+            triggerSync()
         }
     }
 
@@ -201,6 +210,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 processNumber = process,
                 profileImageUrl = photoUrl
             ))
+            triggerSync()
         }
     }
 
@@ -211,6 +221,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun updateStudent(student: Student) {
         viewModelScope.launch {
             repository.updateStudent(student)
+            triggerSync()
         }
     }
 
@@ -221,6 +232,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun deleteStudent(student: Student) {
         viewModelScope.launch {
             repository.deleteStudent(student)
+            triggerSync()
         }
     }
 
@@ -285,6 +297,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
             scores.forEach { score ->
                 repository.insertStudentScore(score)
             }
+            triggerSync()
         }
     }
 
@@ -296,6 +309,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun cloneClass(sourceId: Int, targetSubjectId: Int) {
         viewModelScope.launch {
             cloningRepository.cloneClass(sourceId, targetSubjectId)
+            triggerSync()
         }
     }
 
@@ -305,6 +319,7 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     fun cloneStudent(sourceId: Int, targetClassId: Int) {
         viewModelScope.launch {
             cloningRepository.cloneStudent(sourceId, targetClassId)
+            triggerSync()
         }
     }
 
@@ -314,6 +329,19 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      */
     fun getClassesForSubject(subjectId: Int): LiveData<List<StudentsClass>> {
         return repository.getClassesBySubjectId(subjectId).asLiveData()
+    }
+
+    /**
+     * Triggers a cloud backup if sync is enabled.
+     */
+    private fun triggerSync() {
+        viewModelScope.launch {
+            // Use first() to check preference only once at the moment of mutation
+            val enabled = sessionManager.isSyncEnabled.first()
+            if (enabled) {
+                syncRepository.uploadToCloud()
+            }
+        }
     }
 }
 

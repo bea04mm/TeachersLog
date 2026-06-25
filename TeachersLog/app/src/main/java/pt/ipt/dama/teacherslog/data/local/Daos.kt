@@ -485,4 +485,124 @@ interface TeacherDao {
      */
     @Query("SELECT * FROM semesters WHERE academicYearId = :yearId")
     suspend fun getSemestersForYearList(yearId: Int): List<Semester>
+
+    /**
+     * Retrieves all academic years synchronously for backup purposes.
+     * @return A list of [AcademicYear].
+     */
+    @Query("SELECT * FROM academic_years")
+    suspend fun getAllAcademicYearsSync(): List<AcademicYear>
+
+    /**
+     * Retrieves all semesters synchronously for backup purposes.
+     * @return A list of [Semester].
+     */
+    @Query("SELECT * FROM semesters")
+    suspend fun getAllSemestersSync(): List<Semester>
+
+    /**
+     * Retrieves all subjects synchronously for backup purposes.
+     * @return A list of [Subject].
+     */
+    @Query("SELECT * FROM subjects")
+    suspend fun getAllSubjectsSync(): List<Subject>
+
+    /**
+     * Retrieves all classes synchronously for backup purposes.
+     * @return A list of [StudentsClass].
+     */
+    @Query("SELECT * FROM students_classes")
+    suspend fun getAllClassesSync(): List<StudentsClass>
+
+    /**
+     * Retrieves all grading components synchronously for backup purposes.
+     * @return A list of [GradingComponent].
+     */
+    @Query("SELECT * FROM grading_components")
+    suspend fun getAllGradingComponentsSync(): List<GradingComponent>
+
+    /**
+     * Retrieves all students synchronously for backup purposes.
+     * @return A list of [Student].
+     */
+    @Query("SELECT * FROM students")
+    suspend fun getAllStudentsSync(): List<Student>
+
+    /**
+     * Retrieves all student scores synchronously for backup purposes.
+     * @return A list of [StudentScore].
+     */
+    @Query("SELECT * FROM student_scores")
+    suspend fun getAllStudentScoresSync(): List<StudentScore>
+
+    /**
+     * Retrieves all grades (notes) synchronously for backup purposes.
+     * @return A list of [Grade].
+     */
+    @Query("SELECT * FROM grades")
+    suspend fun getAllGradesSync(): List<Grade>
+
+    // --- Bulk Insert Methods for Restoration ---
+
+    /**
+     * Inserts multiple academic years, replacing on conflict.
+     * @param years The list of [AcademicYear] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAcademicYears(years: List<AcademicYear>)
+
+    /**
+     * Inserts multiple semesters, replacing on conflict.
+     * @param semesters The list of [Semester] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSemesters(semesters: List<Semester>)
+
+    /**
+     * Inserts multiple subjects, replacing on conflict.
+     * @param subjects The list of [Subject] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSubjects(subjects: List<Subject>)
+
+    /**
+     * Inserts multiple student classes, replacing on conflict.
+     * @param classes The list of [StudentsClass] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudentsClasses(classes: List<StudentsClass>)
+
+    /**
+     * Inserts multiple grading components, replacing on conflict.
+     * @param components The list of [GradingComponent] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGradingComponents(components: List<GradingComponent>)
+
+    /**
+     * Inserts multiple students, replacing on conflict.
+     * @param students The list of [Student] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudents(students: List<Student>)
+
+    /**
+     * Inserts multiple student scores, replacing on conflict.
+     * @param scores The list of [StudentScore] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudentScores(scores: List<StudentScore>)
+
+    /**
+     * Inserts multiple grades, replacing on conflict.
+     * @param grades The list of [Grade] to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGrades(grades: List<Grade>)
+
+    /**
+     * Wipes all academic year records (and cascading data) from the local database.
+     */
+    @Query("DELETE FROM academic_years")
+    suspend fun clearAllData()
 }

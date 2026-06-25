@@ -140,7 +140,7 @@
     <string name="choose_how_to_continue">Escolha como deseja continuar</string>
     <string name="sign_in">Iniciar Sessão</string>
     <string name="create_account">Criar Conta</string>
-    <string name="continue_as_guest">Continuar como Convidado</string>
+    <string name="continue_as_guest">Convidado</string>
     <string name="guest_disclaimer">Como convidado, os seus dados são guardados localmente apenas neste dispositivo.</string>
 
     <!-- Settings & Account -->
@@ -158,6 +158,23 @@
     <string name="appearance">Aparência</string>
     <string name="dark_mode">Modo Escuro</string>
     <string name="dark_mode_desc">Ajustar para ambientes de pouca luz</string>
+    <string name="sync_label">Sincronização de Dados</string>
+    <string name="sync_desc">Cópia de segurança das suas turmas e alunos na AWS</string>
+    <string name="data_management_label">GESTÃO DE DADOS</string>
+    <string name="restore_from_cloud">Restaurar da Nuvem</string>
+    <string name="restore_desc">Descarregar a última cópia e substituir os dados locais</string>
+    <string name="restore_confirm_title">Confirmar Restauro</string>
+    <string name="restore_confirm_message">Isto irá APAGAR todos os dados locais atuais e substituí-los pela cópia na nuvem. Esta ação não pode ser desfeita. Tem a certeza?</string>
+    <string name="restore_success">Restauro concluído! Os seus dados foram atualizados.</string>
+    <string name="sync_choice_title">Conflito de Dados</string>
+    <string name="sync_choice_message">Detetámos dados locais neste dispositivo. Deseja manter estes dados e guardá-los na sua conta, ou eliminá-los e restaurar a sua cópia de segurança na nuvem?</string>
+    <string name="keep_local_data">Manter Dados Locais</string>
+    <string name="restore_cloud_data">Restaurar da Nuvem</string>
+    <string name="danger_zone">ZONA DE PERIGO</string>
+    <string name="delete_account">Apagar Conta</string>
+    <string name="delete_account_desc">Apagar permanentemente a sua conta e todos os dados da AWS. Esta ação não pode ser desfeita.</string>
+    <string name="delete_account_confirm_title">Apagar Conta?</string>
+    <string name="delete_account_confirm_message">Tem a certeza absoluta que deseja apagar a sua conta? Todas as cópias de segurança na nuvem serão eliminadas permanentemente. Os dados locais permanecerão até limpar a cache.</string>
     <string name="account">Conta</string>
     <string name="personal_information">Informações Pessoais</string>
     <string name="first_name">Primeiro Nome</string>
@@ -183,4 +200,5 @@
     <string name="cd_decrease_year">Diminuir ano</string>
     <string name="cd_increase_year">Aumentar ano</string>
     <string name="cd_profile_photo">Foto de perfil</string>
+    <string name="create_account_login">Criar Conta / Iniciar Sessão</string>
 </resources>
