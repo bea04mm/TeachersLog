@@ -201,4 +201,16 @@
     <string name="cd_increase_year">Aumentar ano</string>
     <string name="cd_profile_photo">Foto de perfil</string>
     <string name="create_account_login">Criar Conta / Iniciar Sessão</string>
+    <string name="initial_setup_welcome">Bem-vindo! Para começar, por favor crie o seu primeiro ano letivo e período.</string>
+    <string name="sync_notification_title">Notificação de Sincronização</string>
+    <string name="restore_success_message">Restauro concluído! Por favor reinicie ou atualize os ecrãs.</string>
+    <string name="restore_failed_message">Falha no restauro: %s</string>
+    <string name="cd_clone_year">Clonar Ano</string>
+    <string name="cd_clone_period">Clonar Período</string>
+    <string name="cd_options">Opções</string>
+    <string name="password_label">Palavra-passe</string>
+    <string name="error_user_not_authenticated">Utilizador não autenticado</string>
+    <string name="error_sync_failed">Sincronização falhou: %s</string>
+    <string name="error_download_failed">Download falhou: %s</string>
+    <string name="error_unknown">Erro desconhecido</string>
 </resources>

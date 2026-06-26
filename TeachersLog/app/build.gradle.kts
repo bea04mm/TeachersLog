@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "pt.ipt.dama.teacherslog"
+    namespace = "pt.ipt.dama.TeachersLog"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "pt.ipt.dama.teacherslog"
+        applicationId = "pt.ipt.dama.TeachersLog"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -31,11 +31,15 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
     compileOptions {
@@ -45,6 +49,16 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    packaging {
+        jniLibs {
+            // Keep debug symbols in the native libraries to avoid Google Play warnings
+            keepDebugSymbols.add("**/*.so")
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 

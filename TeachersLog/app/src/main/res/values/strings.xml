@@ -201,4 +201,16 @@
     <string name="cd_increase_year">Increase year</string>
     <string name="cd_profile_photo">Profile photo</string>
     <string name="create_account_login">Create Account / Login</string>
+    <string name="initial_setup_welcome">Welcome! To start, please create your first academic year and period.</string>
+    <string name="sync_notification_title">Sync Notification</string>
+    <string name="restore_success_message">Restore complete! Please restart or refresh screens.</string>
+    <string name="restore_failed_message">Restore failed: %s</string>
+    <string name="cd_clone_year">Clone Year</string>
+    <string name="cd_clone_period">Clone Period</string>
+    <string name="cd_options">Options</string>
+    <string name="password_label">Password</string>
+    <string name="error_user_not_authenticated">User not authenticated</string>
+    <string name="error_sync_failed">Sync failed: %s</string>
+    <string name="error_download_failed">Download failed: %s</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>
