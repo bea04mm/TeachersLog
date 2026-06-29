@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
      */
     override fun attachBaseContext(newBase: Context) {
         val lang = newBase.getSharedPreferences("prefs", MODE_PRIVATE)
-            .getString("language", "en") ?: "en"
+            .getString("language", java.util.Locale.getDefault().language) ?: java.util.Locale.getDefault().language
         super.attachBaseContext(LocaleManager.updateResources(newBase, lang))
     }
 
@@ -84,7 +85,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Observe global state from ViewModels
             val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(this))
-            val isDarkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
+            val isDarkModePref by settingsViewModel.isDarkMode.observeAsState(initial = null)
+            val isDarkMode = isDarkModePref ?: isSystemInDarkTheme()
             
             val onboardingCompleted by authViewModel.onboardingCompletedFlow.collectAsState(initial = false)
             val isAuthenticated by authViewModel.isAuthenticatedFlow.collectAsState(initial = false)

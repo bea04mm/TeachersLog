@@ -60,4 +60,22 @@ interface ApiService {
      */
     @GET("sync")
     suspend fun downloadData(@Query("email") email: String): Response<UserDataSync>
+
+    /**
+     * Uploads an image to the backend.
+     * @param image The raw image bytes in the request body.
+     * @return [Response] containing the [ImageResponse] with the cloud URL.
+     */
+    @POST("upload-image")
+    suspend fun uploadImage(
+        @Body image: okhttp3.RequestBody
+    ): Response<ImageResponse>
+
+    /**
+     * Deletes an image from the cloud storage.
+     * @param imageUrl The full URL of the image to delete.
+     * @return [Response] with Unit (200 OK if successful).
+     */
+    @DELETE("delete-image")
+    suspend fun deleteImage(@Query("url") imageUrl: String): Response<Unit>
 }

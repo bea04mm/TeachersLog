@@ -30,7 +30,7 @@ class AuthRepository(
             val response = apiService.register(request)
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
-                sessionManager.saveAuthData(data.token, data.name, data.email, data.syncEnabled)
+                sessionManager.saveAuthData(data.token, data.name, data.email, data.profileImageUrl, data.syncEnabled)
                 Result.success(data)
             } else {
                 Result.failure(Exception("Registration failed: ${response.code()}"))
@@ -51,7 +51,7 @@ class AuthRepository(
             val response = apiService.login(request)
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
-                sessionManager.saveAuthData(data.token, data.name, data.email, data.syncEnabled)
+                sessionManager.saveAuthData(data.token, data.name, data.email, data.profileImageUrl, data.syncEnabled)
                 Result.success(data)
             } else {
                 Result.failure(Exception("Login failed: ${response.code()}"))

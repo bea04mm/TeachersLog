@@ -1,6 +1,7 @@
 package pt.ipt.dama.TeachersLog.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -228,7 +229,8 @@ fun AppPreferencesScreen(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val darkMode by settingsViewModel.isDarkMode.observeAsState(initial = true)
+    val darkModePref by settingsViewModel.isDarkMode.observeAsState(initial = null)
+    val darkMode = darkModePref ?: isSystemInDarkTheme()
     val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(context))
     val syncEnabled by settingsViewModel.isSyncEnabled.observeAsState(initial = false)
     val isGuest by settingsViewModel.isGuest.observeAsState(initial = false)

@@ -20,7 +20,7 @@
     <string name="nav_settings">Definições</string>
 
     <!-- Dashboard -->
-    <string name="academic_dashboard">PAINEL ACADÉMICO</string>
+    <string name="academic_dashboard">Painel Académico</string>
     <string name="active_overview">Resumo Ativo</string>
     <string name="total_students">Total de Alunos</string>
     <string name="global_average">Média Global</string>
@@ -37,9 +37,9 @@
     <string name="no_classes_available">Nenhuma turma disponível para seleção</string>
 
     <!-- Subjects & Classes -->
-    <string name="my_subjects">MINHAS DISCIPLINAS</string>
+    <string name="my_subjects">As Minhas Disciplinas</string>
     <string name="active_curriculum">Currículo Ativo</string>
-    <string name="academic_overview">RESUMO ACADÉMICO</string>
+    <string name="academic_overview">Resumo Académico</string>
     <string name="active_year_classes">Turmas do Ano Ativo</string>
     <string name="subject_average_label">Média da Disciplina</string>
     <string name="class_average_label">Média da Turma</string>
@@ -70,7 +70,7 @@
     <string name="scale_5">Escala 0–5</string>
     <string name="scale_20">Escala 0–20</string>
     <string name="scale_100">Escala 0–100%</string>
-    <string name="class_header">TURMAS</string>
+    <string name="class_header">Turmas</string>
     <string name="subtotal_label">Sub-total: %d%%</string>
     <string name="placeholder_subitem_name">Nome do Sub-item</string>
     <string name="placeholder_group_name">Nome do Grupo</string>
@@ -79,7 +79,7 @@
     <string name="default_component_assignments">Trabalhos</string>
 
     <!-- Class Roster & Students -->
-    <string name="students_roster">LISTA DE ALUNOS</string>
+    <string name="students_roster">Lista de Alunos</string>
     <string name="process_prefix">Proc: %s</string>
     <string name="add_student">Adicionar Aluno</string>
     <string name="edit_student">Editar Aluno</string>
@@ -110,9 +110,11 @@
     <string name="grade_range_max">Máx</string>
 
     <!-- Academic Structure -->
-    <string name="academic_years_header">ANOS LETIVOS</string>
-    <string name="academic_periods_header_label">PERÍODOS ACADÉMICOS</string>
+    <string name="academic_years_header">Anos Letivos</string>
+    <string name="academic_periods_header_label">Períodos Académicos</string>
     <string name="add_new_year">Adicionar Novo Ano</string>
+    <string name="guest_label">Utilizador Convidado</string>
+    <string name="offline_mode">Modo Offline</string>
     <string name="add_period">Adicionar Período Académico</string>
     <string name="all_periods_registered">Todos os tipos de período disponíveis já foram registados para este ano letivo.</string>
     <string name="select_period_type">Selecione o Tipo de Período:</string>
@@ -145,11 +147,11 @@
 
     <!-- Settings & Account -->
     <string name="edit_profile">Editar Perfil</string>
-    <string name="configuration">CONFIGURAÇÃO</string>
+    <string name="configuration">Configuração</string>
     <string name="app_preferences">Preferências da App</string>
     <string name="app_preferences_desc">Modo escuro</string>
     <string name="sign_out">Sair</string>
-    <string name="version_info">Versão 1.1.1 (Build 1)</string>
+    <string name="version_info">Versão 1.2.0 (Build 2)</string>
     <string name="language_label">Idioma</string>
     <string name="app_language">Idioma da App</string>
     <string name="select_language">Selecionar Idioma</string>

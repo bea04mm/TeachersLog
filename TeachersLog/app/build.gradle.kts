@@ -14,8 +14,8 @@ android {
         applicationId = "pt.ipt.dama.TeachersLog"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -63,6 +63,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -96,6 +97,10 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
+
+    // WorkManager for background synchronization
+    val workVersion = "2.10.0"
+    implementation("androidx.work:work-runtime-ktx:$workVersion")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

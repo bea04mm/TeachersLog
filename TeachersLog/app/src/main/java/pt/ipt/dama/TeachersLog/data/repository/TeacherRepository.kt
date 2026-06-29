@@ -10,8 +10,34 @@ import pt.ipt.dama.TeachersLog.data.model.*
  * 
  * @property teacherDao The DAO used to interact with the Room database.
  */
-class TeacherRepository(private val teacherDao: TeacherDao) {
+class TeacherRepository(
+    private val teacherDao: TeacherDao,
+) {
     
+    /**
+     * Fetches all semesters for a specific year synchronously.
+     */
+    suspend fun getSemestersForYearList(yearId: Int): List<Semester> =
+        teacherDao.getSemestersForYearList(yearId)
+
+    /**
+     * Fetches all subjects for a specific semester synchronously.
+     */
+    suspend fun getSubjectsBySemesterIdSync(semesterId: Int): List<Subject> =
+        teacherDao.getSubjectsBySemesterId(semesterId)
+
+    /**
+     * Fetches all classes for a specific subject synchronously.
+     */
+    suspend fun getClassesBySubjectIdSync(subjectId: Int): List<StudentsClass> =
+        teacherDao.getClassesBySubjectId(subjectId)
+
+    /**
+     * Fetches all students for a specific class synchronously.
+     */
+    suspend fun getStudentsByClassIdSync(classId: Int): List<Student> =
+        teacherDao.getStudentsByClassId(classId)
+
     /** Flow emitting all registered academic years. */
     val allAcademicYears: Flow<List<AcademicYear>> = teacherDao.getAllAcademicYears()
     

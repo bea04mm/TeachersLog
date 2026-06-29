@@ -11,8 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
@@ -35,11 +39,13 @@ fun SettingsScreen(
 ) {
     val userName by viewModel.userName.observeAsState("")
     val userEmail by viewModel.userEmail.observeAsState("")
+    val userPhoto by viewModel.userPhoto.observeAsState("")
     val isGuest by viewModel.isGuest.observeAsState(false)
 
     SettingsContent(
         userName = userName,
         userEmail = userEmail,
+        userPhoto = userPhoto,
         isGuest = isGuest,
         onNavigateToAccount = onNavigateToAccount,
         onNavigateToPreferences = onNavigateToPreferences,
@@ -54,6 +60,7 @@ fun SettingsScreen(
 fun SettingsContent(
     userName: String,
     userEmail: String,
+    userPhoto: String,
     isGuest: Boolean,
     onNavigateToAccount: () -> Unit,
     onNavigateToPreferences: () -> Unit,
@@ -85,10 +92,27 @@ fun SettingsContent(
                         Surface(
                             modifier = Modifier.size(64.dp),
                             shape = AppTheme.circle,
-                            color = AppTheme.colors.primaryContainer
+                            color = AppTheme.colors.surfaceContainerHigh
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Icon(IconMapper.Account, contentDescription = null, modifier = Modifier.size(32.dp))
+                                if (userPhoto.isNotBlank()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(userPhoto)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = IconMapper.Account, 
+                                        contentDescription = null, 
+                                        modifier = Modifier.size(32.dp),
+                                        tint = AppTheme.colors.outline
+                                    )
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.width(16.dp))

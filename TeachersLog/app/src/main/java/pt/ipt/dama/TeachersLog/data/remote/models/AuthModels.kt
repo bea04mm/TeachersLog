@@ -27,6 +27,7 @@ data class AuthResponse(
     @SerializedName("token") val token: String,
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String,
+    @SerializedName("profileImageUrl") val profileImageUrl: String?,
     @SerializedName("syncEnabled") val syncEnabled: Boolean
 )
 
@@ -36,4 +37,11 @@ data class AuthResponse(
 data class UpdateSyncRequest(
     @SerializedName("email") val email: String,
     @SerializedName("syncEnabled") val syncEnabled: Boolean
+)
+
+/**
+ * Response for image upload operations.
+ */
+data class ImageResponse(
+    @SerializedName("imageUrl") val imageUrl: String
 )

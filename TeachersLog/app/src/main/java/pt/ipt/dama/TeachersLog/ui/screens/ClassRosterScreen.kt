@@ -23,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.LiveData
-import java.util.Locale
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.*
@@ -37,6 +36,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import androidx.compose.ui.platform.LocalLocale
 
 /**
  * Component for the student selection popup when a shake is detected or triggered manually.
@@ -303,7 +303,7 @@ fun ClassRosterContent(
                                 shape = AppTheme.shapes.extraLarge
                             ) {
                                 Text(
-                                    text = String.format(Locale.getDefault(), "%.2f", student.weightedGrade), 
+                                    text = String.format(LocalLocale.current.platformLocale, "%.2f", student.weightedGrade),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), 
                                     style = AppTheme.typography.titleMedium,
                                     color = gradeColor

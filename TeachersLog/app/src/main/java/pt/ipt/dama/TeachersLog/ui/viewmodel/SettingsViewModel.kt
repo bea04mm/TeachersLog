@@ -13,6 +13,14 @@ import pt.ipt.dama.TeachersLog.data.repository.AuthRepository
 import pt.ipt.dama.TeachersLog.data.repository.SyncRepository
 import pt.ipt.dama.TeachersLog.utils.SessionManager
 import androidx.core.content.edit
+import androidx.core.net.toUri
+import androidx.work.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import pt.ipt.dama.TeachersLog.data.workers.ImageUploadWorker
+import pt.ipt.dama.TeachersLog.data.workers.ImageDeleteWorker
 
 /**
  * SettingsViewModel manages global UI state such as theme preferences and application language.
@@ -26,7 +34,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val authRepository = AuthRepository(NetworkClient.apiService, sessionManager)
 
     /** Observable state for the dark mode theme. */
-    val isDarkMode: LiveData<Boolean> = sessionManager.isDarkMode.asLiveData()
+    val isDarkMode: LiveData<Boolean?> = sessionManager.isDarkMode.asLiveData()
 
     /** Observable state for the current language code (e.g., "en", "pt"). */
     val currentLanguage: LiveData<String> = sessionManager.language.asLiveData()
@@ -39,6 +47,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     /** Observable state for the current user's email. */
     val userEmail: LiveData<String> = sessionManager.userEmail.asLiveData()
+
+    /** Observable state for the current user's photo. */
+    val userPhoto: LiveData<String> = sessionManager.userPhoto.asLiveData()
 
     /** Observable state for guest status. */
     val isGuest: LiveData<Boolean> = sessionManager.isGuest.asLiveData()
@@ -125,10 +136,114 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
      * Updates the user's profile information in the local session manager.
      * @param name The new display name.
      * @param email The new email address.
+     * @param photoUri Optional local URI to upload.
      */
-    fun updateProfile(name: String, email: String) {
+    fun updateProfile(name: String, email: String, photoUri: String? = null) {
         viewModelScope.launch {
-            sessionManager.updateProfile(name, email)
+            var finalPhotoUrl: String? = null
+            
+            // If it's a local URI, upload it first
+            if (photoUri != null && (photoUri.startsWith("content://") || photoUri.startsWith("file://"))) {
+                // Delete old image if it exists and is a cloud URL
+                val oldPhoto = sessionManager.userPhoto.first()
+                android.util.Log.d("SettingsViewModel", "Old photo URL: $oldPhoto")
+                if (oldPhoto.startsWith("http")) {
+                    android.util.Log.d("SettingsViewModel", "Deleting old cloud photo: $oldPhoto")
+                    try { 
+                        val response = NetworkClient.apiService.deleteImage(oldPhoto)
+                        if (!response.isSuccessful) {
+                            scheduleImageDeletion(oldPhoto)
+                        }
+                    } catch (_: Exception) {
+                        scheduleImageDeletion(oldPhoto)
+                    }
+                }
+
+                val cloudUrl = uploadImageFromUri(photoUri)
+                if (cloudUrl != null) {
+                    finalPhotoUrl = cloudUrl
+                } else {
+                    // Upload failed, schedule background task
+                    (-1).scheduleImageUpload(photoUri, isProfile = true)
+                }
+            }
+            
+            sessionManager.updateProfile(name, email, finalPhotoUrl)
+        }
+    }
+
+    /**
+     * Schedules a background task to upload an image when internet is available.
+     */
+    private fun Int.scheduleImageUpload(uri: String, isProfile: Boolean = false) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val inputData = Data.Builder()
+            .putString("image_uri", uri)
+            .putInt("student_id", this)
+            .putBoolean("is_profile", isProfile)
+            .build()
+
+        val uploadRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+            "upload_${if (isProfile) "profile" else this}",
+            ExistingWorkPolicy.REPLACE,
+            uploadRequest
+        )
+    }
+
+    /**
+     * Schedules a background task to delete an image when internet is available.
+     */
+    private fun scheduleImageDeletion(url: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val inputData = Data.Builder()
+            .putString("image_url", url)
+            .build()
+
+        val deleteRequest = OneTimeWorkRequestBuilder<ImageDeleteWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+            "delete_${url.hashCode()}",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            deleteRequest
+        )
+    }
+
+    /**
+     * Helper to handle the image upload process from a URI.
+     */
+    private suspend fun uploadImageFromUri(uriString: String): String? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val context = getApplication<Application>()
+            val uri = uriString.toUri()
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.use { it.readBytes() }
+
+            if (bytes != null) {
+                val mediaType = "image/jpeg".toMediaTypeOrNull()
+                val requestBody = bytes.toRequestBody(mediaType)
+
+                val response = NetworkClient.apiService.uploadImage(requestBody)
+                if (response.isSuccessful) response.body()?.imageUrl else null
+            } else null
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsViewModel", "Error uploading profile image", e)
+            null
         }
     }
 

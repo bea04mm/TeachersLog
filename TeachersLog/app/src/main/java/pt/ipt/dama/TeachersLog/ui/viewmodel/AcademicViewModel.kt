@@ -17,6 +17,9 @@ import pt.ipt.dama.TeachersLog.data.repository.SyncRepository
 import pt.ipt.dama.TeachersLog.data.repository.TeacherRepository
 import pt.ipt.dama.TeachersLog.utils.SessionManager
 import androidx.core.content.edit
+import androidx.work.*
+import pt.ipt.dama.TeachersLog.data.workers.DataSyncWorker
+import pt.ipt.dama.TeachersLog.data.workers.ImageDeleteWorker
 
 /**
  * AcademicViewModel manages the high-level academic structure, including years, 
@@ -171,11 +174,17 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Deletes an academic year and all its associated data.
+     * Deletes an academic year and all its associated data, including images.
      * @param year The [AcademicYear] object to delete.
      */
     fun deleteAcademicYear(year: AcademicYear) {
         viewModelScope.launch {
+            // 1. Clean up images first
+            repository.getSemestersForYearList(year.id).forEach { semester ->
+                cleanupSemesterImages(semester.id)
+            }
+            
+            // 2. Delete data
             if (_selectedYearId.value == year.id) {
                 prefs.edit { remove("last_year_id") }
             }
@@ -199,11 +208,15 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Deletes a semester and all its associated subjects.
+     * Deletes a semester and all its associated subjects and images.
      * @param semester The [Semester] object to delete.
      */
     fun deleteSemester(semester: Semester) {
         viewModelScope.launch {
+            // 1. Clean up images
+            cleanupSemesterImages(semester.id)
+            
+            // 2. Delete data
             if (_selectedSemesterId.value == semester.id) {
                 prefs.edit { remove("last_period_id") }
             }
@@ -245,13 +258,73 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Deletes a subject and its associated classes/students.
+     * Deletes a subject and its associated classes/students and images.
      * @param subject The [Subject] object to delete.
      */
     fun deleteSubject(subject: Subject) {
         viewModelScope.launch {
+            // 1. Clean up student images for this subject
+            cleanupSubjectImages(subject.id)
+            
+            // 2. Delete data
             repository.deleteSubject(subject)
             triggerSync()
+        }
+    }
+
+    /**
+     * Helper to delete all student images within a subject.
+     */
+    private suspend fun cleanupSubjectImages(subjectId: Int) {
+        repository.getClassesBySubjectIdSync(subjectId).forEach { clazz ->
+            repository.getStudentsByClassIdSync(clazz.id).forEach { student ->
+                student.profileImageUrl?.let { url ->
+                    if (url.startsWith("http")) {
+                        try { 
+                            val response = NetworkClient.apiService.deleteImage(url)
+                            if (!response.isSuccessful) {
+                                scheduleImageDeletion(url)
+                            }
+                        } catch (_: Exception) {
+                            scheduleImageDeletion(url)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Schedules a background task to delete an image when internet is available.
+     */
+    private fun scheduleImageDeletion(url: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val inputData = Data.Builder()
+            .putString("image_url", url)
+            .build()
+
+        val deleteRequest = OneTimeWorkRequestBuilder<ImageDeleteWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+            "delete_${url.hashCode()}",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            deleteRequest
+        )
+    }
+
+    /**
+     * Helper to delete all student images within a semester.
+     */
+    private suspend fun cleanupSemesterImages(semesterId: Int) {
+        repository.getSubjectsBySemesterIdSync(semesterId).forEach { subject ->
+            cleanupSubjectImages(subject.id)
         }
     }
 
@@ -301,31 +374,48 @@ class AcademicViewModel(application: Application) : AndroidViewModel(application
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     /**
-     * Refreshes data by downloading the latest backup from the cloud if sync is enabled.
+     * Refreshes data by downloading the latest backup from the cloud for authenticated users.
      * Triggered by Pull-to-Refresh actions in the UI.
      */
     fun refreshData() {
         viewModelScope.launch {
-            sessionManager.isSyncEnabled.first().let { enabled ->
-                if (enabled) {
-                    _isRefreshing.value = true
-                    syncRepository.downloadFromCloud()
-                    _isRefreshing.value = false
-                }
+            val authenticated = sessionManager.isAuthenticated.first()
+            if (authenticated) {
+                _isRefreshing.value = true
+                // Before downloading, try to push current local state if possible
+                syncRepository.uploadToCloud() 
+                syncRepository.downloadFromCloud()
+                _isRefreshing.value = false
             }
         }
     }
 
     /**
-     * Triggers a cloud backup (snapshot upload) if synchronization is enabled.
+     * Schedules a background database sync when internet is available.
      * Called automatically after local database mutations.
      */
     private fun triggerSync() {
         viewModelScope.launch {
-            // Use first() instead of collect/collectLatest to avoid persistent observation
             val enabled = sessionManager.isSyncEnabled.first()
             if (enabled) {
+                // Try immediate sync first
                 syncRepository.uploadToCloud()
+
+                // Schedule background retry/sync to ensure reliability
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+
+                val syncRequest = OneTimeWorkRequestBuilder<DataSyncWorker>()
+                    .setConstraints(constraints)
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .build()
+
+                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                    "full_data_sync",
+                    ExistingWorkPolicy.REPLACE,
+                    syncRequest
+                )
             }
         }
     }

@@ -20,7 +20,7 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Dashboard -->
-    <string name="academic_dashboard">ACADEMIC DASHBOARD</string>
+    <string name="academic_dashboard">Academic Dashboard</string>
     <string name="active_overview">Active Overview</string>
     <string name="total_students">Total Students</string>
     <string name="global_average">Global Average</string>
@@ -37,9 +37,9 @@
     <string name="no_classes_available">No classes available for selection</string>
 
     <!-- Subjects & Classes -->
-    <string name="my_subjects">MY SUBJECTS</string>
+    <string name="my_subjects">My Subjects</string>
     <string name="active_curriculum">Active Curriculum</string>
-    <string name="academic_overview">ACADEMIC OVERVIEW</string>
+    <string name="academic_overview">Academic Overview</string>
     <string name="active_year_classes">Active Year Classes</string>
     <string name="subject_average_label">Subject Average</string>
     <string name="class_average_label">Class Average</string>
@@ -70,7 +70,7 @@
     <string name="scale_5">0–5 Scale</string>
     <string name="scale_20">0–20 Scale</string>
     <string name="scale_100">0–100% Scale</string>
-    <string name="class_header">CLASSES</string>
+    <string name="class_header">Classes</string>
     <string name="subtotal_label">Sub-total: %d%%</string>
     <string name="placeholder_subitem_name">Sub-item Name</string>
     <string name="placeholder_group_name">Group Name</string>
@@ -79,7 +79,7 @@
     <string name="default_component_assignments">Assignments</string>
 
     <!-- Class Roster & Students -->
-    <string name="students_roster">STUDENTS ROSTER</string>
+    <string name="students_roster">Students Roster</string>
     <string name="process_prefix">Proc: %s</string>
     <string name="add_student">Add Student</string>
     <string name="edit_student">Edit Student</string>
@@ -110,9 +110,11 @@
     <string name="grade_range_max">Max</string>
 
     <!-- Academic Structure -->
-    <string name="academic_years_header">ACADEMIC YEARS</string>
-    <string name="academic_periods_header_label">ACADEMIC PERIODS</string>
+    <string name="academic_years_header">Academic Years</string>
+    <string name="academic_periods_header_label">Academic Periods</string>
     <string name="add_new_year">Add New Year</string>
+    <string name="guest_label">Guest User</string>
+    <string name="offline_mode">Offline Mode</string>
     <string name="add_period">Add Academic Period</string>
     <string name="all_periods_registered">All available period types have already been registered for this academic year.</string>
     <string name="select_period_type">Select Period Type:</string>
@@ -145,11 +147,11 @@
 
     <!-- Settings & Account -->
     <string name="edit_profile">Edit Profile</string>
-    <string name="configuration">CONFIGURATION</string>
+    <string name="configuration">Configuration</string>
     <string name="app_preferences">App Preferences</string>
     <string name="app_preferences_desc">Dark mode</string>
     <string name="sign_out">Sign Out</string>
-    <string name="version_info">Version 1.1.1 (Build 1)</string>
+    <string name="version_info">Version 1.2.0 (Build 2)</string>
     <string name="language_label">Language</string>
     <string name="app_language">App Language</string>
     <string name="select_language">Select Language</string>

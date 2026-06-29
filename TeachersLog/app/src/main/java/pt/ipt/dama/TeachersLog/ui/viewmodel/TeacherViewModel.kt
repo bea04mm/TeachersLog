@@ -11,6 +11,15 @@ import pt.ipt.dama.TeachersLog.data.repository.CloningRepository
 import pt.ipt.dama.TeachersLog.data.repository.SyncRepository
 import pt.ipt.dama.TeachersLog.data.repository.TeacherRepository
 import pt.ipt.dama.TeachersLog.utils.SessionManager
+import androidx.core.net.toUri
+import androidx.work.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import pt.ipt.dama.TeachersLog.data.workers.ImageUploadWorker
+import pt.ipt.dama.TeachersLog.data.workers.DataSyncWorker
+import pt.ipt.dama.TeachersLog.data.workers.ImageDeleteWorker
 
 /**
  * TeacherViewModel manages student-specific data including classes, students, and grading.
@@ -110,6 +119,21 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      */
     fun deleteStudentsClass(studentsClass: StudentsClass) {
         viewModelScope.launch {
+            // 1. Clean up student images first
+            repository.getStudentsByClassIdSync(studentsClass.id).forEach { student ->
+                student.profileImageUrl?.let { url ->
+                    if (url.startsWith("http")) {
+                        try { 
+                            val response = NetworkClient.apiService.deleteImage(url)
+                            if (!response.isSuccessful) scheduleImageDeletion(url)
+                        } catch (_: Exception) {
+                            scheduleImageDeletion(url)
+                        }
+                    }
+                }
+            }
+
+            // 2. Delete data
             repository.deleteStudentsClass(studentsClass)
             triggerSync()
         }
@@ -193,35 +217,159 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
     // --- Student CRUD Methods ---
 
     /**
-     * Adds a new student record to the database.
-     * 
-     * @param name Full name.
+     * Adds a new student and triggers synchronization.
+     * If a local photo URI is provided, it attempts to upload it to the cloud first.
+     * @param name Student's full name.
      * @param number Roster number.
-     * @param process Admin process number.
-     * @param photoUrl Image URI or path.
+     * @param process Administrative process string.
+     * @param photoUrl Local URI or cloud photo path.
      * @param classId Target class ID.
      */
     fun addStudent(name: String, number: Int, process: String?, photoUrl: String?, classId: Int) {
         viewModelScope.launch {
-            repository.insertStudent(Student(
+            var finalPhotoUrl = photoUrl
+            
+            // If it's a local URI (starts with content:// or file://), upload it
+            if (photoUrl != null && (photoUrl.startsWith("content://") || photoUrl.startsWith("file://"))) {
+                val cloudUrl = uploadImageFromUri(photoUrl)
+                if (cloudUrl != null) {
+                    finalPhotoUrl = cloudUrl
+                }
+            }
+
+            val newStudentId = repository.insertStudent(Student(
                 studentsClassId = classId,
                 numberInGroup = number,
                 name = name,
                 processNumber = process,
-                profileImageUrl = photoUrl
-            ))
+                profileImageUrl = finalPhotoUrl
+            )).toInt()
+
+            // If upload failed, and it was a local URI, schedule background sync with the new ID
+            if (finalPhotoUrl != null && (finalPhotoUrl.startsWith("content://") || finalPhotoUrl.startsWith("file://"))) {
+                scheduleImageUpload(finalPhotoUrl, newStudentId)
+            }
+
             triggerSync()
         }
     }
 
     /**
-     * Updates an existing student's record.
+     * Updates an existing student's record and triggers synchronization.
+     * Handles cloud upload if a new local photo is provided.
      * @param student The updated [Student] object.
      */
     fun updateStudent(student: Student) {
         viewModelScope.launch {
-            repository.updateStudent(student)
+            var finalStudent = student
+            
+            // If it's a local URI, upload it before saving
+            if (student.profileImageUrl != null && 
+                (student.profileImageUrl.startsWith("content://") || student.profileImageUrl.startsWith("file://"))) {
+                
+                // Delete old image if it exists and is a cloud URL
+                val oldStudent = repository.getStudentById(student.studentId)
+                val oldUrl = oldStudent?.profileImageUrl
+                android.util.Log.d("TeacherViewModel", "Old student photo URL: $oldUrl")
+                
+                if (oldUrl != null && oldUrl.startsWith("http")) {
+                    android.util.Log.d("TeacherViewModel", "Deleting old student cloud photo: $oldUrl")
+                    try { 
+                        val response = NetworkClient.apiService.deleteImage(oldUrl)
+                        if (!response.isSuccessful) {
+                            scheduleImageDeletion(oldUrl)
+                        }
+                    } catch (_: Exception) {
+                        scheduleImageDeletion(oldUrl)
+                    }
+                }
+
+                val cloudUrl = uploadImageFromUri(student.profileImageUrl)
+                if (cloudUrl != null) {
+                    finalStudent = student.copy(profileImageUrl = cloudUrl)
+                } else {
+                    // Upload failed, schedule for later
+                    scheduleImageUpload(student.profileImageUrl, student.studentId)
+                }
+            }
+
+            repository.updateStudent(finalStudent)
             triggerSync()
+        }
+    }
+
+    /**
+     * Schedules a background task to upload an image when internet is available.
+     */
+    private fun scheduleImageUpload(uri: String, studentId: Int, isProfile: Boolean = false) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val inputData = Data.Builder()
+            .putString("image_uri", uri)
+            .putInt("student_id", studentId)
+            .putBoolean("is_profile", isProfile)
+            .build()
+
+        val uploadRequest = OneTimeWorkRequestBuilder<ImageUploadWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+            "upload_${if (isProfile) "profile" else studentId}",
+            ExistingWorkPolicy.REPLACE,
+            uploadRequest
+        )
+    }
+
+    /**
+     * Schedules a background task to delete an image when internet is available.
+     */
+    private fun scheduleImageDeletion(url: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val inputData = Data.Builder()
+            .putString("image_url", url)
+            .build()
+
+        val deleteRequest = OneTimeWorkRequestBuilder<ImageDeleteWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+            "delete_${url.hashCode()}",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            deleteRequest
+        )
+    }
+
+    /**
+     * Helper to handle the image upload process from a URI.
+     */
+    private suspend fun uploadImageFromUri(uriString: String): String? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val context = getApplication<Application>()
+            val uri = uriString.toUri()
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.use { it.readBytes() }
+
+            if (bytes != null) {
+                val mediaType = "image/jpeg".toMediaTypeOrNull()
+                val requestBody = bytes.toRequestBody(mediaType)
+
+                val response = NetworkClient.apiService.uploadImage(requestBody)
+                if (response.isSuccessful) response.body()?.imageUrl else null
+            } else null
+        } catch (e: Exception) {
+            android.util.Log.e("TeacherViewModel", "Error uploading student image", e)
+            null
         }
     }
 
@@ -231,6 +379,19 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      */
     fun deleteStudent(student: Student) {
         viewModelScope.launch {
+            // 1. Clean up image first
+            student.profileImageUrl?.let { url ->
+                if (url.startsWith("http")) {
+                    try { 
+                        val response = NetworkClient.apiService.deleteImage(url)
+                        if (!response.isSuccessful) scheduleImageDeletion(url)
+                    } catch (_: Exception) {
+                        scheduleImageDeletion(url)
+                    }
+                }
+            }
+            
+            // 2. Delete data
             repository.deleteStudent(student)
             triggerSync()
         }
@@ -336,10 +497,26 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
      */
     private fun triggerSync() {
         viewModelScope.launch {
-            // Use first() to check preference only once at the moment of mutation
             val enabled = sessionManager.isSyncEnabled.first()
             if (enabled) {
+                // Try immediate sync first
                 syncRepository.uploadToCloud()
+
+                // Schedule background retry/sync to ensure reliability
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+
+                val syncRequest = OneTimeWorkRequestBuilder<DataSyncWorker>()
+                    .setConstraints(constraints)
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .build()
+
+                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                    "full_data_sync",
+                    ExistingWorkPolicy.REPLACE,
+                    syncRequest
+                )
             }
         }
     }

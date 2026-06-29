@@ -18,6 +18,7 @@ fun SettingsPreview() {
         SettingsContent(
             userName = "John Doe",
             userEmail = "john.doe@ipt.pt",
+            userPhoto = "",
             isGuest = false,
             onNavigateToAccount = {}, 
             onNavigateToPreferences = {},
@@ -61,8 +62,9 @@ fun AccountDetailsPreview() {
         AccountDetailsContent(
             userName = "John Doe",
             userEmail = "john.doe@ipt.pt",
+            userPhoto = "",
             isDeleting = false,
-            onSave = { _, _ -> },
+            onSave = { _, _, _ -> },
             onDeleteAccount = {},
             onBackClick = {}
         )

@@ -1,5 +1,8 @@
 package pt.ipt.dama.TeachersLog.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,8 +14,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
@@ -33,13 +40,15 @@ fun AccountDetailsScreen(
     // Local UI state for form fields
     val userName by viewModel.userName.observeAsState("")
     val userEmail by viewModel.userEmail.observeAsState("")
+    val userPhoto by viewModel.userPhoto.observeAsState("")
     val isDeleting by viewModel.isSyncing.collectAsState()
 
     AccountDetailsContent(
         userName = userName,
         userEmail = userEmail,
+        userPhoto = userPhoto,
         isDeleting = isDeleting,
-        onSave = { name, email -> viewModel.updateProfile(name, email) },
+        onSave = { name, email, photo -> viewModel.updateProfile(name, email, photo) },
         onDeleteAccount = { viewModel.deleteAccount() },
         onBackClick = onBackClick
     )
@@ -52,23 +61,36 @@ fun AccountDetailsScreen(
 fun AccountDetailsContent(
     userName: String,
     userEmail: String,
+    userPhoto: String,
     isDeleting: Boolean,
-    onSave: (String, String) -> Unit,
+    onSave: (String, String, String?) -> Unit,
     onDeleteAccount: () -> Unit,
     onBackClick: () -> Unit
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf("") }
     val showDeleteDialog = remember { mutableStateOf(false) }
 
     // Sync local state when LiveData emits
-    LaunchedEffect(userName, userEmail) {
+    LaunchedEffect(userName, userEmail, userPhoto) {
         val parts = userName.split(" ")
         firstName = parts.firstOrNull() ?: ""
         lastName = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""
         email = userEmail
+        
+        // Only update local photoUri if it's currently empty or already a cloud URL
+        // (This prevents overwriting a newly selected local photo during recomposition)
+        if (photoUri.isEmpty() || photoUri.startsWith("http")) {
+            photoUri = userPhoto
+        }
     }
+
+    val photoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> uri?.let { photoUri = it.toString() } }
+    )
 
     Scaffold(
         topBar = {
@@ -121,16 +143,28 @@ fun AccountDetailsContent(
                                 .background(AppTheme.colors.surfaceContainerHigh),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = IconMapper.Account, 
-                                contentDescription = null, 
-                                modifier = Modifier.size(80.dp), 
-                                tint = AppTheme.colors.outline
-                            )
+                            if (photoUri.isNotBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(photoUri)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = IconMapper.Account, 
+                                    contentDescription = null, 
+                                    modifier = Modifier.size(80.dp), 
+                                    tint = AppTheme.colors.outline
+                                )
+                            }
                         }
                         // Circular edit FAB overlay
                         IconButton(
-                            onClick = { /* TODO: Implement actual photo picker */ },
+                            onClick = { photoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .size(40.dp)
@@ -205,7 +239,7 @@ fun AccountDetailsContent(
                             // Save Button
                             Button(
                                 onClick = { 
-                                    onSave("$firstName $lastName", email)
+                                    onSave("$firstName $lastName", email, photoUri.ifBlank { null })
                                     onBackClick() 
                                 },
                                 modifier = Modifier

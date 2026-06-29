@@ -25,6 +25,7 @@ class SessionManager(private val context: Context) {
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
         private val USER_NAME = stringPreferencesKey("user_name")
         private val USER_EMAIL = stringPreferencesKey("user_email")
+        private val USER_PHOTO = stringPreferencesKey("user_photo")
         private val SYNC_ENABLED = booleanPreferencesKey("sync_enabled")
         private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         private val LANGUAGE = stringPreferencesKey("language")
@@ -33,15 +34,16 @@ class SessionManager(private val context: Context) {
     /**
      * Flow emitting the dark mode preference.
      */
-    val isDarkMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_DARK_MODE] ?: true // Default to true (Dark Mode)
+    val isDarkMode: Flow<Boolean?> = context.dataStore.data.map { preferences ->
+        preferences[IS_DARK_MODE]
     }
 
     /**
      * Flow emitting the language preference.
      */
     val language: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[LANGUAGE] ?: "en" // Default to English
+        // Default to system language if not set
+        preferences[LANGUAGE] ?: java.util.Locale.getDefault().language
     }
 
     /**
@@ -80,6 +82,13 @@ class SessionManager(private val context: Context) {
     }
 
     /**
+     * Flow emitting the current user's profile photo URL.
+     */
+    val userPhoto: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[USER_PHOTO] ?: ""
+    }
+
+    /**
      * Flow emitting if the user is a guest.
      */
     val isGuest: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -109,13 +118,14 @@ class SessionManager(private val context: Context) {
     /**
      * Configures the session as logged in with user data and token.
      */
-    suspend fun saveAuthData(token: String, name: String, email: String, syncEnabled: Boolean) {
+    suspend fun saveAuthData(token: String, name: String, email: String, photoUrl: String?, syncEnabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = true
             preferences[IS_GUEST] = false
             preferences[AUTH_TOKEN] = token
             preferences[USER_NAME] = name
             preferences[USER_EMAIL] = email
+            preferences[USER_PHOTO] = photoUrl ?: ""
             preferences[SYNC_ENABLED] = syncEnabled
         }
     }
@@ -123,10 +133,11 @@ class SessionManager(private val context: Context) {
     /**
      * Updates only the user profile data.
      */
-    suspend fun updateProfile(name: String, email: String) {
+    suspend fun updateProfile(name: String, email: String, photoUrl: String? = null) {
         context.dataStore.edit { preferences ->
             preferences[USER_NAME] = name
             preferences[USER_EMAIL] = email
+            photoUrl?.let { preferences[USER_PHOTO] = it }
         }
     }
 
@@ -167,6 +178,7 @@ class SessionManager(private val context: Context) {
             preferences[AUTH_TOKEN] = ""
             preferences[USER_NAME] = ""
             preferences[USER_EMAIL] = ""
+            preferences[USER_PHOTO] = ""
             // Keep ONBOARDING_COMPLETED as true so we go to Welcome instead of Tutorial
         }
     }
