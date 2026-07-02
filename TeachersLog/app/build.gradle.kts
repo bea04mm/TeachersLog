@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -5,26 +7,39 @@ plugins {
 }
 
 android {
-    namespace = "pt.ipt.dama.teacherslog"
+    namespace = "pt.ipt.dama.TeachersLog"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "pt.ipt.dama.teacherslog"
+        applicationId = "pt.ipt.dama.TeachersLog"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Load API URL from local.properties
+        val properties = Properties()
+        val propertiesFile = project.rootProject.file("local.properties")
+        if (propertiesFile.exists()) {
+            properties.load(propertiesFile.inputStream())
+        }
+        val apiUrl = properties.getProperty("API_URL") ?: ""
+        buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
     compileOptions {
@@ -33,10 +48,22 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    packaging {
+        jniLibs {
+            // Keep debug symbols in the native libraries to avoid Google Play warnings
+            keepDebugSymbols.add("**/*.so")
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
 dependencies {
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -65,6 +92,15 @@ dependencies {
     // Identity & Onboarding
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.datastore.preferences)
+
+    // Networking
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+
+    // WorkManager for background synchronization
+    val workVersion = "2.10.0"
+    implementation("androidx.work:work-runtime-ktx:$workVersion")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

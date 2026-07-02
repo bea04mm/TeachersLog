@@ -12,10 +12,17 @@
 #   public *;
 #}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Preserve the line number information for debugging stack traces.
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Model classes used for serialization/deserialization with Retrofit/Gson
+-keep class pt.ipt.dama.TeachersLog.data.model.** { *; }
+-keep class pt.ipt.dama.TeachersLog.data.remote.models.** { *; }
+
+# Room
+-keep class * extends androidx.room.RoomDatabase
+-keep class * extends androidx.room.Entity

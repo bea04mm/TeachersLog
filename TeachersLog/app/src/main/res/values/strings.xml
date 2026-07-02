@@ -20,7 +20,7 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Dashboard -->
-    <string name="academic_dashboard">ACADEMIC DASHBOARD</string>
+    <string name="academic_dashboard">Academic Dashboard</string>
     <string name="active_overview">Active Overview</string>
     <string name="total_students">Total Students</string>
     <string name="global_average">Global Average</string>
@@ -37,9 +37,9 @@
     <string name="no_classes_available">No classes available for selection</string>
 
     <!-- Subjects & Classes -->
-    <string name="my_subjects">MY SUBJECTS</string>
+    <string name="my_subjects">My Subjects</string>
     <string name="active_curriculum">Active Curriculum</string>
-    <string name="academic_overview">ACADEMIC OVERVIEW</string>
+    <string name="academic_overview">Academic Overview</string>
     <string name="active_year_classes">Active Year Classes</string>
     <string name="subject_average_label">Subject Average</string>
     <string name="class_average_label">Class Average</string>
@@ -70,7 +70,7 @@
     <string name="scale_5">0–5 Scale</string>
     <string name="scale_20">0–20 Scale</string>
     <string name="scale_100">0–100% Scale</string>
-    <string name="class_header">CLASSES</string>
+    <string name="class_header">Classes</string>
     <string name="subtotal_label">Sub-total: %d%%</string>
     <string name="placeholder_subitem_name">Sub-item Name</string>
     <string name="placeholder_group_name">Group Name</string>
@@ -79,7 +79,7 @@
     <string name="default_component_assignments">Assignments</string>
 
     <!-- Class Roster & Students -->
-    <string name="students_roster">STUDENTS ROSTER</string>
+    <string name="students_roster">Students Roster</string>
     <string name="process_prefix">Proc: %s</string>
     <string name="add_student">Add Student</string>
     <string name="edit_student">Edit Student</string>
@@ -110,9 +110,11 @@
     <string name="grade_range_max">Max</string>
 
     <!-- Academic Structure -->
-    <string name="academic_years_header">ACADEMIC YEARS</string>
-    <string name="academic_periods_header_label">ACADEMIC PERIODS</string>
+    <string name="academic_years_header">Academic Years</string>
+    <string name="academic_periods_header_label">Academic Periods</string>
     <string name="add_new_year">Add New Year</string>
+    <string name="guest_label">Guest User</string>
+    <string name="offline_mode">Offline Mode</string>
     <string name="add_period">Add Academic Period</string>
     <string name="all_periods_registered">All available period types have already been registered for this academic year.</string>
     <string name="select_period_type">Select Period Type:</string>
@@ -140,16 +142,16 @@
     <string name="choose_how_to_continue">Choose how you want to continue</string>
     <string name="sign_in">Sign In</string>
     <string name="create_account">Create Account</string>
-    <string name="continue_as_guest">Continue as Guest</string>
+    <string name="continue_as_guest">Guest</string>
     <string name="guest_disclaimer">As a guest, your data is saved locally on this device only.</string>
 
     <!-- Settings & Account -->
     <string name="edit_profile">Edit Profile</string>
-    <string name="configuration">CONFIGURATION</string>
+    <string name="configuration">Configuration</string>
     <string name="app_preferences">App Preferences</string>
     <string name="app_preferences_desc">Dark mode</string>
     <string name="sign_out">Sign Out</string>
-    <string name="version_info">Version 1.1.1 (Build 1)</string>
+    <string name="version_info">Version 1.2.0 (Build 2)</string>
     <string name="language_label">Language</string>
     <string name="app_language">App Language</string>
     <string name="select_language">Select Language</string>
@@ -158,6 +160,23 @@
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_desc">Adjust for low-light environments</string>
+    <string name="sync_label">Data Synchronization</string>
+    <string name="sync_desc">Backup your classes and students to AWS</string>
+    <string name="data_management_label">DATA MANAGEMENT</string>
+    <string name="restore_from_cloud">Restore from Cloud</string>
+    <string name="restore_desc">Download your last backup and overwrite local data</string>
+    <string name="restore_confirm_title">Confirm Restore</string>
+    <string name="restore_confirm_message">This will DELETE all current local data and replace it with your cloud backup. This action cannot be undone. Are you sure?</string>
+    <string name="restore_success">Restore complete! Your data has been updated.</string>
+    <string name="sync_choice_title">Data Conflict</string>
+    <string name="sync_choice_message">You have data on this device. Would you like to keep it and upload it to your account, or discard it and restore your cloud backup?</string>
+    <string name="keep_local_data">Keep Local Data</string>
+    <string name="restore_cloud_data">Restore Cloud Data</string>
+    <string name="danger_zone">DANGER ZONE</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_account_desc">Permanently delete your account and all data from AWS. This cannot be undone.</string>
+    <string name="delete_account_confirm_title">Delete Account?</string>
+    <string name="delete_account_confirm_message">Are you absolutely sure you want to delete your account? All your cloud backups will be permanently erased. Local data will remain until you clear app cache.</string>
     <string name="account">Account</string>
     <string name="personal_information">Personal Information</string>
     <string name="first_name">First Name</string>
@@ -183,4 +202,17 @@
     <string name="cd_decrease_year">Decrease year</string>
     <string name="cd_increase_year">Increase year</string>
     <string name="cd_profile_photo">Profile photo</string>
+    <string name="create_account_login">Create Account / Login</string>
+    <string name="initial_setup_welcome">Welcome! To start, please create your first academic year and period.</string>
+    <string name="sync_notification_title">Sync Notification</string>
+    <string name="restore_success_message">Restore complete! Please restart or refresh screens.</string>
+    <string name="restore_failed_message">Restore failed: %s</string>
+    <string name="cd_clone_year">Clone Year</string>
+    <string name="cd_clone_period">Clone Period</string>
+    <string name="cd_options">Options</string>
+    <string name="password_label">Password</string>
+    <string name="error_user_not_authenticated">User not authenticated</string>
+    <string name="error_sync_failed">Sync failed: %s</string>
+    <string name="error_download_failed">Download failed: %s</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>
