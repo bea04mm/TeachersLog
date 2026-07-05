@@ -39,15 +39,13 @@ fun SettingsScreen(
     onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val userName by viewModel.userName.observeAsState("")
-    val userEmail by viewModel.userEmail.observeAsState("")
-    val userPhoto by viewModel.userPhoto.observeAsState("")
+    val profile by viewModel.userProfile.observeAsState()
     val isGuest by viewModel.isGuest.observeAsState(false)
 
     SettingsContent(
-        userName = userName,
-        userEmail = userEmail,
-        userPhoto = userPhoto,
+        userName = profile?.name ?: "",
+        userEmail = profile?.email ?: "",
+        userPhoto = profile?.photoUrl ?: "",
         isGuest = isGuest,
         onNavigateToAccount = onNavigateToAccount,
         onNavigateToPreferences = onNavigateToPreferences,
@@ -71,6 +69,7 @@ fun SettingsContent(
     onLogout: () -> Unit
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -129,12 +128,10 @@ fun SettingsContent(
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            if (isGuest) {
-                                // Guest label or empty space
-                            } else {
+                            if (!isGuest) {
                                 TextButton(
                                     onClick = onNavigateToAccount,
-                                    modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
+                                    modifier = Modifier.offset(x = (-8).dp)
                                 ) {
                                     Icon(IconMapper.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))

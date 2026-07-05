@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -63,6 +65,7 @@ fun SubjectEditContent(
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
@@ -183,7 +186,7 @@ fun SubjectEditScreen(
         initialColor = existingSubject?.colorHex ?: "#004AC6",
         onSave = { name, icon, color ->
             if (name.trim().length < 3) {
-                scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
                 return@SubjectEditContent
             }
             if (subjectId == null) {
@@ -193,7 +196,7 @@ fun SubjectEditScreen(
                     academicViewModel.updateSubject(it.copy(name = name, iconName = icon, colorHex = color))
                 }
             }
-            scope.launch { snackbarHostState.showSnackbar(successMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
             onBackClick()
         },
         onBackClick = onBackClick

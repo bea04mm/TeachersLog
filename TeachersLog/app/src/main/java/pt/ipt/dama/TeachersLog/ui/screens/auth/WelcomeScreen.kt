@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -20,7 +22,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
+import pt.ipt.dama.TeachersLog.ui.components.AppSnackbar
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.AppTheme
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AuthViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -45,11 +50,11 @@ fun WelcomeScreen(
     val shortPasswordMsg = stringResource(R.string.error_password_too_short)
     val shortNameMsg = stringResource(R.string.error_name_too_short)
 
-    // Replace inline error display with custom snackbar
+    // Handle authentication errors from the backend
     LaunchedEffect(authError) {
         if (authError != null) {
             scope.launch {
-                snackbarHostState.showSnackbar(authError!!)
+                snackbarHostState.showAppSnackbar(authError!!, type = SnackbarType.ERROR)
                 authViewModel.clearError()
             }
         }
@@ -72,15 +77,15 @@ fun WelcomeScreen(
     
     fun validateAndSubmit(isRegister: Boolean) {
         if (isRegister && name.trim().length < 3) {
-            scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
             return
         }
         if (!email.matches(emailRegex)) {
-            scope.launch { snackbarHostState.showSnackbar(invalidEmailMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(invalidEmailMsg, type = SnackbarType.ERROR) }
             return
         }
         if (password.length < 6) {
-            scope.launch { snackbarHostState.showSnackbar(shortPasswordMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(shortPasswordMsg, type = SnackbarType.ERROR) }
             return
         }
         
@@ -91,13 +96,15 @@ fun WelcomeScreen(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = AppTheme.colors.background
-    ) {
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = AppTheme.colors.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) { AppSnackbar(it) } }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(32.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,7 +122,7 @@ fun WelcomeScreen(
                     modifier = Modifier
                         .size(if (viewState == WelcomeViewState.LANDING) 160.dp else 100.dp)
                         .clip(AppTheme.circle)
-                        .background(AppTheme.colors.surfaceContainerLowest),
+                        .background(AppTheme.white),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(

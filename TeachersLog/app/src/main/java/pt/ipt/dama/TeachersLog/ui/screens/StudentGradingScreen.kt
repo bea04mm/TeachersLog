@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -37,6 +38,8 @@ import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -75,7 +78,14 @@ fun StudentGradingContent(
     val scope = rememberCoroutineScope()
     var isOcrProcessing by remember { mutableStateOf(false) }
 
-    val textRecognizer = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
+    val isInPreview = LocalInspectionMode.current
+    val textRecognizer = remember {
+        try {
+            TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     val ocrNoTextMsg = stringResource(R.string.ocr_no_text_found)
     val ocrErrorMsg = stringResource(R.string.ocr_error)
@@ -88,7 +98,13 @@ fun StudentGradingContent(
         .setScannerMode(SCANNER_MODE_FULL)
         .build()
 
-    val scanner = remember { GmsDocumentScanning.getClient(scannerOptions) }
+    val scanner = remember {
+        try {
+            GmsDocumentScanning.getClient(scannerOptions)
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -100,23 +116,23 @@ fun StudentGradingContent(
                     isOcrProcessing = true
                     try {
                         val image = InputImage.fromFilePath(context, uri)
-                        textRecognizer.process(image)
-                            .addOnSuccessListener { visionText ->
+                        textRecognizer?.process(image)
+                            ?.addOnSuccessListener { visionText ->
                                 isOcrProcessing = false
                                 val scannedText = visionText.text
                                 if (scannedText.isNotBlank()) {
                                     onNotesChange(if (teacherNotes.isBlank()) scannedText else "$teacherNotes\n$scannedText")
                                 } else {
-                                    scope.launch { snackbarHostState.showSnackbar(ocrNoTextMsg) }
+                                    scope.launch { snackbarHostState.showAppSnackbar(ocrNoTextMsg, type = SnackbarType.ERROR) }
                                 }
                             }
-                            .addOnFailureListener { e ->
+                            ?.addOnFailureListener { e ->
                                 isOcrProcessing = false
-                                scope.launch { snackbarHostState.showSnackbar("${ocrErrorMsg}: ${e.message}") }
+                                scope.launch { snackbarHostState.showAppSnackbar("${ocrErrorMsg}: ${e.message}", type = SnackbarType.ERROR) }
                             }
                     } catch (_: Exception) {
                         isOcrProcessing = false
-                        scope.launch { snackbarHostState.showSnackbar(ocrErrorMsg) }
+                        scope.launch { snackbarHostState.showAppSnackbar(ocrErrorMsg, type = SnackbarType.ERROR) }
                     }
                 }
             }
@@ -140,6 +156,7 @@ fun StudentGradingContent(
     val gradeColor = AppTheme.getGradeColor(percentage)
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -253,20 +270,22 @@ fun StudentGradingContent(
                                 IconButton(onClick = {
                                     val activity = activityOwner as? Activity
                                     
-                                    if (activity != null) {
+                                    if (activity != null && scanner != null) {
                                         scanner.getStartScanIntent(activity)
                                             .addOnSuccessListener { intentSender ->
                                                 try {
                                                     scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
                                                 } catch (_: Exception) {
-                                                    scope.launch { snackbarHostState.showSnackbar(ocrErrorMsg) }
+                                                    scope.launch { snackbarHostState.showAppSnackbar(ocrErrorMsg, type = SnackbarType.ERROR) }
                                                 }
                                             }
                                             .addOnFailureListener { e ->
-                                                scope.launch { snackbarHostState.showSnackbar("${ocrErrorMsg}: ${e.message}") }
+                                                scope.launch { snackbarHostState.showAppSnackbar("${ocrErrorMsg}: ${e.message}", type = SnackbarType.ERROR) }
                                             }
                                     } else {
-                                        scope.launch { snackbarHostState.showSnackbar(activityErrorMsg) }
+                                        if (!isInPreview) {
+                                            scope.launch { snackbarHostState.showAppSnackbar(activityErrorMsg, type = SnackbarType.ERROR) }
+                                        }
                                     }
                                 }) {
                                     Icon(

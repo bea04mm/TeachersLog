@@ -20,6 +20,8 @@ import pt.ipt.dama.TeachersLog.data.model.GradingComponent
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -87,6 +89,7 @@ fun ClassEditContent(
     val isRootValid = rootWeight == 100
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -346,15 +349,15 @@ fun ClassEditScreen(
         initialComponents = initialUIComponents,
         onSave = { name, scale, entities, parentMap ->
             if (name.trim().length < 2) {
-                scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
                 return@ClassEditContent
             }
             if (entities.any { it.name.trim().length < 2 }) {
-                scope.launch { snackbarHostState.showSnackbar(shortCompNameMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(shortCompNameMsg, type = SnackbarType.ERROR) }
                 return@ClassEditContent
             }
             viewModel.upsertClassWithHierarchy(classId, subjectId, name, scale, entities, parentMap)
-            scope.launch { snackbarHostState.showSnackbar(successMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
             onBackClick()
         },
         onBackClick = onBackClick

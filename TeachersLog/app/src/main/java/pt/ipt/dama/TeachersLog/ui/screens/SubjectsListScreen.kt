@@ -23,6 +23,8 @@ import pt.ipt.dama.TeachersLog.data.model.Subject
 import pt.ipt.dama.TeachersLog.data.model.SubjectWithStats
 import pt.ipt.dama.TeachersLog.ui.components.*
 import pt.ipt.dama.TeachersLog.ui.theme.*
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
 import pt.ipt.dama.TeachersLog.utils.LocalizedNameMapper
@@ -78,7 +80,7 @@ fun SubjectsListContent(
             onConfirm = {
                 onDeleteSubjectClick(subject)
                 subjectToDelete.value = null
-                scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(deleteSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { subjectToDelete.value = null }
         )
@@ -93,13 +95,14 @@ fun SubjectsListContent(
             onConfirm = { targetSemesterId ->
                 onCloneSubjectClick(subject.id, targetSemesterId)
                 subjectToClone.value = null
-                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(cloneSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { subjectToClone.value = null }
         )
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(

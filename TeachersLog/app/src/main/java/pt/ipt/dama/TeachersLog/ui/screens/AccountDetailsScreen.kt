@@ -23,6 +23,8 @@ import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -35,16 +37,13 @@ fun AccountDetailsScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit
 ) {
-    // Local UI state for form fields
-    val userName by viewModel.userName.observeAsState("")
-    val userEmail by viewModel.userEmail.observeAsState("")
-    val userPhoto by viewModel.userPhoto.observeAsState("")
+    val profile by viewModel.userProfile.observeAsState()
     val isDeleting by viewModel.isSyncing.collectAsState()
 
     AccountDetailsContent(
-        userName = userName,
-        userEmail = userEmail,
-        userPhoto = userPhoto,
+        userName = profile?.name ?: "",
+        userEmail = profile?.email ?: "",
+        userPhoto = profile?.photoUrl ?: "",
         isDeleting = isDeleting,
         onSave = { name, email, photo -> viewModel.updateProfile(name, email, photo) },
         onDeleteAccount = { viewModel.deleteAccount() },
@@ -66,7 +65,6 @@ fun AccountDetailsContent(
     onBackClick: () -> Unit
 ) {
     var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf("") }
     val showDeleteDialog = remember { mutableStateOf(false) }
@@ -78,11 +76,10 @@ fun AccountDetailsContent(
     val invalidEmailMsg = stringResource(R.string.error_invalid_email)
     val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
 
-    // Sync local state when LiveData emits
+    // Sync local state when inputs change
     LaunchedEffect(userName, userEmail, userPhoto) {
         val parts = userName.split(" ")
         firstName = parts.firstOrNull() ?: ""
-        lastName = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""
         email = userEmail
         
         if (photoUri.isEmpty() || photoUri.startsWith("http")) {
@@ -96,6 +93,7 @@ fun AccountDetailsContent(
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -182,7 +180,7 @@ fun AccountDetailsContent(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "$firstName $lastName", 
+                        text = firstName,
                         style = AppTheme.typography.headlineMedium,
                         color = AppTheme.colors.onSurface
                     )
@@ -213,27 +211,14 @@ fun AccountDetailsContent(
                         modifier = Modifier.padding(16.dp), 
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(), 
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = firstName,
-                                onValueChange = { firstName = it },
-                                label = { Text(stringResource(R.string.first_name)) },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = AppTheme.shapes.medium
-                            )
-                            OutlinedTextField(
-                                value = lastName,
-                                onValueChange = { lastName = it },
-                                label = { Text(stringResource(R.string.last_name)) },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                shape = AppTheme.shapes.medium
-                            )
-                        }
+                        OutlinedTextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            label = { Text(stringResource(R.string.first_name)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = AppTheme.shapes.medium
+                        )
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
@@ -244,16 +229,16 @@ fun AccountDetailsContent(
                         )
                         Button(
                             onClick = { 
-                                if (firstName.trim().length < 2 || lastName.trim().length < 2) {
-                                    scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+                                if (firstName.trim().length < 2) {
+                                    scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
                                     return@Button
                                 }
                                 if (!email.matches(emailRegex)) {
-                                    scope.launch { snackbarHostState.showSnackbar(invalidEmailMsg) }
+                                    scope.launch { snackbarHostState.showAppSnackbar(invalidEmailMsg, type = SnackbarType.ERROR) }
                                     return@Button
                                 }
-                                onSave("$firstName $lastName", email, photoUri.ifBlank { null })
-                                scope.launch { snackbarHostState.showSnackbar(successMsg) }
+                                onSave(firstName, email, photoUri.ifBlank { null })
+                                scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
                                 onBackClick() 
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),

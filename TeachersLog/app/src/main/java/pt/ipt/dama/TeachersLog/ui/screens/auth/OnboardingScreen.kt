@@ -40,6 +40,7 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         bottomBar = {
             Row(
@@ -114,7 +115,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
             modifier = Modifier
                 .size(240.dp)
                 .clip(AppTheme.circle)
-                .background(AppTheme.colors.surfaceContainerLowest),
+                .background(AppTheme.white),
             contentAlignment = Alignment.Center
         ) {
             Image(

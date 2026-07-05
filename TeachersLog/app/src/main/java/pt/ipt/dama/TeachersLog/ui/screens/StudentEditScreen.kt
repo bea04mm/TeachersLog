@@ -26,6 +26,8 @@ import pt.ipt.dama.TeachersLog.data.model.Student
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -98,6 +100,7 @@ fun StudentEditContent(
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
@@ -306,12 +309,12 @@ fun StudentEditScreen(
         availableNumbers = availableNumbers,
         onSave = { n, num, proc, photo ->
             if (n.trim().length < 3) {
-                scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
                 return@StudentEditContent
             }
             if (studentId == null) viewModel.addStudent(n, num, proc, photo, classId)
             else existingStudent?.let { viewModel.updateStudent(it.copy(name = n, numberInGroup = num, processNumber = proc, profileImageUrl = photo)) }
-            scope.launch { snackbarHostState.showSnackbar(successMsg) }
+            scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
             onBackClick()
         },
         onBackClick = onBackClick,

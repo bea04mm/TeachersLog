@@ -38,6 +38,7 @@ fun AboutScreen(
     onBackClick: () -> Unit,
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -66,7 +67,7 @@ fun AboutScreen(
                         modifier = Modifier
                             .size(160.dp)
                             .clip(roundedShape)
-                            .background(AppTheme.colors.surfaceContainerLowest),
+                            .background(AppTheme.white),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(

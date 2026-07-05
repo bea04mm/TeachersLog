@@ -25,6 +25,43 @@ val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
 }
 
 /**
+ * Extension function to show styled snackbars.
+ */
+suspend fun SnackbarHostState.showAppSnackbar(
+    message: String,
+    type: SnackbarType = SnackbarType.INFO,
+    actionLabel: String? = null,
+    duration: SnackbarDuration = SnackbarDuration.Long
+): SnackbarResult {
+    return showSnackbar(
+        AppSnackbarVisuals(
+            message = message,
+            actionLabel = actionLabel,
+            duration = duration,
+            type = type
+        )
+    )
+}
+
+/**
+ * Defines the semantic types for snackbar notifications.
+ */
+enum class SnackbarType {
+    INFO, SUCCESS, ERROR
+}
+
+/**
+ * Custom visuals that include a type for styling.
+ */
+class AppSnackbarVisuals(
+    override val message: String,
+    override val actionLabel: String? = null,
+    override val withDismissAction: Boolean = false,
+    override val duration: SnackbarDuration = SnackbarDuration.Long,
+    val type: SnackbarType = SnackbarType.INFO
+) : SnackbarVisuals
+
+/**
  * A beautiful, personalized Snackbar component.
  *
  * @param snackbarData The data provided by the SnackbarHost.
@@ -35,14 +72,28 @@ fun AppSnackbar(
     snackbarData: SnackbarData,
     modifier: Modifier = Modifier
 ) {
+    val visuals = snackbarData.visuals as? AppSnackbarVisuals
+    val type = visuals?.type ?: SnackbarType.INFO
+
+    val containerColor = when (type) {
+        SnackbarType.SUCCESS -> AppTheme.success.copy(alpha = 0.9f)
+        SnackbarType.ERROR -> AppTheme.critical.copy(alpha = 0.9f)
+        SnackbarType.INFO -> AppTheme.colors.primaryContainer
+    }
+    
+    val contentColor = when (type) {
+        SnackbarType.SUCCESS, SnackbarType.ERROR -> Color.White
+        SnackbarType.INFO -> AppTheme.colors.onPrimaryContainer
+    }
+
     Card(
         modifier = modifier
             .padding(16.dp)
             .fillMaxWidth(),
         shape = AppTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colors.primaryContainer,
-            contentColor = AppTheme.colors.onPrimaryContainer
+            containerColor = containerColor,
+            contentColor = contentColor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -54,13 +105,17 @@ fun AppSnackbar(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(AppTheme.shapes.small)
-                    .background(AppTheme.colors.primary.copy(alpha = 0.2f)),
+                    .background(contentColor.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = IconMapper.Notifications,
+                    imageVector = when(type) {
+                        SnackbarType.SUCCESS -> IconMapper.Check
+                        SnackbarType.ERROR -> IconMapper.Warning
+                        SnackbarType.INFO -> IconMapper.Notifications
+                    },
                     contentDescription = null,
-                    tint = AppTheme.colors.primary,
+                    tint = contentColor,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -68,13 +123,14 @@ fun AppSnackbar(
             Text(
                 text = snackbarData.visuals.message,
                 style = AppTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = contentColor
             )
             if (snackbarData.visuals.actionLabel != null) {
                 TextButton(onClick = { snackbarData.performAction() }) {
                     Text(
                         text = snackbarData.visuals.actionLabel!!,
-                        color = AppTheme.colors.primary,
+                        color = contentColor,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                     )
                 }
@@ -152,7 +208,7 @@ fun TeacherTopBar(
         },
         actions = {},
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = AppTheme.colors.surface
+            containerColor = AppTheme.colors.surfaceContainer
         )
     )
 }

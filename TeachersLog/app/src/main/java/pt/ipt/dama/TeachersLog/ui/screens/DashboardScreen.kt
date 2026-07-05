@@ -54,6 +54,7 @@ fun DashboardContent(
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(

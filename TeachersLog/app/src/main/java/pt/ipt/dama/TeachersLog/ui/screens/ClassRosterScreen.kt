@@ -26,6 +26,8 @@ import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.*
 import pt.ipt.dama.TeachersLog.ui.theme.*
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.LocalizedNameMapper
@@ -180,7 +182,7 @@ fun ClassRosterContent(
             onConfirm = { targetClassId ->
                 onCloneStudentClick(student.studentId, targetClassId)
                 studentToClone.value = null
-                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(cloneSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { studentToClone.value = null }
         )
@@ -235,13 +237,14 @@ fun ClassRosterContent(
             onConfirm = {
                 onDeleteStudent(student)
                 studentToDelete.value = null
-                scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(deleteSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { studentToDelete.value = null }
         )
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(

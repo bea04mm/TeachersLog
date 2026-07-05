@@ -17,6 +17,8 @@ import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.TeachersLog.utils.LocaleManager
@@ -86,21 +88,22 @@ fun AppPreferencesContent(
 
     LaunchedEffect(syncMessage) {
         if (syncMessage != null) {
-            val message = when {
-                syncMessage == "RESTORE_SUCCESS" -> restoreSuccess
+            val (message, type) = when {
+                syncMessage == "RESTORE_SUCCESS" -> restoreSuccess to SnackbarType.SUCCESS
                 syncMessage.startsWith("RESTORE_FAILED:") -> {
                     val error = syncMessage.substringAfter("RESTORE_FAILED:")
-                    when {
+                    val msg = when {
                         error == "User not authenticated" -> authenticatedError
                         error.startsWith("Download failed:") -> "$downloadFailed ${error.substringAfter("Download failed:")}"
                         else -> "$restoreFailed $error"
                     }
+                    msg to SnackbarType.ERROR
                 }
-                syncMessage == "User not authenticated" -> authenticatedError
-                else -> syncMessage
+                syncMessage == "User not authenticated" -> authenticatedError to SnackbarType.ERROR
+                else -> syncMessage to SnackbarType.INFO
             }
             scope.launch {
-                snackbarHostState.showSnackbar(message)
+                snackbarHostState.showAppSnackbar(message, type = type)
                 onClearSyncMessage()
             }
         }
@@ -133,6 +136,7 @@ fun AppPreferencesContent(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
