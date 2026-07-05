@@ -48,6 +48,11 @@ object AppTheme {
         get() = MaterialTheme.shapes
 
     /**
+     * Standard white color.
+     */
+    val white = White
+
+    /**
      * Standard circular shape.
      */
     val circle = CircleShape

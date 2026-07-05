@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import java.net.URLEncoder
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -37,6 +38,8 @@ import pt.ipt.dama.TeachersLog.ui.components.CloneYearDialog
 import pt.ipt.dama.TeachersLog.ui.components.CloneSemesterDestinationDialog
 import pt.ipt.dama.TeachersLog.ui.components.AppSnackbar
 import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.screens.*
 import pt.ipt.dama.TeachersLog.ui.screens.auth.OnboardingScreen
 import pt.ipt.dama.TeachersLog.ui.screens.auth.WelcomeScreen
@@ -79,7 +82,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        
+        // Ensure fully transparent system bars
         enableEdgeToEdge()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         
         // Keep splash screen visible until initial state is loaded
         splashScreen.setKeepOnScreenCondition { authViewModel.isLoading.value }
@@ -91,6 +99,23 @@ class MainActivity : ComponentActivity() {
             val isDarkModePref by settingsViewModel.isDarkMode.observeAsState(initial = null)
             val isDarkMode = isDarkModePref ?: isSystemInDarkTheme()
             
+            // Handle edge-to-edge system bars style reactively
+            SideEffect {
+                this@MainActivity.enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                    ) { isDarkMode },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                    ) { isDarkMode }
+                )
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
+            }
+
             val onboardingCompleted by authViewModel.onboardingCompletedFlow.collectAsState(initial = false)
             val isAuthenticated by authViewModel.isAuthenticatedFlow.collectAsState(initial = false)
             
@@ -166,19 +191,16 @@ fun MainApp(
     val isGuest by authViewModel.isGuest.observeAsState(initial = false)
     val isAuthenticated by authViewModel.isAuthenticated.observeAsState(initial = false)
     val justLoggedIn by authViewModel.justLoggedIn.collectAsState()
+    val isSyncing by settingsViewModel.isSyncing.collectAsState()
     val showSyncChoiceDialog = rememberSaveable { mutableStateOf(false) }
 
-    // Logic to detect first login with existing data
+    // Logic to detect first login with existing data or empty state
     LaunchedEffect(isAuthenticated, isGuest, academicYears, justLoggedIn) {
-        val years = academicYears ?: return@LaunchedEffect
-        // Show conflict dialog only if just logged in (transient state) and local data exists
+        academicYears ?: return@LaunchedEffect
         if (isAuthenticated && !isGuest && justLoggedIn) {
-            if (years.isNotEmpty()) {
-                showSyncChoiceDialog.value = true
-            } else {
-                // If no local data, we could auto-restore or just clear the flag
-                authViewModel.clearJustLoggedIn()
-            }
+            // If user has local data, show conflict dialog. 
+            // If local data is empty, still show the choice to restore or start fresh.
+            showSyncChoiceDialog.value = true
         }
     }
 
@@ -186,14 +208,15 @@ fun MainApp(
     val showAddYearDialog = remember { mutableStateOf(false) }
     val isYearMandatory = remember { mutableStateOf(false) }
 
-    // Enforce initial setup if database is empty (after initial load)
-    LaunchedEffect(academicYears) {
+    // Enforce initial setup only if not just logged in and not syncing
+    LaunchedEffect(academicYears, justLoggedIn, showSyncChoiceDialog.value, isSyncing) {
         academicYears?.let { years ->
-            if (years.isEmpty()) {
+            if (years.isEmpty() && !justLoggedIn && !showSyncChoiceDialog.value && !isSyncing) {
                 isYearMandatory.value = true
                 showAddYearDialog.value = true
-            } else {
+            } else if (years.isNotEmpty() || isSyncing) {
                 isYearMandatory.value = false
+                showAddYearDialog.value = false
             }
         }
     }
@@ -208,10 +231,14 @@ fun MainApp(
 
     // Dialog for choosing between local data or cloud restore after login
     if (showSyncChoiceDialog.value) {
+        val hasLocalData = (academicYears?.size ?: 0) > 0
         AlertDialog(
-            onDismissRequest = { showSyncChoiceDialog.value = false },
-            title = { Text(stringResource(R.string.sync_choice_title)) },
-            text = { Text(stringResource(R.string.sync_choice_message)) },
+            onDismissRequest = { 
+                showSyncChoiceDialog.value = false 
+                authViewModel.clearJustLoggedIn()
+            },
+            title = { Text(if (hasLocalData) stringResource(R.string.sync_choice_title) else stringResource(R.string.welcome_title)) },
+            text = { Text(if (hasLocalData) stringResource(R.string.sync_choice_message) else stringResource(R.string.restore_desc)) },
             confirmButton = {
                 Button(
                     onClick = { 
@@ -224,10 +251,11 @@ fun MainApp(
             dismissButton = {
                 TextButton(
                     onClick = { 
+                        settingsViewModel.clearCloudBackup()
                         showSyncChoiceDialog.value = false 
                         authViewModel.clearJustLoggedIn()
                     }
-                ) { Text(stringResource(R.string.keep_local_data)) }
+                ) { Text(if (hasLocalData) stringResource(R.string.keep_local_data) else stringResource(R.string.get_started)) }
             }
         )
     }
@@ -241,7 +269,7 @@ fun MainApp(
             onAdd = { yearName, periodName ->
                 academicViewModel.addYearWithPeriod(yearName, periodName)
                 showAddYearDialog.value = false
-                scope.launch { snackbarHostState.showSnackbar(successMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
             },
             existingYears = academicYears ?: emptyList(),
             isMandatory = isYearMandatory.value
@@ -291,7 +319,7 @@ fun MainApp(
                     Button(onClick = { 
                         academicViewModel.addSemester(periodName)
                         showAddPeriodDialog.value = false 
-                        scope.launch { snackbarHostState.showSnackbar(successMsg) }
+                        scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
                     }) {
                         Text(stringResource(R.string.save))
                     }
@@ -314,7 +342,7 @@ fun MainApp(
                     onClick = { 
                         academicViewModel.deleteAcademicYear(year)
                         yearToDelete.value = null 
-                        scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                        scope.launch { snackbarHostState.showAppSnackbar(deleteSuccessMsg, type = SnackbarType.SUCCESS) }
                     }, 
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
@@ -339,7 +367,7 @@ fun MainApp(
                     onClick = { 
                         academicViewModel.deleteSemester(semester)
                         periodToDelete.value = null 
-                        scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                        scope.launch { snackbarHostState.showAppSnackbar(deleteSuccessMsg, type = SnackbarType.SUCCESS) }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
@@ -360,7 +388,7 @@ fun MainApp(
             onConfirm = { newName ->
                 academicViewModel.cloneAcademicYear(year.id, newName)
                 yearToClone.value = null
-                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(cloneSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { yearToClone.value = null }
         )
@@ -378,7 +406,7 @@ fun MainApp(
             onConfirm = { targetYearId, newName ->
                 academicViewModel.cloneSemester(semester.id, targetYearId, newName)
                 periodToClone.value = null
-                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
+                scope.launch { snackbarHostState.showAppSnackbar(cloneSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { periodToClone.value = null }
         )

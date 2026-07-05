@@ -50,6 +50,7 @@ object IconMapper {
     val School = Icons.Default.School
     val Group = Icons.Default.Group
     val Code = Icons.Default.Code
+    val Check = Icons.Default.Check
 
     // --- Dynamic Subject Icon Mapping ---
 
