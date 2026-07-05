@@ -25,6 +25,7 @@ fun SettingsPreview() {
             userPhoto = "",
             isGuest = false,
             onNavigateToAccount = {}, 
+            onNavigateToSecurity = {},
             onNavigateToPreferences = {},
             onNavigateToAbout = {},
             onLogout = {}
