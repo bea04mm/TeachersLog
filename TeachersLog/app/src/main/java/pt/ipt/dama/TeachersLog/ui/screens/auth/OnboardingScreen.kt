@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -13,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +40,7 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         bottomBar = {
             Row(
                 modifier = Modifier
@@ -57,7 +56,7 @@ fun OnboardingScreen(
                         Box(
                             modifier = Modifier
                                 .padding(2.dp)
-                                .clip(CircleShape)
+                                .clip(AppTheme.circle)
                                 .background(color)
                                 .size(8.dp)
                         )
@@ -71,13 +70,19 @@ fun OnboardingScreen(
                             Text(stringResource(R.string.skip), color = AppTheme.colors.outline)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                        }) {
+                        Button(
+                            onClick = {
+                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                            },
+                            shape = AppTheme.shapes.medium
+                        ) {
                             Text(stringResource(R.string.next))
                         }
                     } else {
-                        Button(onClick = onFinished) {
+                        Button(
+                            onClick = onFinished,
+                            shape = AppTheme.shapes.medium
+                        ) {
                             Text(stringResource(R.string.get_started))
                         }
                     }
@@ -108,8 +113,8 @@ fun OnboardingPageContent(page: OnboardingPage) {
         Box(
             modifier = Modifier
                 .size(240.dp)
-                .clip(CircleShape)
-                .background(Color.White),
+                .clip(AppTheme.circle)
+                .background(AppTheme.colors.surfaceContainerLowest),
             contentAlignment = Alignment.Center
         ) {
             Image(

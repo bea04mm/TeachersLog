@@ -5,27 +5,25 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.theme.AppTheme
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AuthViewModel
+import pt.ipt.dama.TeachersLog.utils.IconMapper
 
 enum class WelcomeViewState {
     LANDING, LOGIN, REGISTER
@@ -39,6 +37,23 @@ fun WelcomeScreen(
     var viewState by remember { mutableStateOf(WelcomeViewState.LANDING) }
     val isLoading by authViewModel.isLoading.collectAsState()
     val authError by authViewModel.authError.collectAsState()
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+
+    // Validation messages
+    val invalidEmailMsg = stringResource(R.string.error_invalid_email)
+    val shortPasswordMsg = stringResource(R.string.error_password_too_short)
+    val shortNameMsg = stringResource(R.string.error_name_too_short)
+
+    // Replace inline error display with custom snackbar
+    LaunchedEffect(authError) {
+        if (authError != null) {
+            scope.launch {
+                snackbarHostState.showSnackbar(authError!!)
+                authViewModel.clearError()
+            }
+        }
+    }
 
     // Handle back button/gesture when not in landing page
     BackHandler(enabled = viewState != WelcomeViewState.LANDING) {
@@ -52,6 +67,29 @@ fun WelcomeScreen(
     var name by remember { mutableStateOf("") }
     var syncEnabled by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
+    
+    fun validateAndSubmit(isRegister: Boolean) {
+        if (isRegister && name.trim().length < 3) {
+            scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+            return
+        }
+        if (!email.matches(emailRegex)) {
+            scope.launch { snackbarHostState.showSnackbar(invalidEmailMsg) }
+            return
+        }
+        if (password.length < 6) {
+            scope.launch { snackbarHostState.showSnackbar(shortPasswordMsg) }
+            return
+        }
+        
+        if (isRegister) {
+            authViewModel.register(name, email, password, syncEnabled)
+        } else {
+            authViewModel.login(email, password)
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -76,8 +114,8 @@ fun WelcomeScreen(
                 Box(
                     modifier = Modifier
                         .size(if (viewState == WelcomeViewState.LANDING) 160.dp else 100.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
+                        .clip(AppTheme.circle)
+                        .background(AppTheme.colors.surfaceContainerLowest),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -115,14 +153,16 @@ fun WelcomeScreen(
                     ) {
                         Button(
                             onClick = { viewState = WelcomeViewState.LOGIN; authViewModel.clearError() },
-                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = AppTheme.shapes.medium
                         ) {
                             Text(stringResource(R.string.sign_in))
                         }
                         
                         OutlinedButton(
                             onClick = { viewState = WelcomeViewState.REGISTER; authViewModel.clearError() },
-                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = AppTheme.shapes.medium
                         ) {
                             Text(stringResource(R.string.create_account))
                         }
@@ -158,9 +198,8 @@ fun WelcomeScreen(
                         onSyncChange = { syncEnabled = it },
                         passwordVisible = passwordVisible,
                         onTogglePassword = { passwordVisible = !passwordVisible },
-                        error = authError,
                         isLoading = isLoading,
-                        onSubmit = { authViewModel.login(email, password) },
+                        onSubmit = { validateAndSubmit(false) },
                         onBack = { viewState = WelcomeViewState.LANDING }
                     )
                 }
@@ -177,9 +216,8 @@ fun WelcomeScreen(
                         onSyncChange = { syncEnabled = it },
                         passwordVisible = passwordVisible,
                         onTogglePassword = { passwordVisible = !passwordVisible },
-                        error = authError,
                         isLoading = isLoading,
-                        onSubmit = { authViewModel.register(name, email, password, syncEnabled) },
+                        onSubmit = { validateAndSubmit(true) },
                         onBack = { viewState = WelcomeViewState.LANDING }
                     )
                 }
@@ -201,7 +239,6 @@ fun AuthForm(
     onSyncChange: (Boolean) -> Unit,
     passwordVisible: Boolean,
     onTogglePassword: () -> Unit,
-    error: String?,
     isLoading: Boolean,
     onSubmit: () -> Unit,
     onBack: () -> Unit
@@ -216,16 +253,6 @@ fun AuthForm(
             color = AppTheme.colors.onBackground
         )
 
-        if (error != null) {
-            Text(
-                text = error,
-                color = AppTheme.colors.error,
-                style = AppTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        }
-
         if (isRegister) {
             OutlinedTextField(
                 value = name,
@@ -233,7 +260,8 @@ fun AuthForm(
                 label = { Text(stringResource(R.string.first_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isLoading
+                enabled = !isLoading,
+                shape = AppTheme.shapes.medium
             )
         }
 
@@ -243,7 +271,8 @@ fun AuthForm(
             label = { Text(stringResource(R.string.email)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = !isLoading
+            enabled = !isLoading,
+            shape = AppTheme.shapes.medium
         )
 
         OutlinedTextField(
@@ -253,9 +282,10 @@ fun AuthForm(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             enabled = !isLoading,
+            shape = AppTheme.shapes.medium,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                val image = if (passwordVisible) IconMapper.Visibility else IconMapper.VisibilityOff
                 IconButton(onClick = onTogglePassword) {
                     Icon(imageVector = image, contentDescription = null)
                 }
@@ -285,7 +315,8 @@ fun AuthForm(
         Button(
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth().height(56.dp),
-            enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && (!isRegister || name.isNotBlank())
+            enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && (!isRegister || name.isNotBlank()),
+            shape = AppTheme.shapes.medium
         ) {
             if (isLoading) {
                 CircularProgressIndicator(

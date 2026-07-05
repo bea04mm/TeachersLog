@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -14,12 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.TeachersLog.utils.LocaleManager
+import pt.ipt.dama.TeachersLog.utils.IconMapper
 
 /**
  * AppPreferencesContent is the stateless UI for managing application settings.
@@ -54,53 +55,61 @@ fun AppPreferencesContent(
 ) {
     val showLanguageDialog = remember { mutableStateOf(false) }
     val showRestoreDialog = remember { mutableStateOf(false) }
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
 
     if (showRestoreDialog.value) {
         AlertDialog(
             onDismissRequest = { showRestoreDialog.value = false },
-            title = { Text(stringResource(R.string.restore_confirm_title)) },
-            text = { Text(stringResource(R.string.restore_confirm_message)) },
+            title = { Text(stringResource(R.string.restore_confirm_title), style = AppTheme.typography.titleLarge) },
+            text = { Text(stringResource(R.string.restore_confirm_message), style = AppTheme.typography.bodyMedium) },
             confirmButton = {
                 Button(
                     onClick = { onRestoreClick(); showRestoreDialog.value = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error),
+                    shape = AppTheme.shapes.medium
                 ) { Text(stringResource(R.string.restore_from_cloud)) }
             },
             dismissButton = {
                 TextButton(onClick = { showRestoreDialog.value = false }) { Text(stringResource(R.string.cancel)) }
-            }
+            },
+            shape = AppTheme.shapes.large,
+            containerColor = AppTheme.colors.surfaceContainerHigh
         )
     }
 
-    if (syncMessage != null) {
-        val displayMessage = when {
-            syncMessage == "RESTORE_SUCCESS" -> stringResource(R.string.restore_success_message)
-            syncMessage.startsWith("RESTORE_FAILED:") -> {
-                val error = syncMessage.substringAfter("RESTORE_FAILED:")
-                when {
-                    error == "User not authenticated" -> stringResource(R.string.error_user_not_authenticated)
-                    error.startsWith("Download failed:") -> stringResource(R.string.error_download_failed, error.substringAfter("Download failed:"))
-                    else -> stringResource(R.string.restore_failed_message, error)
-                }
-            }
-            syncMessage == "User not authenticated" -> stringResource(R.string.error_user_not_authenticated)
-            else -> syncMessage
-        }
+    // Snackbar localized messages
+    val authenticatedError = stringResource(R.string.error_user_not_authenticated)
+    val restoreSuccess = stringResource(R.string.restore_success_message)
+    val restoreFailed = stringResource(R.string.restore_failed_message)
+    val downloadFailed = stringResource(R.string.error_download_failed)
 
-        AlertDialog(
-            onDismissRequest = onClearSyncMessage,
-            title = { Text(stringResource(R.string.sync_notification_title)) },
-            text = { Text(displayMessage) },
-            confirmButton = {
-                Button(onClick = onClearSyncMessage) { Text(stringResource(R.string.close)) }
+    LaunchedEffect(syncMessage) {
+        if (syncMessage != null) {
+            val message = when {
+                syncMessage == "RESTORE_SUCCESS" -> restoreSuccess
+                syncMessage.startsWith("RESTORE_FAILED:") -> {
+                    val error = syncMessage.substringAfter("RESTORE_FAILED:")
+                    when {
+                        error == "User not authenticated" -> authenticatedError
+                        error.startsWith("Download failed:") -> "$downloadFailed ${error.substringAfter("Download failed:")}"
+                        else -> "$restoreFailed $error"
+                    }
+                }
+                syncMessage == "User not authenticated" -> authenticatedError
+                else -> syncMessage
             }
-        )
+            scope.launch {
+                snackbarHostState.showSnackbar(message)
+                onClearSyncMessage()
+            }
+        }
     }
 
     if (showLanguageDialog.value) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog.value = false },
-            title = { Text(stringResource(R.string.select_language)) },
+            title = { Text(stringResource(R.string.select_language), style = AppTheme.typography.titleLarge) },
             text = {
                 Column {
                     LanguageOption(stringResource(R.string.english), "en", currentLang) { 
@@ -117,7 +126,9 @@ fun AppPreferencesContent(
                 TextButton(onClick = { showLanguageDialog.value = false }) { 
                     Text(stringResource(R.string.close)) 
                 } 
-            }
+            },
+            shape = AppTheme.shapes.large,
+            containerColor = AppTheme.colors.surfaceContainerHigh
         )
     }
 
@@ -141,7 +152,7 @@ fun AppPreferencesContent(
             item {
                 PreferenceSection(
                     title = stringResource(R.string.language_label),
-                    icon = Icons.Default.Language
+                    icon = IconMapper.Translate
                 ) {
                     TonalCard {
                         Row(
@@ -168,7 +179,7 @@ fun AppPreferencesContent(
                                     color = AppTheme.colors.primary
                                 )
                             }
-                            Icon(Icons.Default.Translate, contentDescription = null)
+                            Icon(IconMapper.Translate, contentDescription = null, tint = AppTheme.colors.primary)
                         }
                     }
                 }
@@ -176,7 +187,7 @@ fun AppPreferencesContent(
 
             // Appearance/Theme Section
             item {
-                PreferenceSection(title = stringResource(R.string.appearance), icon = Icons.Default.Palette) {
+                PreferenceSection(title = stringResource(R.string.appearance), icon = IconMapper.Palette) {
                     TonalCard {
                         PreferenceToggle(
                             title = stringResource(R.string.dark_mode),
@@ -191,7 +202,7 @@ fun AppPreferencesContent(
             // Data Sync Section
             if (!isGuest) {
                 item {
-                    PreferenceSection(title = stringResource(R.string.data_management_label), icon = Icons.Default.CloudSync) {
+                    PreferenceSection(title = stringResource(R.string.data_management_label), icon = IconMapper.CloudSync) {
                         TonalCard {
                             Column {
                                 PreferenceToggle(
@@ -204,7 +215,7 @@ fun AppPreferencesContent(
                                 PreferenceAction(
                                     title = stringResource(R.string.restore_from_cloud),
                                     subtitle = stringResource(R.string.restore_desc),
-                                    icon = Icons.Default.CloudDownload,
+                                    icon = IconMapper.CloudDownload,
                                     isLoading = isSyncing,
                                     onClick = { showRestoreDialog.value = true }
                                 )
@@ -306,7 +317,7 @@ fun LanguageOption(label: String, code: String, current: String, onClick: () -> 
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = AppTheme.typography.bodyLarge)
+        Text(text = label, style = AppTheme.typography.bodyLarge, color = AppTheme.colors.onSurface)
         RadioButton(selected = (code == current), onClick = onClick)
     }
 }
@@ -326,9 +337,9 @@ fun PreferenceSection(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) {
-            Icon(imageVector = icon, contentDescription = null, tint = AppTheme.colors.primary)
+            Icon(imageVector = icon, contentDescription = null, tint = AppTheme.colors.primary, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = title, style = AppTheme.typography.titleMedium)
+            Text(text = title, style = AppTheme.typography.titleMedium, color = AppTheme.colors.onBackground)
         }
         content()
     }
@@ -357,7 +368,7 @@ fun PreferenceToggle(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = AppTheme.typography.bodyLarge)
+            Text(text = title, style = AppTheme.typography.bodyLarge, color = AppTheme.colors.onSurface)
             Text(text = subtitle, style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)

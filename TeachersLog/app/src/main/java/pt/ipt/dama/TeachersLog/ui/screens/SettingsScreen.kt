@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -129,13 +130,13 @@ fun SettingsContent(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             if (isGuest) {
-                                // Guest label or empty space, removed the button as requested
+                                // Guest label or empty space
                             } else {
                                 TextButton(
                                     onClick = onNavigateToAccount,
                                     modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
                                 ) {
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Icon(IconMapper.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(stringResource(R.string.edit_profile))
                                 }
@@ -155,16 +156,16 @@ fun SettingsContent(
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.app_preferences)) },
                             supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
-                            leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                            leadingContent = { Icon(Icons.Default.Tune, contentDescription = null, tint = AppTheme.colors.primary) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
                             modifier = Modifier.clickable(onClick = onNavigateToPreferences),
                             colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                         )
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.nav_about)) },
-                            leadingContent = { Icon(Icons.Default.Info, contentDescription = null) },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                            leadingContent = { Icon(Icons.Default.Info, contentDescription = null, tint = AppTheme.colors.primary) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
                             modifier = Modifier.clickable(onClick = onNavigateToAbout),
                             colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                         )
@@ -182,7 +183,8 @@ fun SettingsContent(
                         Button(
                             onClick = onLogout,
                             modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary)
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary),
+                            shape = AppTheme.shapes.medium
                         ) {
                             Icon(Icons.Default.PersonAdd, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
