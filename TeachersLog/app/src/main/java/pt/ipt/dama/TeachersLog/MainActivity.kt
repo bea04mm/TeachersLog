@@ -35,6 +35,8 @@ import pt.ipt.dama.TeachersLog.ui.components.TeacherDrawerContent
 import pt.ipt.dama.TeachersLog.ui.components.AddYearAndPeriodDialog
 import pt.ipt.dama.TeachersLog.ui.components.CloneYearDialog
 import pt.ipt.dama.TeachersLog.ui.components.CloneSemesterDestinationDialog
+import pt.ipt.dama.TeachersLog.ui.components.AppSnackbar
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.screens.*
 import pt.ipt.dama.TeachersLog.ui.screens.auth.OnboardingScreen
 import pt.ipt.dama.TeachersLog.ui.screens.auth.WelcomeScreen
@@ -83,6 +85,7 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { authViewModel.isLoading.value }
         
         setContent {
+            val snackbarHostState = remember { SnackbarHostState() }
             // Observe global state from ViewModels
             val currentLang by settingsViewModel.currentLanguage.observeAsState(initial = LocaleManager.getLanguage(this))
             val isDarkModePref by settingsViewModel.isDarkMode.observeAsState(initial = null)
@@ -105,7 +108,8 @@ class MainActivity : ComponentActivity() {
                     
                     CompositionLocalProvider(
                         LocalContext provides localizedContext,
-                        LocalActivityResultRegistryOwner provides this@MainActivity
+                        LocalActivityResultRegistryOwner provides this@MainActivity,
+                        LocalSnackbarHostState provides snackbarHostState
                     ) {
                         when {
                             !onboardingCompleted -> {
@@ -151,7 +155,7 @@ fun MainApp(
     
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     
     // Global academic state observation
     val academicYears by academicViewModel.allAcademicYears.observeAsState()
@@ -230,11 +234,14 @@ fun MainApp(
 
     // Atomic dialog for adding a new Year + its initial Period
     if (showAddYearDialog.value) {
+        val snackbarHostState = LocalSnackbarHostState.current
+        val successMsg = stringResource(R.string.save_success)
         AddYearAndPeriodDialog(
             onDismiss = { showAddYearDialog.value = false },
             onAdd = { yearName, periodName ->
                 academicViewModel.addYearWithPeriod(yearName, periodName)
                 showAddYearDialog.value = false
+                scope.launch { snackbarHostState.showSnackbar(successMsg) }
             },
             existingYears = academicYears ?: emptyList(),
             isMandatory = isYearMandatory.value
@@ -243,6 +250,8 @@ fun MainApp(
 
     // Dialog for adding additional periods to an existing year
     if (showAddPeriodDialog.value) {
+        val snackbarHostState = LocalSnackbarHostState.current
+        val successMsg = stringResource(R.string.save_success)
         val allOptions = listOf(
             R.string.period_1st_semester, R.string.period_2nd_semester,
             R.string.period_1st_period, R.string.period_2nd_period,
@@ -282,6 +291,7 @@ fun MainApp(
                     Button(onClick = { 
                         academicViewModel.addSemester(periodName)
                         showAddPeriodDialog.value = false 
+                        scope.launch { snackbarHostState.showSnackbar(successMsg) }
                     }) {
                         Text(stringResource(R.string.save))
                     }
@@ -293,13 +303,19 @@ fun MainApp(
 
     // Confirmation dialog for deleting an academic year
     yearToDelete.value?.let { year ->
+        val snackbarHostState = LocalSnackbarHostState.current
+        val deleteSuccessMsg = stringResource(R.string.delete_success)
         AlertDialog(
             onDismissRequest = { yearToDelete.value = null },
             title = { Text(stringResource(R.string.delete_year_title)) },
             text = { Text(stringResource(R.string.delete_year_message, year.year)) },
             confirmButton = {
                 Button(
-                    onClick = { academicViewModel.deleteAcademicYear(year); yearToDelete.value = null }, 
+                    onClick = { 
+                        academicViewModel.deleteAcademicYear(year)
+                        yearToDelete.value = null 
+                        scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                    }, 
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
@@ -311,6 +327,8 @@ fun MainApp(
 
     // Confirmation dialog for deleting an academic period
     periodToDelete.value?.let { semester ->
+        val snackbarHostState = LocalSnackbarHostState.current
+        val deleteSuccessMsg = stringResource(R.string.delete_success)
         val localizedName = LocalizedNameMapper.getLocalizedSemesterName(semester.name)
         AlertDialog(
             onDismissRequest = { periodToDelete.value = null },
@@ -318,7 +336,11 @@ fun MainApp(
             text = { Text(stringResource(R.string.delete_period_message, localizedName)) },
             confirmButton = {
                 Button(
-                    onClick = { academicViewModel.deleteSemester(semester); periodToDelete.value = null }, 
+                    onClick = { 
+                        academicViewModel.deleteSemester(semester)
+                        periodToDelete.value = null 
+                        scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
                 ) {
                     Text(stringResource(R.string.delete_label))
@@ -330,12 +352,15 @@ fun MainApp(
 
     // Dialog for cloning an academic year
     yearToClone.value?.let { year ->
+        val snackbarHostState = LocalSnackbarHostState.current
+        val cloneSuccessMsg = stringResource(R.string.clone_success)
         CloneYearDialog(
             sourceYear = year,
             existingYears = academicYears ?: emptyList(),
             onConfirm = { newName ->
                 academicViewModel.cloneAcademicYear(year.id, newName)
                 yearToClone.value = null
+                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
             },
             onDismiss = { yearToClone.value = null }
         )
@@ -343,6 +368,8 @@ fun MainApp(
 
     // Dialog for cloning an academic period (semester)
     periodToClone.value?.let { semester ->
+        val snackbarHostState = LocalSnackbarHostState.current
+        val cloneSuccessMsg = stringResource(R.string.clone_success)
         val localizedName = LocalizedNameMapper.getLocalizedSemesterName(semester.name)
         CloneSemesterDestinationDialog(
             title = stringResource(R.string.clone_item_title, localizedName),
@@ -351,6 +378,7 @@ fun MainApp(
             onConfirm = { targetYearId, newName ->
                 academicViewModel.cloneSemester(semester.id, targetYearId, newName)
                 periodToClone.value = null
+                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
             },
             onDismiss = { periodToClone.value = null }
         )
@@ -380,7 +408,7 @@ fun MainApp(
     ) {
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = { SnackbarHost(snackbarHostState) { AppSnackbar(it) } },
             bottomBar = {
                 // Show navigation bar only on top-level screens
                 if (currentRoute in listOf("dashboard", "subjects", "settings")) {

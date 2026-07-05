@@ -3,21 +3,85 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.utils.IconMapper
+import androidx.compose.ui.platform.LocalLocale
+
+/**
+ * CompositionLocal to provide a global SnackbarHostState.
+ */
+val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
+    error("No SnackbarHostState provided")
+}
+
+/**
+ * A beautiful, personalized Snackbar component.
+ *
+ * @param snackbarData The data provided by the SnackbarHost.
+ * @param modifier The [Modifier] to apply.
+ */
+@Composable
+fun AppSnackbar(
+    snackbarData: SnackbarData,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        shape = AppTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = AppTheme.colors.primaryContainer,
+            contentColor = AppTheme.colors.onPrimaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(AppTheme.shapes.small)
+                    .background(AppTheme.colors.primary.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = IconMapper.Notifications,
+                    contentDescription = null,
+                    tint = AppTheme.colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = snackbarData.visuals.message,
+                style = AppTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            if (snackbarData.visuals.actionLabel != null) {
+                TextButton(onClick = { snackbarData.performAction() }) {
+                    Text(
+                        text = snackbarData.visuals.actionLabel!!,
+                        color = AppTheme.colors.primary,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
 
 /**
  * TeacherTopBar is a standardized TopAppBar for the application.
@@ -60,7 +124,8 @@ fun TeacherTopBar(
                 // Bold screen title using project typography
                 Text(
                     text = title,
-                    style = AppTheme.typography.titleLarge
+                    style = AppTheme.typography.titleLarge,
+                    color = AppTheme.colors.onSurface
                 )
             }
         },
@@ -69,7 +134,7 @@ fun TeacherTopBar(
             if (showBackButton) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                        imageVector = IconMapper.Back, 
                         contentDescription = stringResource(R.string.back),
                         tint = AppTheme.colors.primary
                     )
@@ -78,7 +143,7 @@ fun TeacherTopBar(
                 // Priority 2: Show Menu button if a callback is provided
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
-                        imageVector = Icons.Default.Menu, 
+                        imageVector = IconMapper.Menu,
                         contentDescription = stringResource(R.string.menu),
                         tint = AppTheme.colors.primary
                     )
@@ -166,7 +231,8 @@ fun SectionHeader(
         )
         Text(
             text = title,
-            style = AppTheme.typography.headlineLarge
+            style = AppTheme.typography.headlineLarge,
+            color = AppTheme.colors.onSurface
         )
     }
 }
@@ -330,7 +396,7 @@ fun AcademicSummaryCard(
                             color = AppTheme.colors.outline
                         )
                         Text(
-                            text = String.format(Locale.getDefault(), "%.2f", averageGrade) + suffix,
+                            text = String.format(LocalLocale.current.platformLocale, "%.2f", averageGrade) + suffix,
                             style = AppTheme.typography.titleMedium,
                             color = performanceColor
                         )
@@ -347,13 +413,15 @@ fun AcademicSummaryCard(
                             Icon(
                                 imageVector = IconMapper.Account, 
                                 contentDescription = null, 
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
+                                tint = AppTheme.colors.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             // Use the formatted string resource for student count
                             Text(
                                 text = stringResource(R.string.students_count_label, studentCount),
-                                style = AppTheme.typography.labelSmall
+                                style = AppTheme.typography.labelSmall,
+                                color = AppTheme.colors.onSurfaceVariant
                             )
                         }
                     }
@@ -380,12 +448,13 @@ fun DeleteConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = title) },
-        text = { Text(text = message) },
+        title = { Text(text = title, style = AppTheme.typography.titleLarge) },
+        text = { Text(text = message, style = AppTheme.typography.bodyMedium) },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error),
+                shape = AppTheme.shapes.medium
             ) {
                 Text(text = stringResource(R.string.delete_label))
             }
@@ -394,7 +463,9 @@ fun DeleteConfirmationDialog(
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.cancel))
             }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 

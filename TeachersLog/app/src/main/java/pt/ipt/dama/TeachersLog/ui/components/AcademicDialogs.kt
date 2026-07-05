@@ -5,16 +5,12 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -27,6 +23,7 @@ import pt.ipt.dama.TeachersLog.data.model.Subject
 import pt.ipt.dama.TeachersLog.data.model.StudentsClass
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.utils.LocalizedNameMapper
+import pt.ipt.dama.TeachersLog.utils.IconMapper
 
 /**
  * Stateless content for the Year and Period creation dialog.
@@ -66,7 +63,7 @@ fun AddYearAndPeriodContent(
                     var y = selectedStartYear - 1
                     while (y in takenStartYears && y > 2000) y--
                     if (y !in takenStartYears) onYearChange(y) 
-                }) { Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.cd_decrease_year)) }
+                }) { Icon(IconMapper.Remove, contentDescription = stringResource(R.string.cd_decrease_year), tint = AppTheme.colors.primary) }
                 
                 Surface(
                     color = AppTheme.colors.primaryContainer, 
@@ -76,7 +73,8 @@ fun AddYearAndPeriodContent(
                     Text(
                         text = "$selectedStartYear / ${selectedStartYear + 1}", 
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                        style = AppTheme.typography.headlineSmall
+                        style = AppTheme.typography.headlineSmall,
+                        color = AppTheme.colors.onPrimaryContainer
                     )
                 }
                 
@@ -84,7 +82,7 @@ fun AddYearAndPeriodContent(
                     var y = selectedStartYear + 1
                     while (y in takenStartYears) y++
                     onYearChange(y) 
-                }) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_increase_year)) }
+                }) { Icon(IconMapper.Add, contentDescription = stringResource(R.string.cd_increase_year), tint = AppTheme.colors.primary) }
             }
         }
 
@@ -149,7 +147,7 @@ fun AddYearAndPeriodDialog(
             dismissOnBackPress = !isMandatory,
             dismissOnClickOutside = !isMandatory
         ),
-        title = { Text(stringResource(R.string.add_new_year)) },
+        title = { Text(stringResource(R.string.add_new_year), style = AppTheme.typography.titleLarge) },
         text = {
             Column {
                 if (isMandatory) {
@@ -172,7 +170,10 @@ fun AddYearAndPeriodDialog(
         },
         confirmButton = { 
             val periodName = stringResource(selectedPeriodOption)
-            Button(onClick = { onAdd("$selectedStartYear/${selectedStartYear + 1}", periodName) }) {
+            Button(
+                onClick = { onAdd("$selectedStartYear/${selectedStartYear + 1}", periodName) },
+                shape = AppTheme.shapes.medium
+            ) {
                 Text(stringResource(R.string.save)) 
             } 
         },
@@ -182,7 +183,9 @@ fun AddYearAndPeriodDialog(
                     Text(stringResource(R.string.cancel)) 
                 }
             }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 
@@ -203,23 +206,33 @@ fun CloneDestinationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(title, style = AppTheme.typography.titleLarge) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(stringResource(R.string.clone_destination_label), style = AppTheme.typography.labelMedium)
+                Text(stringResource(R.string.clone_destination_label), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
                 
-                // Year Selection (Simple dropdown or row)
+                // Year Selection
                 ScrollableTabRow(
                     selectedTabIndex = academicYears.indexOfFirst { it.id == selectedYearId }.coerceAtLeast(0),
                     edgePadding = 0.dp,
-                    containerColor = Color.Transparent,
-                    divider = {}
+                    containerColor = AppTheme.transparent,
+                    divider = {},
+                    indicator = { tabPositions ->
+                        if (academicYears.isNotEmpty()) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[academicYears.indexOfFirst { it.id == selectedYearId }.coerceAtLeast(0)]),
+                                color = AppTheme.colors.primary
+                            )
+                        }
+                    }
                 ) {
                     academicYears.forEach { year ->
                         Tab(
                             selected = year.id == selectedYearId,
                             onClick = { selectedYearId = year.id; selectedSemesterId = null },
-                            text = { Text(year.year) }
+                            text = { Text(year.year, style = AppTheme.typography.labelLarge) },
+                            selectedContentColor = AppTheme.colors.primary,
+                            unselectedContentColor = AppTheme.colors.onSurfaceVariant
                         )
                     }
                 }
@@ -236,7 +249,7 @@ fun CloneDestinationDialog(
                         ) {
                             RadioButton(selected = selectedSemesterId == sem.id, onClick = { selectedSemesterId = sem.id })
                             val displayName = LocalizedNameMapper.getLocalizedSemesterName(sem.name)
-                            Text(displayName, modifier = Modifier.padding(start = 8.dp))
+                            Text(displayName, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                         }
                     }
                 }
@@ -245,7 +258,8 @@ fun CloneDestinationDialog(
         confirmButton = {
             Button(
                 onClick = { selectedSemesterId?.let { onConfirm(it) } },
-                enabled = selectedSemesterId != null
+                enabled = selectedSemesterId != null,
+                shape = AppTheme.shapes.medium
             ) {
                 Text(stringResource(R.string.clone_label))
             }
@@ -254,7 +268,9 @@ fun CloneDestinationDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 
@@ -288,30 +304,42 @@ fun CloneClassDestinationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.clone_class_title)) },
+        title = { Text(stringResource(R.string.clone_class_title), style = AppTheme.typography.titleLarge) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.clone_destination_class_label), style = AppTheme.typography.labelMedium)
+                Text(stringResource(R.string.clone_destination_class_label), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
 
                 // Year Tabs
                 ScrollableTabRow(
                     selectedTabIndex = academicYears.indexOfFirst { it.id == selectedYearId }.coerceAtLeast(0),
-                    edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}
+                    edgePadding = 0.dp, containerColor = AppTheme.transparent, divider = {}
                 ) {
                     academicYears.forEach { year ->
-                        Tab(selected = year.id == selectedYearId, onClick = { selectedYearId = year.id; selectedSemesterId = null; selectedSubjectId = null }, text = { Text(year.year) })
+                        Tab(
+                            selected = year.id == selectedYearId, 
+                            onClick = { selectedYearId = year.id; selectedSemesterId = null; selectedSubjectId = null }, 
+                            text = { Text(year.year, style = AppTheme.typography.labelLarge) },
+                            selectedContentColor = AppTheme.colors.primary,
+                            unselectedContentColor = AppTheme.colors.onSurfaceVariant
+                        )
                     }
                 }
 
-                // Semester Tabs (Smaller)
+                // Semester Tabs
                 if (semesters.isNotEmpty()) {
                     ScrollableTabRow(
                         selectedTabIndex = semesters.indexOfFirst { it.id == selectedSemesterId }.coerceAtLeast(0),
-                        edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}
+                        edgePadding = 0.dp, containerColor = AppTheme.transparent, divider = {}
                     ) {
                         semesters.forEach { sem ->
                             val displayName = LocalizedNameMapper.getLocalizedSemesterName(sem.name)
-                            Tab(selected = sem.id == selectedSemesterId, onClick = { selectedSemesterId = sem.id; selectedSubjectId = null }, text = { Text(displayName, style = AppTheme.typography.bodySmall) })
+                            Tab(
+                                selected = sem.id == selectedSemesterId, 
+                                onClick = { selectedSemesterId = sem.id; selectedSubjectId = null }, 
+                                text = { Text(displayName, style = AppTheme.typography.labelSmall) },
+                                selectedContentColor = AppTheme.colors.primary,
+                                unselectedContentColor = AppTheme.colors.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -325,7 +353,7 @@ fun CloneClassDestinationDialog(
                                 modifier = Modifier.fillMaxWidth().clickable { selectedSubjectId = subject.id }.padding(vertical = 8.dp)
                             ) {
                                 RadioButton(selected = selectedSubjectId == subject.id, onClick = { selectedSubjectId = subject.id })
-                                Text(subject.name, modifier = Modifier.padding(start = 8.dp))
+                                Text(subject.name, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }
@@ -333,11 +361,17 @@ fun CloneClassDestinationDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { selectedSubjectId?.let { onConfirm(it) } }, enabled = selectedSubjectId != null) { Text(stringResource(R.string.clone_label)) }
+            Button(
+                onClick = { selectedSubjectId?.let { onConfirm(it) } }, 
+                enabled = selectedSubjectId != null,
+                shape = AppTheme.shapes.medium
+            ) { Text(stringResource(R.string.clone_label)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 
@@ -359,10 +393,10 @@ fun CloneYearDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.clone_item_title, sourceYear.year)) },
+        title = { Text(stringResource(R.string.clone_item_title, sourceYear.year), style = AppTheme.typography.titleLarge) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(stringResource(R.string.select_starting_year), style = AppTheme.typography.labelMedium)
+                Text(stringResource(R.string.select_starting_year), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
                 Row(
                     modifier = Modifier.fillMaxWidth(), 
                     horizontalArrangement = Arrangement.Center, 
@@ -372,7 +406,7 @@ fun CloneYearDialog(
                         var y = selectedStartYear - 1
                         while (y in takenStartYears && y > 2000) y--
                         if (y !in takenStartYears) selectedStartYear = y 
-                    }) { Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.cd_decrease_year)) }
+                    }) { Icon(IconMapper.Remove, contentDescription = stringResource(R.string.cd_decrease_year), tint = AppTheme.colors.primary) }
                     
                     Surface(
                         color = AppTheme.colors.primaryContainer, 
@@ -382,7 +416,8 @@ fun CloneYearDialog(
                         Text(
                             text = "$selectedStartYear / ${selectedStartYear + 1}", 
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
-                            style = AppTheme.typography.headlineSmall
+                            style = AppTheme.typography.headlineSmall,
+                            color = AppTheme.colors.onPrimaryContainer
                         )
                     }
                     
@@ -390,12 +425,15 @@ fun CloneYearDialog(
                         var y = selectedStartYear + 1
                         while (y in takenStartYears) y++
                         selectedStartYear = y 
-                    }) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_increase_year)) }
+                    }) { Icon(IconMapper.Add, contentDescription = stringResource(R.string.cd_increase_year), tint = AppTheme.colors.primary) }
                 }
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm("$selectedStartYear/${selectedStartYear + 1}") }) {
+            Button(
+                onClick = { onConfirm("$selectedStartYear/${selectedStartYear + 1}") },
+                shape = AppTheme.shapes.medium
+            ) {
                 Text(stringResource(R.string.clone_label))
             }
         },
@@ -403,7 +441,9 @@ fun CloneYearDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 
@@ -425,17 +465,18 @@ fun CloneSemesterDestinationDialog(
     val baseName = title.substringAfter(stringResource(R.string.clone_label)).trim()
     var newName by remember { mutableStateOf(baseName) }
 
-    val context = LocalContext.current
     val periodOptions = listOf(
         R.string.period_1st_semester, R.string.period_2nd_semester,
         R.string.period_1st_period, R.string.period_2nd_period,
         R.string.period_3rd_period, R.string.period_annual
     )
+    
+    // Pre-resolve names to avoid using context in remember/effects
+    val optionNames = periodOptions.map { it to stringResource(it) }
 
     // Filter out options that already exist in the target year
-    val availableOptions = remember(periodOptions, existingSemesters) {
-        periodOptions.filter { resId ->
-            val pName = context.getString(resId)
+    val availableOptions = remember(optionNames, existingSemesters) {
+        optionNames.filter { (_, pName) ->
             existingSemesters.none { it.name.equals(pName, ignoreCase = true) }
         }
     }
@@ -443,16 +484,16 @@ fun CloneSemesterDestinationDialog(
     // Auto-select first available option if current choice becomes invalid
     LaunchedEffect(availableOptions) {
         if (availableOptions.isNotEmpty()) {
-            val currentNameValid = availableOptions.any { context.getString(it) == newName }
+            val currentNameValid = availableOptions.any { it.second == newName }
             if (!currentNameValid) {
-                newName = context.getString(availableOptions.first())
+                newName = availableOptions.first().second
             }
         }
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(title, style = AppTheme.typography.titleLarge) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 // 1. Rename Section
@@ -462,8 +503,7 @@ fun CloneSemesterDestinationDialog(
                     
                     // Show only available common names
                     Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        availableOptions.forEach { resId ->
-                            val pName = stringResource(resId)
+                        availableOptions.forEach { (_, pName) ->
                             FilterChip(
                                 selected = newName == pName,
                                 onClick = { newName = pName },
@@ -474,7 +514,7 @@ fun CloneSemesterDestinationDialog(
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = AppTheme.colors.outlineVariant)
 
                 // 2. Year Selection
                 Column {
@@ -489,7 +529,7 @@ fun CloneSemesterDestinationDialog(
                                     .padding(vertical = 8.dp)
                             ) {
                                 RadioButton(selected = selectedYearId == year.id, onClick = { selectedYearId = year.id })
-                                Text(year.year, modifier = Modifier.padding(start = 8.dp))
+                                Text(year.year, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }
@@ -499,7 +539,8 @@ fun CloneSemesterDestinationDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(selectedYearId, newName) }, 
-                enabled = newName.isNotBlank() && availableOptions.any { context.getString(it) == newName }
+                enabled = newName.isNotBlank() && availableOptions.any { it.second == newName },
+                shape = AppTheme.shapes.medium
             ) {
                 Text(stringResource(R.string.clone_label))
             }
@@ -508,7 +549,9 @@ fun CloneSemesterDestinationDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
 
@@ -556,18 +599,24 @@ fun CloneStudentDestinationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.clone_student_title)) },
+        title = { Text(stringResource(R.string.clone_student_title), style = AppTheme.typography.titleLarge) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.class_header), style = AppTheme.typography.labelMedium)
+                Text(stringResource(R.string.class_header), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
 
                 // Year Tabs
                 ScrollableTabRow(
                     selectedTabIndex = academicYears.indexOfFirst { it.id == selectedYearId }.coerceAtLeast(0),
-                    edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}
+                    edgePadding = 0.dp, containerColor = AppTheme.transparent, divider = {}
                 ) {
                     academicYears.forEach { year ->
-                        Tab(selected = year.id == selectedYearId, onClick = { selectedYearId = year.id; selectedSemesterId = null; selectedSubjectId = null; selectedClassId = null }, text = { Text(year.year) })
+                        Tab(
+                            selected = year.id == selectedYearId, 
+                            onClick = { selectedYearId = year.id; selectedSemesterId = null; selectedSubjectId = null; selectedClassId = null }, 
+                            text = { Text(year.year, style = AppTheme.typography.labelLarge) },
+                            selectedContentColor = AppTheme.colors.primary,
+                            unselectedContentColor = AppTheme.colors.onSurfaceVariant
+                        )
                     }
                 }
 
@@ -575,11 +624,17 @@ fun CloneStudentDestinationDialog(
                 if (semesters.isNotEmpty()) {
                     ScrollableTabRow(
                         selectedTabIndex = semesters.indexOfFirst { it.id == selectedSemesterId }.coerceAtLeast(0),
-                        edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}
+                        edgePadding = 0.dp, containerColor = AppTheme.transparent, divider = {}
                     ) {
                         semesters.forEach { sem ->
                             val displayName = LocalizedNameMapper.getLocalizedSemesterName(sem.name)
-                            Tab(selected = sem.id == selectedSemesterId, onClick = { selectedSemesterId = sem.id; selectedSubjectId = null; selectedClassId = null }, text = { Text(displayName, style = AppTheme.typography.bodySmall) })
+                            Tab(
+                                selected = sem.id == selectedSemesterId, 
+                                onClick = { selectedSemesterId = sem.id; selectedSubjectId = null; selectedClassId = null }, 
+                                text = { Text(displayName, style = AppTheme.typography.labelSmall) },
+                                selectedContentColor = AppTheme.colors.primary,
+                                unselectedContentColor = AppTheme.colors.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -588,10 +643,16 @@ fun CloneStudentDestinationDialog(
                 if (subjects.isNotEmpty()) {
                     ScrollableTabRow(
                         selectedTabIndex = subjects.indexOfFirst { it.id == selectedSubjectId }.coerceAtLeast(0),
-                        edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}
+                        edgePadding = 0.dp, containerColor = AppTheme.transparent, divider = {}
                     ) {
                         subjects.forEach { sub ->
-                            Tab(selected = sub.id == selectedSubjectId, onClick = { selectedSubjectId = sub.id; selectedClassId = null }, text = { Text(sub.name, style = AppTheme.typography.bodySmall) })
+                            Tab(
+                                selected = sub.id == selectedSubjectId, 
+                                onClick = { selectedSubjectId = sub.id; selectedClassId = null }, 
+                                text = { Text(sub.name, style = AppTheme.typography.labelSmall) },
+                                selectedContentColor = AppTheme.colors.primary,
+                                unselectedContentColor = AppTheme.colors.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -605,7 +666,7 @@ fun CloneStudentDestinationDialog(
                                 modifier = Modifier.fillMaxWidth().clickable { selectedClassId = clazz.id }.padding(vertical = 8.dp)
                             ) {
                                 RadioButton(selected = selectedClassId == clazz.id, onClick = { selectedClassId = clazz.id })
-                                Text(clazz.name, modifier = Modifier.padding(start = 8.dp))
+                                Text(clazz.name, style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }
@@ -613,10 +674,16 @@ fun CloneStudentDestinationDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { selectedClassId?.let { onConfirm(it) } }, enabled = selectedClassId != null) { Text(stringResource(R.string.clone_label)) }
+            Button(
+                onClick = { selectedClassId?.let { onConfirm(it) } }, 
+                enabled = selectedClassId != null,
+                shape = AppTheme.shapes.medium
+            ) { Text(stringResource(R.string.clone_label)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        }
+        },
+        shape = AppTheme.shapes.large,
+        containerColor = AppTheme.colors.surfaceContainerHigh
     )
 }
