@@ -1,41 +1,62 @@
 package pt.ipt.dama.TeachersLog.utils
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * Centralized utility for managing application-wide iconography.
- * 
+ *
  * Provides a single source of truth for both dynamic subject icons stored in the database
  * and static application icons used for navigation and branding.
  */
 object IconMapper {
 
     // --- Core Navigation Icons ---
-    
-    /** Icon for the Dashboard/Home destination. */
     val Dashboard = Icons.Default.Home
-    
-    /** Icon for the Subjects/Curriculum destination. */
     val Subjects = Icons.AutoMirrored.Filled.MenuBook
-    
-    /** Icon for the Settings/Configuration destination. */
     val Settings = Icons.Default.Settings
-    
-    /** Icon for the User Account/Profile destination. */
     val Account = Icons.Default.Person
-
-    /** Icon for the Sign-Out action. */
     val Logout = Icons.AutoMirrored.Filled.Logout
+
+    // --- Common Action Icons ---
+    val Add = Icons.Default.Add
+    val Remove = Icons.Default.Remove
+    val Save = Icons.Default.Save
+    val Delete = Icons.Default.Delete
+    val Edit = Icons.Default.Edit
+    val More = Icons.Default.MoreVert
+    val Copy = Icons.Default.ContentCopy
+    val Camera = Icons.Default.PhotoCamera
+    val Notes = Icons.AutoMirrored.Filled.Notes
+    val Warning = Icons.Default.Warning
+    val Visibility = Icons.Default.Visibility
+    val VisibilityOff = Icons.Default.VisibilityOff
+    val Analytics = Icons.Default.Analytics
+    val Back = Icons.AutoMirrored.Filled.ArrowBack
+    val Menu = Icons.Default.Menu
+    val SubItem = Icons.Default.SubdirectoryArrowRight
+    val AddPhoto = Icons.Default.AddAPhoto
+    val Notifications = Icons.Default.Notifications
+    val Translate = Icons.Default.Translate
+    val Palette = Icons.Default.Palette
+    val CloudSync = Icons.Default.CloudSync
+    val CloudDownload = Icons.Default.CloudDownload
+    val AutoAwesome = Icons.Default.AutoAwesome
+    val School = Icons.Default.School
+    val Group = Icons.Default.Group
+    val Code = Icons.Default.Code
+    val Check = Icons.Default.Check
 
     // --- Dynamic Subject Icon Mapping ---
 
     /**
      * Maps a string identifier stored in the database to its corresponding Material ImageVector.
-     * 
+     *
      * @param name The icon identifier string (e.g., "functions", "biotech").
      * @return The matching ImageVector, or [Subjects] as a default fallback.
      */

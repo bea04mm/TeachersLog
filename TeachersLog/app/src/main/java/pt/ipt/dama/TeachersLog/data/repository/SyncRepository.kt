@@ -50,7 +50,8 @@ class SyncRepository(
                 components = teacherDao.getAllGradingComponentsSync(),
                 students = teacherDao.getAllStudentsSync(),
                 scores = teacherDao.getAllStudentScoresSync(),
-                grades = teacherDao.getAllGradesSync()
+                grades = teacherDao.getAllGradesSync(),
+                userProfile = teacherDao.getUserProfileSync()
             )
 
             val response = apiService.syncData(SyncRequest(email, snapshot))
@@ -92,6 +93,25 @@ class SyncRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Clears the user's cloud backup and all associated images from S3.
+     */
+    suspend fun clearCloudBackup(): Result<Unit> {
+        return try {
+            val email = sessionManager.userEmail.first()
+            if (email.isBlank()) return Result.failure(Exception("User not authenticated"))
+
+            val response = apiService.clearCloudBackup(email)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Clear failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     
     /**
      * Helper to perform a full local database overwrite with cloud data within a transaction.
@@ -109,6 +129,7 @@ class SyncRepository(
             teacherDao.insertStudents(data.students)
             teacherDao.insertStudentScores(data.scores)
             teacherDao.insertGrades(data.grades)
+            data.userProfile?.let { teacherDao.insertUserProfile(it) }
         }
     }
 }

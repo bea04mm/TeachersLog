@@ -1,14 +1,18 @@
 package pt.ipt.dama.TeachersLog.ui.previews
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import pt.ipt.dama.TeachersLog.data.model.AcademicYear
 import pt.ipt.dama.TeachersLog.data.model.StudentWithGrade
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.screens.ClassEditContent
 import pt.ipt.dama.TeachersLog.ui.screens.ClassRosterContent
 import pt.ipt.dama.TeachersLog.ui.screens.RandomStudentPopupContent
@@ -21,30 +25,33 @@ import pt.ipt.dama.TeachersLog.ui.theme.TeachersLogTheme
 @Composable
 fun ClassRosterPreview() {
     TeachersLogTheme(darkTheme = false) {
-        ClassRosterContent(
-            className = "10.ºA",
-            classIcon = "functions",
-            students = listOf(
-                StudentWithGrade(1, 1, 1, "Alice Johnson", "P001", null, 4.5),
-                StudentWithGrade(2, 1, 2, "Bob Smith", "P002", null, 3.2)
-            ),
-            gradingScale = "5",
-            isRefreshing = false,
-            isGuest = false,
-            syncEnabled = true,
-            onRefresh = {},
-            onStudentClick = { _, _ -> },
-            onAddStudentClick = {},
-            onEditStudentClick = {},
-            onDeleteStudent = {},
-            onCloneStudentClick = { _, _ -> },
-            onBackClick = {},
-            academicYears = listOf(AcademicYear(1, "2024/2025")),
-            semestersProvider = { _ -> MutableLiveData(emptyList()) },
-            subjectsProvider = { _ -> MutableLiveData(emptyList()) },
-            classesProvider = { _ -> MutableLiveData(emptyList()) },
-            currentSemesterName = null
-                )
+        val snackbarHostState = remember { SnackbarHostState() }
+        CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            ClassRosterContent(
+                className = "10.ºA",
+                classIcon = "functions",
+                students = listOf(
+                    StudentWithGrade(1, 1, 1, "Alice Johnson", "P001", null, 4.5),
+                    StudentWithGrade(2, 1, 2, "Bob Smith", "P002", null, 3.2)
+                ),
+                gradingScale = "5",
+                isRefreshing = false,
+                isGuest = false,
+                syncEnabled = true,
+                onRefresh = {},
+                onStudentClick = { _, _ -> },
+                onAddStudentClick = {},
+                onEditStudentClick = {},
+                onDeleteStudent = {},
+                onCloneStudentClick = { _, _ -> },
+                onBackClick = {},
+                academicYears = listOf(AcademicYear(1, "2024/2025")),
+                semestersProvider = { _ -> MutableLiveData(emptyList()) },
+                subjectsProvider = { _ -> MutableLiveData(emptyList()) },
+                classesProvider = { _ -> MutableLiveData(emptyList()) },
+                currentSemesterName = null
+            )
+        }
     }
 }
 
@@ -73,13 +80,16 @@ fun RandomStudentPopupPreview() {
 @Composable
 fun ClassEditPreview() {
     TeachersLogTheme {
-        ClassEditContent(
-            isEditMode = false, 
-            initialName = "", 
-            initialScale = "5", 
-            initialComponents = emptyList(), 
-            onSave = { _, _, _, _ -> }, 
-            onBackClick = {}
-        )
+        val snackbarHostState = remember { SnackbarHostState() }
+        CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            ClassEditContent(
+                isEditMode = false,
+                initialName = "",
+                initialScale = "5",
+                initialComponents = emptyList(),
+                onSave = { _, _, _, _ -> },
+                onBackClick = {}
+            )
+        }
     }
 }

@@ -243,3 +243,19 @@ data class Grade(
     val teacherNotes: String = "",
     val tags: String = ""
 )
+
+/**
+ * Stores the application user's profile information.
+ * 
+ * @property id Primary key (singleton, usually 1).
+ * @property name User's display name.
+ * @property email User's email address.
+ * @property photoUrl Cloud URL or local URI of the profile photo.
+ */
+@Entity(tableName = "user_profile")
+data class UserProfile(
+    @PrimaryKey val id: Int = 1,
+    val name: String,
+    val email: String,
+    val photoUrl: String? = null
+)

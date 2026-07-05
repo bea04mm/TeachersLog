@@ -605,4 +605,28 @@ interface TeacherDao {
      */
     @Query("DELETE FROM academic_years")
     suspend fun clearAllData()
+
+    /**
+     * Fetches the singleton user profile record.
+     */
+    @Query("SELECT * FROM user_profile LIMIT 1")
+    fun getUserProfile(): Flow<UserProfile?>
+
+    /**
+     * Fetches the singleton user profile record synchronously for backup.
+     */
+    @Query("SELECT * FROM user_profile LIMIT 1")
+    suspend fun getUserProfileSync(): UserProfile?
+
+    /**
+     * Inserts or updates the user profile information.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserProfile(userProfile: UserProfile)
+
+    /**
+     * Deletes the user profile record.
+     */
+    @Query("DELETE FROM user_profile")
+    suspend fun deleteUserProfile()
 }

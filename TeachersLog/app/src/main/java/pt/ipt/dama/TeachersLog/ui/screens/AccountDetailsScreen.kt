@@ -6,8 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -20,33 +18,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.SettingsViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
 
 /**
  * AccountDetailsScreen provides a form to update user identity details.
- *
- * @param onBackClick Callback for navigating back to the settings screen.
  */
 @Composable
 fun AccountDetailsScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit
 ) {
-    // Local UI state for form fields
-    val userName by viewModel.userName.observeAsState("")
-    val userEmail by viewModel.userEmail.observeAsState("")
-    val userPhoto by viewModel.userPhoto.observeAsState("")
+    val profile by viewModel.userProfile.observeAsState()
     val isDeleting by viewModel.isSyncing.collectAsState()
 
     AccountDetailsContent(
-        userName = userName,
-        userEmail = userEmail,
-        userPhoto = userPhoto,
+        userName = profile?.name ?: "",
+        userEmail = profile?.email ?: "",
+        userPhoto = profile?.photoUrl ?: "",
         isDeleting = isDeleting,
         onSave = { name, email, photo -> viewModel.updateProfile(name, email, photo) },
         onDeleteAccount = { viewModel.deleteAccount() },
@@ -68,20 +65,23 @@ fun AccountDetailsContent(
     onBackClick: () -> Unit
 ) {
     var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf("") }
     val showDeleteDialog = remember { mutableStateOf(false) }
+    
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    val successMsg = stringResource(R.string.save_success)
+    val shortNameMsg = stringResource(R.string.error_name_too_short)
+    val invalidEmailMsg = stringResource(R.string.error_invalid_email)
+    val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}$".toRegex()
 
-    // Sync local state when LiveData emits
+    // Sync local state when inputs change
     LaunchedEffect(userName, userEmail, userPhoto) {
         val parts = userName.split(" ")
         firstName = parts.firstOrNull() ?: ""
-        lastName = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""
         email = userEmail
         
-        // Only update local photoUri if it's currently empty or already a cloud URL
-        // (This prevents overwriting a newly selected local photo during recomposition)
         if (photoUri.isEmpty() || photoUri.startsWith("http")) {
             photoUri = userPhoto
         }
@@ -93,6 +93,8 @@ fun AccountDetailsContent(
     )
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
                 title = stringResource(R.string.account),
@@ -113,17 +115,20 @@ fun AccountDetailsContent(
                 item {
                     AlertDialog(
                         onDismissRequest = { showDeleteDialog.value = false },
-                        title = { Text(stringResource(R.string.delete_account_confirm_title)) },
-                        text = { Text(stringResource(R.string.delete_account_confirm_message)) },
+                        title = { Text(stringResource(R.string.delete_account_confirm_title), style = AppTheme.typography.titleLarge) },
+                        text = { Text(stringResource(R.string.delete_account_confirm_message), style = AppTheme.typography.bodyMedium) },
                         confirmButton = {
                             Button(
                                 onClick = { onDeleteAccount(); showDeleteDialog.value = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error)
+                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.error),
+                                shape = AppTheme.shapes.medium
                             ) { Text(stringResource(R.string.delete_label)) }
                         },
                         dismissButton = {
                             TextButton(onClick = { showDeleteDialog.value = false }) { Text(stringResource(R.string.cancel)) }
-                        }
+                        },
+                        shape = AppTheme.shapes.large,
+                        containerColor = AppTheme.colors.surfaceContainerHigh
                     )
                 }
             }
@@ -135,7 +140,6 @@ fun AccountDetailsContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(modifier = Modifier.size(128.dp)) {
-                        // Profile circular background
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -162,7 +166,6 @@ fun AccountDetailsContent(
                                 )
                             }
                         }
-                        // Circular edit FAB overlay
                         IconButton(
                             onClick = { photoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                             modifier = Modifier
@@ -172,13 +175,14 @@ fun AccountDetailsContent(
                                 .background(AppTheme.colors.primary),
                             colors = IconButtonDefaults.iconButtonColors(contentColor = AppTheme.colors.onPrimary)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(IconMapper.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "$firstName $lastName", 
-                        style = AppTheme.typography.headlineMedium
+                        text = firstName,
+                        style = AppTheme.typography.headlineMedium,
+                        color = AppTheme.colors.onSurface
                     )
                     Text(
                         text = email,
@@ -190,66 +194,58 @@ fun AccountDetailsContent(
 
             // --- Personal Information Form ---
             item {
-                Column {
-                    TonalCard {
-                        // Section Header
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(AppTheme.colors.surfaceContainerLow)
-                                .padding(16.dp)
+                TonalCard {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(AppTheme.colors.surfaceContainerLow)
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.personal_information), 
+                            style = AppTheme.typography.bodyLarge, 
+                            color = AppTheme.colors.primary
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.padding(16.dp), 
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = firstName,
+                            onValueChange = { firstName = it },
+                            label = { Text(stringResource(R.string.first_name)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = AppTheme.shapes.medium
+                        )
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text(stringResource(R.string.email)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = AppTheme.shapes.medium
+                        )
+                        Button(
+                            onClick = { 
+                                if (firstName.trim().length < 2) {
+                                    scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
+                                    return@Button
+                                }
+                                if (!email.matches(emailRegex)) {
+                                    scope.launch { snackbarHostState.showAppSnackbar(invalidEmailMsg, type = SnackbarType.ERROR) }
+                                    return@Button
+                                }
+                                onSave(firstName, email, photoUri.ifBlank { null })
+                                scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
+                                onBackClick() 
+                            },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = AppTheme.shapes.medium,
+                            enabled = firstName.isNotBlank() && email.isNotBlank()
                         ) {
-                            Text(
-                                text = stringResource(R.string.personal_information), 
-                                style = AppTheme.typography.bodyLarge, 
-                                color = AppTheme.colors.primary
-                            )
-                        }
-                        // Form Fields
-                        Column(
-                            modifier = Modifier.padding(16.dp), 
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(), 
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = firstName,
-                                    onValueChange = { firstName = it },
-                                    label = { Text(stringResource(R.string.first_name)) },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                                OutlinedTextField(
-                                    value = lastName,
-                                    onValueChange = { lastName = it },
-                                    label = { Text(stringResource(R.string.last_name)) },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                            }
-                            OutlinedTextField(
-                                value = email,
-                                onValueChange = { email = it },
-                                label = { Text(stringResource(R.string.email)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            // Save Button
-                            Button(
-                                onClick = { 
-                                    onSave("$firstName $lastName", email, photoUri.ifBlank { null })
-                                    onBackClick() 
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = AppTheme.shapes.medium,
-                                enabled = firstName.isNotBlank() && email.isNotBlank()
-                            ) {
-                                Text(stringResource(R.string.save))
-                            }
+                            Text(stringResource(R.string.save))
                         }
                     }
                 }
@@ -259,7 +255,7 @@ fun AccountDetailsContent(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = AppTheme.colors.error, modifier = Modifier.size(16.dp))
+                        Icon(IconMapper.Warning, contentDescription = null, tint = AppTheme.colors.error, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = stringResource(R.string.danger_zone), style = AppTheme.typography.labelMedium, color = AppTheme.colors.error)
                     }

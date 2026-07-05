@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -23,10 +21,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.*
 import pt.ipt.dama.TeachersLog.ui.theme.*
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.LocalizedNameMapper
@@ -40,7 +41,7 @@ import androidx.compose.ui.platform.LocalLocale
 
 /**
  * Component for the student selection popup when a shake is detected or triggered manually.
- * 
+ *
  * @param title Header text for the popup.
  * @param student The selected [StudentWithGrade] to display.
  * @param onGoToGrading Callback to navigate to the student's grading screen.
@@ -100,10 +101,10 @@ fun RandomStudentPopupContent(
             color = AppTheme.colors.primary
         )
         Spacer(modifier = Modifier.height(32.dp))
-        // Stacked buttons for better centering and prominence
         Button(
             onClick = onGoToGrading,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = AppTheme.shapes.medium
         ) {
             Text(stringResource(R.string.go_to_grading))
         }
@@ -165,8 +166,12 @@ fun ClassRosterContent(
     val randomStudent = remember { mutableStateOf<StudentWithGrade?>(null) }
     val pullToRefreshState = rememberPullToRefreshState()
     val context = LocalContext.current
+    
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    val deleteSuccessMsg = stringResource(R.string.delete_success)
+    val cloneSuccessMsg = stringResource(R.string.clone_success)
 
-    // ... (dialogs stay same) ...
     // --- Clone Destination Dialog ---
     studentToClone.value?.let { student ->
         CloneStudentDestinationDialog(
@@ -177,6 +182,7 @@ fun ClassRosterContent(
             onConfirm = { targetClassId ->
                 onCloneStudentClick(student.studentId, targetClassId)
                 studentToClone.value = null
+                scope.launch { snackbarHostState.showAppSnackbar(cloneSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { studentToClone.value = null }
         )
@@ -231,12 +237,14 @@ fun ClassRosterContent(
             onConfirm = {
                 onDeleteStudent(student)
                 studentToDelete.value = null
+                scope.launch { snackbarHostState.showAppSnackbar(deleteSuccessMsg, type = SnackbarType.SUCCESS) }
             },
             onDismiss = { studentToDelete.value = null }
         )
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
@@ -253,9 +261,16 @@ fun ClassRosterContent(
                     containerColor = AppTheme.colors.secondaryContainer,
                     contentColor = AppTheme.colors.onSecondaryContainer,
                     shape = AppTheme.circle
-                ) { Icon(Icons.Default.AutoAwesome, contentDescription = stringResource(R.string.pick_random_student)) }
+                ) { Icon(IconMapper.AutoAwesome, contentDescription = stringResource(R.string.pick_random_student)) }
                 Spacer(modifier = Modifier.height(16.dp))
-                FloatingActionButton(onClick = onAddStudentClick) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_student)) }
+                FloatingActionButton(
+                    onClick = onAddStudentClick,
+                    containerColor = AppTheme.colors.primaryContainer,
+                    contentColor = AppTheme.colors.onPrimaryContainer,
+                    shape = AppTheme.shapes.medium
+                ) { 
+                    Icon(IconMapper.Add, contentDescription = stringResource(R.string.add_student)) 
+                }
             }
         }
     ) { paddingValues ->
@@ -295,7 +310,8 @@ fun ClassRosterContent(
                             Text(
                                 text = student.name, 
                                 style = AppTheme.typography.titleMedium, 
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                color = AppTheme.colors.onSurface
                             )
                             
                             Surface(
@@ -313,14 +329,20 @@ fun ClassRosterContent(
                             Spacer(modifier = Modifier.width(8.dp))
                             var showMenu by remember { mutableStateOf(false) }
                             Box {
-                                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = AppTheme.colors.outline) }
-                                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.clone_label)) }, onClick = { showMenu = false; studentToClone.value = student }, leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) })
+                                IconButton(onClick = { showMenu = true }) { 
+                                    Icon(IconMapper.More, contentDescription = null, tint = AppTheme.colors.outline) 
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu, 
+                                    onDismissRequest = { showMenu = false },
+                                    containerColor = AppTheme.colors.surfaceContainerHigh
+                                ) {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.edit_student)) }, onClick = { showMenu = false; onEditStudentClick(student.studentId) }, leadingIcon = { Icon(IconMapper.Edit, contentDescription = null) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.clone_label)) }, onClick = { showMenu = false; studentToClone.value = student }, leadingIcon = { Icon(IconMapper.Copy, contentDescription = null) })
                                     DropdownMenuItem(text = { Text(stringResource(R.string.delete_student_title)) }, onClick = { 
                                         showMenu = false
                                         studentToDelete.value = Student(student.studentId, student.studentsClassId, student.numberInGroup, student.name, student.processNumber, student.profileImageUrl) 
-                                    }, leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) })
+                                    }, leadingIcon = { Icon(IconMapper.Delete, contentDescription = null, tint = AppTheme.colors.error) })
                                 }
                             }
                         }

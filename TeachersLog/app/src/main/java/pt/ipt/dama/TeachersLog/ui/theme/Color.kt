@@ -81,6 +81,7 @@ val SurfaceContainerHighestDark = Color(0xFF35353C)
 val SuccessLight = Color(0xFF22C55E)
 val WarningLight = Color(0xFFF59E0B)
 val CriticalLight = Color(0xFFEF4444)
+val White = Color(0xFFFFFFFF)
 
 // --- Semantic Colors (Dark) ---
 val SuccessDark = Color(0xFF4ADE80)

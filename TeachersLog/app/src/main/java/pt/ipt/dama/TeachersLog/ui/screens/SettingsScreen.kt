@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -34,21 +35,23 @@ import pt.ipt.dama.TeachersLog.utils.IconMapper
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToAccount: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     onNavigateToPreferences: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val userName by viewModel.userName.observeAsState("")
-    val userEmail by viewModel.userEmail.observeAsState("")
-    val userPhoto by viewModel.userPhoto.observeAsState("")
+    val profile by viewModel.userProfile.observeAsState()
     val isGuest by viewModel.isGuest.observeAsState(false)
 
     SettingsContent(
-        userName = userName,
-        userEmail = userEmail,
-        userPhoto = userPhoto,
+        userName = profile?.name ?: "",
+        userEmail = profile?.email ?: "",
+        userPhoto = profile?.photoUrl ?: "",
         isGuest = isGuest,
         onNavigateToAccount = onNavigateToAccount,
+        onNavigateToSecurity = onNavigateToSecurity,
         onNavigateToPreferences = onNavigateToPreferences,
+        onNavigateToAbout = onNavigateToAbout,
         onLogout = onLogout
     )
 }
@@ -63,10 +66,13 @@ fun SettingsContent(
     userPhoto: String,
     isGuest: Boolean,
     onNavigateToAccount: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     onNavigateToPreferences: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -125,14 +131,12 @@ fun SettingsContent(
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            if (isGuest) {
-                                // Guest label or empty space, removed the button as requested
-                            } else {
+                            if (!isGuest) {
                                 TextButton(
                                     onClick = onNavigateToAccount,
-                                    modifier = Modifier.offset(x = (-8).dp) // Align text with names while keeping internal padding
+                                    modifier = Modifier.offset(x = (-8).dp)
                                 ) {
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Icon(IconMapper.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(stringResource(R.string.edit_profile))
                                 }
@@ -148,14 +152,34 @@ fun SettingsContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 TonalCard {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.app_preferences)) },
-                        supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
-                        leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
-                        trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = onNavigateToPreferences),
-                        colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
-                    )
+                    Column {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.app_preferences)) },
+                            supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
+                            leadingContent = { Icon(Icons.Default.Tune, contentDescription = null, tint = AppTheme.colors.primary) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                            modifier = Modifier.clickable(onClick = onNavigateToPreferences),
+                            colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                        if (!isGuest) {
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.security)) },
+                                leadingContent = { Icon(Icons.Default.Lock, contentDescription = null, tint = AppTheme.colors.primary) },
+                                trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                                modifier = Modifier.clickable(onClick = onNavigateToSecurity),
+                                colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                        }
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.nav_about)) },
+                            leadingContent = { Icon(Icons.Default.Info, contentDescription = null, tint = AppTheme.colors.primary) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                            modifier = Modifier.clickable(onClick = onNavigateToAbout),
+                            colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                        )
+                    }
                 }
             }
 
@@ -169,7 +193,8 @@ fun SettingsContent(
                         Button(
                             onClick = onLogout,
                             modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary)
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary),
+                            shape = AppTheme.shapes.medium
                         ) {
                             Icon(Icons.Default.PersonAdd, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -185,8 +210,6 @@ fun SettingsContent(
                             Text(stringResource(R.string.sign_out))
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = stringResource(R.string.version_info), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
                 }
             }
         }

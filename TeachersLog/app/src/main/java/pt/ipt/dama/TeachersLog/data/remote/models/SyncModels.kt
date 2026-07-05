@@ -15,6 +15,7 @@ data class UserDataSync(
     @SerializedName("students") val students: List<Student>,
     @SerializedName("studentScores") val scores: List<StudentScore>,
     @SerializedName("grades") val grades: List<Grade>,
+    @SerializedName("userProfile") val userProfile: UserProfile? = null,
     @SerializedName("lastUpdated") val lastUpdated: Long = System.currentTimeMillis()
 )
 

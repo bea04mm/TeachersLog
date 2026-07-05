@@ -1,7 +1,11 @@
 package pt.ipt.dama.TeachersLog.ui.previews
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.screens.AccountDetailsContent
 import pt.ipt.dama.TeachersLog.ui.screens.AppPreferencesContent
 import pt.ipt.dama.TeachersLog.ui.screens.SettingsContent
@@ -21,7 +25,9 @@ fun SettingsPreview() {
             userPhoto = "",
             isGuest = false,
             onNavigateToAccount = {}, 
+            onNavigateToSecurity = {},
             onNavigateToPreferences = {},
+            onNavigateToAbout = {},
             onLogout = {}
         )
     }
@@ -34,20 +40,23 @@ fun SettingsPreview() {
 @Composable
 fun AppPreferencesPreview() {
     TeachersLogTheme(darkTheme = false) {
-        AppPreferencesContent(
-            darkMode = false,
-            currentLang = "en",
-            syncEnabled = true,
-            isGuest = false,
-            isSyncing = false,
-            syncMessage = null,
-            onToggleDarkMode = {},
-            onLanguageChange = {},
-            onToggleSync = {},
-            onRestoreClick = {},
-            onClearSyncMessage = {},
-            onBackClick = {}
-        )
+        val snackbarHostState = remember { SnackbarHostState() }
+        CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            AppPreferencesContent(
+                darkMode = false,
+                currentLang = "en",
+                syncEnabled = true,
+                isGuest = false,
+                isSyncing = false,
+                syncMessage = null,
+                onToggleDarkMode = {},
+                onLanguageChange = {},
+                onToggleSync = {},
+                onRestoreClick = {},
+                onClearSyncMessage = {},
+                onBackClick = {}
+            )
+        }
     }
 }
 
@@ -59,14 +68,17 @@ fun AppPreferencesPreview() {
 @Composable
 fun AccountDetailsPreview() {
     TeachersLogTheme(darkTheme = false) {
-        AccountDetailsContent(
-            userName = "John Doe",
-            userEmail = "john.doe@ipt.pt",
-            userPhoto = "",
-            isDeleting = false,
-            onSave = { _, _, _ -> },
-            onDeleteAccount = {},
-            onBackClick = {}
-        )
+        val snackbarHostState = remember { SnackbarHostState() }
+        CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            AccountDetailsContent(
+                userName = "John Doe",
+                userEmail = "john.doe@ipt.pt",
+                userPhoto = "",
+                isDeleting = false,
+                onSave = { _, _, _ -> },
+                onDeleteAccount = {},
+                onBackClick = {}
+            )
+        }
     }
 }

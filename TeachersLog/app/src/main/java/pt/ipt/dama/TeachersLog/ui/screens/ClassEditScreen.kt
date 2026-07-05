@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -16,12 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.GradingComponent
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
+import pt.ipt.dama.TeachersLog.ui.components.SnackbarType
+import pt.ipt.dama.TeachersLog.ui.components.showAppSnackbar
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
+import pt.ipt.dama.TeachersLog.utils.IconMapper
 import java.util.UUID
 
 /**
@@ -86,6 +89,7 @@ fun ClassEditContent(
     val isRootValid = rootWeight == 100
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = AppTheme.colors.background,
         topBar = {
             TeacherTopBar(
@@ -101,19 +105,41 @@ fun ClassEditContent(
         ) {
             // --- Class Identity ---
             item {
-                Text(text = stringResource(R.string.class_identity_header), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.class_name)) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true)
+                Text(
+                    text = stringResource(R.string.class_identity_header), 
+                    style = AppTheme.typography.labelSmall, 
+                    color = AppTheme.colors.primary
+                )
+                OutlinedTextField(
+                    value = name, 
+                    onValueChange = { name = it }, 
+                    label = { Text(stringResource(R.string.class_name)) }, 
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp), 
+                    singleLine = true,
+                    shape = AppTheme.shapes.medium
+                )
             }
 
             // --- Scale Selection ---
             item {
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = stringResource(R.string.grading_scale), style = AppTheme.typography.labelMedium, color = AppTheme.colors.primary)
+                        Text(
+                            text = stringResource(R.string.grading_scale), 
+                            style = AppTheme.typography.labelMedium, 
+                            color = AppTheme.colors.primary
+                        )
                         listOf("5" to R.string.scale_5, "20" to R.string.scale_20, "100" to R.string.scale_100).forEach { (scale, labelRes) ->
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { selectedScale = scale }.padding(vertical = 4.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically, 
+                                modifier = Modifier.fillMaxWidth().clickable { selectedScale = scale }.padding(vertical = 4.dp)
+                            ) {
                                 RadioButton(selected = (selectedScale == scale), onClick = { selectedScale = scale })
-                                Text(text = stringResource(labelRes), style = AppTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+                                Text(
+                                    text = stringResource(labelRes), 
+                                    style = AppTheme.typography.bodyLarge, 
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
                             }
                         }
                     }
@@ -122,8 +148,16 @@ fun ClassEditContent(
 
             // --- Hierarchical Components Section ---
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                    Text(text = stringResource(R.string.grading_components), style = AppTheme.typography.labelSmall, color = AppTheme.colors.primary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(), 
+                    horizontalArrangement = Arrangement.SpaceBetween, 
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = stringResource(R.string.grading_components), 
+                        style = AppTheme.typography.labelSmall, 
+                        color = AppTheme.colors.primary
+                    )
                     Text(
                         text = "${rootWeight}%", 
                         color = if (isRootValid) AppTheme.success else AppTheme.critical,
@@ -173,7 +207,8 @@ fun ClassEditContent(
 
             item {
                 TextButton(onClick = { components.add(ClassComponentEditState()) }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(IconMapper.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.add_component))
                 }
             }
@@ -203,9 +238,11 @@ fun ClassEditContent(
                         onSave(name, selectedScale, finalEntities, parentMap)
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    enabled = name.isNotBlank() && isRootValid && allGroupsValid && components.isNotEmpty()
+                    enabled = name.isNotBlank() && isRootValid && allGroupsValid && components.isNotEmpty(),
+                    shape = AppTheme.shapes.medium
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
+                    Icon(IconMapper.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.save_class))
                 }
             }
@@ -235,16 +272,33 @@ fun ComponentRow(
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (isSubItem) Icon(Icons.Default.SubdirectoryArrowRight, contentDescription = null, tint = AppTheme.colors.outline)
+                if (isSubItem) Icon(IconMapper.SubItem, contentDescription = null, tint = AppTheme.colors.outline)
                 val namePlaceholder = if (isSubItem) stringResource(R.string.placeholder_subitem_name) else stringResource(R.string.placeholder_group_name)
-                OutlinedTextField(value = state.name, onValueChange = { onUpdate(state.copy(name = it)) }, placeholder = { Text(namePlaceholder) }, modifier = Modifier.weight(1f), singleLine = true)
-                OutlinedTextField(value = state.weight, onValueChange = { if (it.all { c -> c.isDigit() }) onUpdate(state.copy(weight = it)) }, placeholder = { Text("%") }, modifier = Modifier.width(70.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
-                IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, contentDescription = null, tint = AppTheme.colors.error) }
+                OutlinedTextField(
+                    value = state.name, 
+                    onValueChange = { onUpdate(state.copy(name = it)) }, 
+                    placeholder = { Text(namePlaceholder) }, 
+                    modifier = Modifier.weight(1f), 
+                    singleLine = true,
+                    shape = AppTheme.shapes.small
+                )
+                OutlinedTextField(
+                    value = state.weight, 
+                    onValueChange = { if (it.all { c -> c.isDigit() }) onUpdate(state.copy(weight = it)) }, 
+                    placeholder = { Text("%") }, 
+                    modifier = Modifier.width(70.dp), 
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), 
+                    singleLine = true,
+                    shape = AppTheme.shapes.small
+                )
+                IconButton(onClick = onRemove) { 
+                    Icon(IconMapper.Delete, contentDescription = null, tint = AppTheme.colors.error) 
+                }
             }
             if (!isSubItem) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onAddSub) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(IconMapper.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text(stringResource(R.string.add_subitem_label), style = AppTheme.typography.labelMedium)
                     }
                     if (currentChildSum != null) {
@@ -277,6 +331,12 @@ fun ClassEditScreen(
 ) {
     val existingClass by if (classId != null) viewModel.getStudentsClassById(classId).observeAsState() else remember { mutableStateOf(null) }
     val existingComponents by if (classId != null) viewModel.getGradingComponentsForClass(classId).observeAsState(emptyList()) else remember { mutableStateOf(emptyList()) }
+    
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    val successMsg = stringResource(R.string.save_success)
+    val shortNameMsg = stringResource(R.string.error_class_name_too_short)
+    val shortCompNameMsg = stringResource(R.string.error_component_name_too_short)
 
     val initialUIComponents = remember(existingComponents) {
         val mapping = mutableMapOf<Int, String>()
@@ -288,7 +348,16 @@ fun ClassEditScreen(
         isEditMode = classId != null, initialName = existingClass?.name ?: "", initialScale = existingClass?.gradingScale ?: "5",
         initialComponents = initialUIComponents,
         onSave = { name, scale, entities, parentMap ->
+            if (name.trim().length < 2) {
+                scope.launch { snackbarHostState.showAppSnackbar(shortNameMsg, type = SnackbarType.ERROR) }
+                return@ClassEditContent
+            }
+            if (entities.any { it.name.trim().length < 2 }) {
+                scope.launch { snackbarHostState.showAppSnackbar(shortCompNameMsg, type = SnackbarType.ERROR) }
+                return@ClassEditContent
+            }
             viewModel.upsertClassWithHierarchy(classId, subjectId, name, scale, entities, parentMap)
+            scope.launch { snackbarHostState.showAppSnackbar(successMsg, type = SnackbarType.SUCCESS) }
             onBackClick()
         },
         onBackClick = onBackClick

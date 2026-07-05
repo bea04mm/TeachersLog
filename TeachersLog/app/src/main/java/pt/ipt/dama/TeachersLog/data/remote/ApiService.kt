@@ -38,6 +38,12 @@ interface ApiService {
     suspend fun updateSyncPreference(@Body request: UpdateSyncRequest): Response<Unit>
 
     /**
+     * Updates the user's password.
+     */
+    @POST("auth/change-password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Unit>
+
+    /**
      * Permanently deletes the user account and all associated cloud data.
      * @param email The identifier of the account to delete.
      * @return [Response] with Unit (200 OK if successful).
@@ -60,6 +66,14 @@ interface ApiService {
      */
     @GET("sync")
     suspend fun downloadData(@Query("email") email: String): Response<UserDataSync>
+
+    /**
+     * Clears the user's cloud backup data and associated images.
+     * @param email The user identifier.
+     * @return [Response] with Unit.
+     */
+    @DELETE("sync")
+    suspend fun clearCloudBackup(@Query("email") email: String): Response<Unit>
 
     /**
      * Uploads an image to the backend.

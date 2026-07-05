@@ -15,7 +15,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = 2
-        versionName = "1.2.0"
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -65,11 +65,9 @@ android {
 dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.constraintlayout)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -83,6 +81,7 @@ dependencies {
 
     // Image Loading
     implementation(libs.coil.compose)
+    implementation(libs.play.services.mlkit.document.scanner)
 
     // Room
     implementation(libs.room.runtime)
@@ -99,8 +98,10 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     // WorkManager for background synchronization
-    val workVersion = "2.10.0"
-    implementation("androidx.work:work-runtime-ktx:$workVersion")
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // ML Kit & Document Scanner
+    implementation(libs.google.mlkit.text)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

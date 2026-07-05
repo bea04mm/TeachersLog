@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.data.local.AppDatabase
+import pt.ipt.dama.TeachersLog.data.local.TeacherDao
 import pt.ipt.dama.TeachersLog.data.remote.NetworkClient
 import pt.ipt.dama.TeachersLog.data.repository.AuthRepository
 import pt.ipt.dama.TeachersLog.data.repository.SyncRepository
@@ -19,19 +20,18 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import pt.ipt.dama.TeachersLog.data.model.UserProfile
 import pt.ipt.dama.TeachersLog.data.workers.ImageUploadWorker
-import pt.ipt.dama.TeachersLog.data.workers.ImageDeleteWorker
 
 /**
  * SettingsViewModel manages global UI state such as theme preferences and application language.
- *
- * @param application The application context, used for locale initialization.
  */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sessionManager = SessionManager(application)
     private val syncRepository: SyncRepository
-    private val authRepository = AuthRepository(NetworkClient.apiService, sessionManager)
+    private val authRepository: AuthRepository
+    private val teacherDao: TeacherDao
 
     /** Observable state for the dark mode theme. */
     val isDarkMode: LiveData<Boolean?> = sessionManager.isDarkMode.asLiveData()
@@ -42,14 +42,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     /** Observable state for synchronization preference. */
     val isSyncEnabled: LiveData<Boolean> = sessionManager.isSyncEnabled.asLiveData()
 
-    /** Observable state for the current user's name. */
-    val userName: LiveData<String> = sessionManager.userName.asLiveData()
-
-    /** Observable state for the current user's email. */
-    val userEmail: LiveData<String> = sessionManager.userEmail.asLiveData()
-
-    /** Observable state for the current user's photo. */
-    val userPhoto: LiveData<String> = sessionManager.userPhoto.asLiveData()
+    /** Observable state for the current user's profile from the database. */
+    val userProfile: LiveData<UserProfile?>
 
     /** Observable state for guest status. */
     val isGuest: LiveData<Boolean> = sessionManager.isGuest.asLiveData()
@@ -62,29 +56,27 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     init {
         val database = AppDatabase.getDatabase(application)
-        syncRepository = SyncRepository(database, database.teacherDao(), NetworkClient.apiService, sessionManager)
+        teacherDao = database.teacherDao()
+        syncRepository = SyncRepository(database, teacherDao, NetworkClient.apiService, sessionManager)
+        authRepository = AuthRepository(NetworkClient.apiService, sessionManager, teacherDao)
+        userProfile = teacherDao.getUserProfile().asLiveData()
     }
 
     /**
      * Toggles the application's dark mode setting.
-     * @param enabled True to enable dark mode, false for light mode.
      */
     fun toggleDarkMode(enabled: Boolean) {
         viewModelScope.launch {
             sessionManager.setDarkMode(enabled)
-            // Also save to SharedPreferences for sync initialization if needed, 
-            // but DataStore is preferred for Compose.
         }
     }
 
     /**
      * Updates the application's current language code.
-     * @param languageCode The new language code (e.g., "en" or "pt").
      */
     fun setLanguage(languageCode: String) {
         viewModelScope.launch {
             sessionManager.setLanguage(languageCode)
-            // Persist to SharedPreferences for attachBaseContext on restart
             getApplication<Application>().getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE).edit {
                 putString("language", languageCode)
             }
@@ -93,7 +85,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     /**
      * Toggles the data synchronization setting and syncs it with AWS.
-     * @param enabled True to enable sync, false to disable.
      */
     fun toggleSync(enabled: Boolean) {
         viewModelScope.launch {
@@ -107,7 +98,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     /**
      * Downloads the latest backup from AWS and overwrites the local database.
-     * Updates [isSyncing] and [syncMessage] during the process.
      */
     fun restoreFromCloud() {
         viewModelScope.launch {
@@ -115,10 +105,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             _syncMessage.value = null
             val result = syncRepository.downloadFromCloud()
             if (result.isSuccess) {
-                // Return success signal (UI will map to string resource)
                 _syncMessage.value = "RESTORE_SUCCESS"
             } else {
-                // Return error message
                 _syncMessage.value = "RESTORE_FAILED:" + (result.exceptionOrNull()?.message ?: "Unknown Error")
             }
             _isSyncing.value = false
@@ -133,6 +121,17 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
+     * Clears the user's cloud backup and associated images from S3.
+     */
+    fun clearCloudBackup() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            syncRepository.clearCloudBackup()
+            _isSyncing.value = false
+        }
+    }
+
+    /**
      * Updates the user's profile information in the local session manager.
      * @param name The new display name.
      * @param email The new email address.
@@ -142,39 +141,64 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             var finalPhotoUrl: String? = null
             
-            // If it's a local URI, upload it first
-            if (photoUri != null && (photoUri.startsWith("content://") || photoUri.startsWith("file://"))) {
-                // Delete old image if it exists and is a cloud URL
-                val oldPhoto = sessionManager.userPhoto.first()
-                android.util.Log.d("SettingsViewModel", "Old photo URL: $oldPhoto")
-                if (oldPhoto.startsWith("http")) {
-                    android.util.Log.d("SettingsViewModel", "Deleting old cloud photo: $oldPhoto")
-                    try { 
-                        val response = NetworkClient.apiService.deleteImage(oldPhoto)
-                        if (!response.isSuccessful) {
-                            scheduleImageDeletion(oldPhoto)
-                        }
-                    } catch (_: Exception) {
-                        scheduleImageDeletion(oldPhoto)
+            if (photoUri != null) {
+                if (photoUri.startsWith("http")) {
+                    finalPhotoUrl = photoUri
+                } else if (photoUri.startsWith("content://") || photoUri.startsWith("file://")) {
+                    // Upload first
+                    val cloudUrl = uploadImageFromUri(photoUri)
+                    if (cloudUrl != null) {
+                        finalPhotoUrl = cloudUrl
+                    } else {
+                        // Background upload if immediate fails
+                        (-1).scheduleImageUpload(photoUri, isProfile = true)
+                        finalPhotoUrl = photoUri // Keep local URI for now
                     }
                 }
-
-                val cloudUrl = uploadImageFromUri(photoUri)
-                if (cloudUrl != null) {
-                    finalPhotoUrl = cloudUrl
-                } else {
-                    // Upload failed, schedule background task
-                    (-1).scheduleImageUpload(photoUri, isProfile = true)
-                }
+            } else {
+                // If photoUri is null, we might want to keep the old one or clear it.
+                // In this app's logic, null usually means no change requested if name/email are provided.
+                finalPhotoUrl = teacherDao.getUserProfile().first()?.photoUrl
             }
             
+            // Save to Room (Database)
+            teacherDao.insertUserProfile(UserProfile(name = name, email = email, photoUrl = finalPhotoUrl))
+            
+            // Save to DataStore (Session)
             sessionManager.updateProfile(name, email, finalPhotoUrl)
+            
+            // Trigger sync to update top-level columns in DynamoDB
+            triggerSync()
         }
     }
 
     /**
-     * Schedules a background task to upload an image when internet is available.
+     * Triggers a cloud backup if sync is enabled.
      */
+    private fun triggerSync() {
+        viewModelScope.launch {
+            val enabled = sessionManager.isSyncEnabled.first()
+            if (enabled) {
+                syncRepository.uploadToCloud()
+
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+
+                val syncRequest = OneTimeWorkRequestBuilder<pt.ipt.dama.TeachersLog.data.workers.DataSyncWorker>()
+                    .setConstraints(constraints)
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .build()
+
+                WorkManager.getInstance(getApplication()).enqueueUniqueWork(
+                    "full_data_sync_settings",
+                    ExistingWorkPolicy.REPLACE,
+                    syncRequest
+                )
+            }
+        }
+    }
+
     private fun Int.scheduleImageUpload(uri: String, isProfile: Boolean = false) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -200,31 +224,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Schedules a background task to delete an image when internet is available.
-     */
-    private fun scheduleImageDeletion(url: String) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val inputData = Data.Builder()
-            .putString("image_url", url)
-            .build()
-
-        val deleteRequest = OneTimeWorkRequestBuilder<ImageDeleteWorker>()
-            .setConstraints(constraints)
-            .setInputData(inputData)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
-            .build()
-
-        WorkManager.getInstance(getApplication()).enqueueUniqueWork(
-            "delete_${url.hashCode()}",
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
-            deleteRequest
-        )
-    }
-
-    /**
      * Helper to handle the image upload process from a URI.
      */
     private suspend fun uploadImageFromUri(uriString: String): String? = withContext(Dispatchers.IO) {
@@ -241,16 +240,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 val response = NetworkClient.apiService.uploadImage(requestBody)
                 if (response.isSuccessful) response.body()?.imageUrl else null
             } else null
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsViewModel", "Error uploading profile image", e)
+        } catch (_: Exception) {
             null
         }
     }
 
-    /**
-     * Permanently deletes the user account from AWS and the local device.
-     * Redirects to the welcome/onboarding screen upon success via state change.
-     */
     fun deleteAccount() {
         viewModelScope.launch {
             val email = sessionManager.userEmail.first()
@@ -258,6 +252,25 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _isSyncing.value = true
                 authRepository.deleteAccount(email)
                 _isSyncing.value = false
+            }
+        }
+    }
+
+    /**
+     * Attempts to update the password via the AuthRepository.
+     */
+    fun changePassword(oldPass: String, newPass: String, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            val email = sessionManager.userEmail.first()
+            if (email.isBlank()) {
+                onResult("USER_NOT_LOGGED_IN")
+                return@launch
+            }
+            val result = authRepository.changePassword(email, oldPass, newPass)
+            if (result.isSuccess) {
+                onResult(null) // Success
+            } else {
+                onResult(result.exceptionOrNull()?.message ?: "ERROR")
             }
         }
     }
