@@ -151,7 +151,7 @@
     <string name="app_preferences">Preferências da App</string>
     <string name="app_preferences_desc">Modo escuro</string>
     <string name="sign_out">Sair</string>
-    <string name="version_info">Versão 1.2.0 (Build 2)</string>
+    <string name="version_info">Versão 1.3.0 (Build 3)</string>
     <string name="language_label">Idioma</string>
     <string name="app_language">Idioma da App</string>
     <string name="select_language">Selecionar Idioma</string>
@@ -179,12 +179,8 @@
     <string name="delete_account_confirm_message">Tem a certeza que deseja apagar a sua conta? Todas as cópias de segurança na nuvem serão eliminadas permanentemente. Os dados locais permanecerão até limpar a cache.</string>
     <string name="account">Conta</string>
     <string name="personal_information">Informações Pessoais</string>
-    <string name="first_name">Primeiro Nome</string>
-    <string name="last_name">Apelido</string>
+    <string name="first_name">Nome</string>
     <string name="email">Email</string>
-    <string name="default_user_firstname">Joana</string>
-    <string name="default_user_lastname">Silva</string>
-    <string name="default_user_email">joana.s@escola.edu</string>
 
     <!-- Cloning -->
     <string name="clone_label">Clonar</string>
@@ -240,6 +236,10 @@
     <string name="error_sync_failed">Sincronização falhou: %s</string>
     <string name="error_download_failed">Download falhou: %s</string>
     <string name="error_unknown">Erro desconhecido</string>
+    <string name="error_login_failed">Falha ao iniciar sessão. Por favor, tente novamente.</string>
+    <string name="error_registration_failed">Falha no registo. Por favor, tente novamente.</string>
+    <string name="error_invalid_credentials">Credenciais erradas.</string>
+    <string name="error_user_exists">O utilizador já existe.</string>
     <string name="error_invalid_email">Por favor, introduza um email válido.</string>
     <string name="error_password_too_short">A palavra-passe deve ter pelo menos 6 caracteres.</string>
     <string name="error_name_too_short">O nome deve ter pelo menos 3 caracteres.</string>
