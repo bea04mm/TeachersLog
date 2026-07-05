@@ -1,7 +1,6 @@
 ﻿package pt.ipt.dama.TeachersLog.ui.screens
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -10,9 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -35,10 +31,12 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.RESULT_
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.SCANNER_MODE_FULL
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -73,12 +71,15 @@ fun StudentGradingContent(
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
     var isOcrProcessing by remember { mutableStateOf(false) }
 
     val textRecognizer = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 
     val ocrNoTextMsg = stringResource(R.string.ocr_no_text_found)
     val ocrErrorMsg = stringResource(R.string.ocr_error)
+    val activityErrorMsg = stringResource(R.string.error_activity_not_found)
 
     // Set up the Document Scanner client
     val scannerOptions = GmsDocumentScannerOptions.Builder()
@@ -106,16 +107,16 @@ fun StudentGradingContent(
                                 if (scannedText.isNotBlank()) {
                                     onNotesChange(if (teacherNotes.isBlank()) scannedText else "$teacherNotes\n$scannedText")
                                 } else {
-                                    Toast.makeText(context, ocrNoTextMsg, Toast.LENGTH_SHORT).show()
+                                    scope.launch { snackbarHostState.showSnackbar(ocrNoTextMsg) }
                                 }
                             }
                             .addOnFailureListener { e ->
                                 isOcrProcessing = false
-                                Toast.makeText(context, "${ocrErrorMsg}: ${e.message}", Toast.LENGTH_SHORT).show()
+                                scope.launch { snackbarHostState.showSnackbar("${ocrErrorMsg}: ${e.message}") }
                             }
                     } catch (_: Exception) {
                         isOcrProcessing = false
-                        Toast.makeText(context, ocrErrorMsg, Toast.LENGTH_SHORT).show()
+                        scope.launch { snackbarHostState.showSnackbar(ocrErrorMsg) }
                     }
                 }
             }
@@ -223,14 +224,14 @@ fun StudentGradingContent(
                 if (children.isEmpty()) {
                     item {
                         GradeSliderCard(
-                            title = group.componentName, weight = stringResource(R.string.weight_percentage_format, group.weight), icon = Icons.Default.Analytics, value = group.score.toFloat(), 
+                            title = group.componentName, weight = stringResource(R.string.weight_percentage_format, group.weight), icon = IconMapper.Analytics, value = group.score.toFloat(), 
                             maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(group.componentId, it.toDouble()) }, rangeLabels = listOf(stringResource(R.string.grade_range_min), stringResource(R.string.grade_range_max))
                         )
                     }
                 } else {
                     items(children) { child ->
                         GradeSliderCard(
-                            title = child.componentName, weight = stringResource(R.string.weight_percentage_format, child.weight), icon = Icons.Default.Analytics, value = child.score.toFloat(),
+                            title = child.componentName, weight = stringResource(R.string.weight_percentage_format, child.weight), icon = IconMapper.Analytics, value = child.score.toFloat(),
                             maxGrade = maxGradeValue, scaleSuffix = scaleSuffix, onValueChange = { onScoreChange(child.componentId, it.toDouble()) }, rangeLabels = listOf(stringResource(R.string.grade_range_min), stringResource(R.string.grade_range_max))
                         )
                     }
@@ -241,7 +242,7 @@ fun StudentGradingContent(
                 TonalCard {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = AppTheme.colors.primary)
+                            Icon(imageVector = IconMapper.Notes, contentDescription = null, tint = AppTheme.colors.primary)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = stringResource(R.string.teachers_notes), style = AppTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.weight(1f))
@@ -258,18 +259,18 @@ fun StudentGradingContent(
                                                 try {
                                                     scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
                                                 } catch (_: Exception) {
-                                                    Toast.makeText(context, ocrErrorMsg, Toast.LENGTH_SHORT).show()
+                                                    scope.launch { snackbarHostState.showSnackbar(ocrErrorMsg) }
                                                 }
                                             }
                                             .addOnFailureListener { e ->
-                                                Toast.makeText(context, "${ocrErrorMsg}: ${e.message}", Toast.LENGTH_LONG).show()
+                                                scope.launch { snackbarHostState.showSnackbar("${ocrErrorMsg}: ${e.message}") }
                                             }
                                     } else {
-                                        Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
+                                        scope.launch { snackbarHostState.showSnackbar(activityErrorMsg) }
                                     }
                                 }) {
                                     Icon(
-                                        imageVector = Icons.Default.PhotoCamera,
+                                        imageVector = IconMapper.Camera,
                                         contentDescription = stringResource(R.string.ocr_scan_button),
                                         tint = AppTheme.colors.primary
                                     )
@@ -281,7 +282,8 @@ fun StudentGradingContent(
                             value = teacherNotes, onValueChange = onNotesChange,
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text(stringResource(R.string.qualitative_feedback_hint)) },
-                            minLines = 3
+                            minLines = 3,
+                            shape = AppTheme.shapes.medium
                         )
                     }
                 }
@@ -290,9 +292,10 @@ fun StudentGradingContent(
             item {
                 Button(
                     onClick = onSave,
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = AppTheme.shapes.medium
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
+                    Icon(IconMapper.Save, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = stringResource(R.string.save_grades))
                 }

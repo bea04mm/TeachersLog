@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +20,7 @@ import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
 import pt.ipt.dama.TeachersLog.ui.components.TonalCard
 import pt.ipt.dama.TeachersLog.ui.theme.AppTheme
+import pt.ipt.dama.TeachersLog.utils.IconMapper
 
 /**
  * AboutScreen displays information about the application, its purpose, 
@@ -67,7 +66,7 @@ fun AboutScreen(
                         modifier = Modifier
                             .size(160.dp)
                             .clip(roundedShape)
-                            .background(androidx.compose.ui.graphics.Color.White),
+                            .background(AppTheme.colors.surfaceContainerLowest),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -107,7 +106,7 @@ fun AboutScreen(
                     ) {
                         AboutSectionHeader(
                             title = stringResource(R.string.academic_overview),
-                            icon = Icons.Default.School,
+                            icon = IconMapper.School,
                             isCentered = false
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +114,8 @@ fun AboutScreen(
                             text = stringResource(R.string.institution_label),
                             style = AppTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            color = AppTheme.colors.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -151,12 +151,12 @@ fun AboutScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutSectionHeader(
                             title = stringResource(R.string.author_header),
-                            icon = Icons.Default.Group
+                            icon = IconMapper.Group
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         ListItem(
                             headlineContent = { Text(text = stringResource(R.string.author), style = AppTheme.typography.bodyLarge) },
-                            leadingContent = { Icon(Icons.Default.Person, contentDescription = null, tint = AppTheme.colors.primary) },
+                            leadingContent = { Icon(IconMapper.Account, contentDescription = null, tint = AppTheme.colors.primary) },
                             colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                         )
                     }
@@ -169,7 +169,7 @@ fun AboutScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutSectionHeader(
                             title = stringResource(R.string.libraries_frameworks_header),
-                            icon = Icons.Default.Code
+                            icon = IconMapper.Code
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         val libs = listOf(
@@ -187,7 +187,7 @@ fun AboutScreen(
                                 verticalAlignment = Alignment.Top
                             ) {
                                 Text(text = "•", modifier = Modifier.padding(end = 8.dp), color = AppTheme.colors.primary)
-                                Text(text = stringResource(resId), style = AppTheme.typography.bodyMedium)
+                                Text(text = stringResource(resId), style = AppTheme.typography.bodyMedium, color = AppTheme.colors.onSurface)
                             }
                         }
                     }

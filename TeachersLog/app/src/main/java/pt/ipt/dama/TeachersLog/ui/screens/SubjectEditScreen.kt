@@ -6,8 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -16,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.ui.components.TeacherTopBar
+import pt.ipt.dama.TeachersLog.ui.components.LocalSnackbarHostState
 import pt.ipt.dama.TeachersLog.ui.theme.*
 import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
@@ -63,6 +63,7 @@ fun SubjectEditContent(
     )
 
     Scaffold(
+        containerColor = AppTheme.colors.background,
         topBar = { 
             TeacherTopBar(
                 title = stringResource(if (!isEditMode) R.string.add_subject else R.string.edit_subject), 
@@ -81,7 +82,8 @@ fun SubjectEditContent(
                 onValueChange = { name = it }, 
                 label = { Text(stringResource(R.string.subject_name)) }, 
                 modifier = Modifier.fillMaxWidth(), 
-                singleLine = true
+                singleLine = true,
+                shape = AppTheme.shapes.medium
             )
 
             // Dynamic Icon Selection
@@ -139,9 +141,10 @@ fun SubjectEditContent(
             Button(
                 onClick = { if (name.isNotBlank()) onSave(name, selectedIcon, selectedColor) }, 
                 modifier = Modifier.fillMaxWidth().height(56.dp), 
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank(),
+                shape = AppTheme.shapes.medium
             ) {
-                Icon(Icons.Default.Save, contentDescription = null)
+                Icon(IconMapper.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.save)) 
             }
@@ -167,6 +170,11 @@ fun SubjectEditScreen(
     } else {
         remember { mutableStateOf(null) }
     }
+    
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    val successMsg = stringResource(R.string.save_success)
+    val shortNameMsg = stringResource(R.string.error_subject_name_too_short)
 
     SubjectEditContent(
         isEditMode = subjectId != null,
@@ -174,6 +182,10 @@ fun SubjectEditScreen(
         initialIcon = existingSubject?.iconName ?: "functions",
         initialColor = existingSubject?.colorHex ?: "#004AC6",
         onSave = { name, icon, color ->
+            if (name.trim().length < 3) {
+                scope.launch { snackbarHostState.showSnackbar(shortNameMsg) }
+                return@SubjectEditContent
+            }
             if (subjectId == null) {
                 academicViewModel.addSubject(name, icon, color)
             } else {
@@ -181,6 +193,7 @@ fun SubjectEditScreen(
                     academicViewModel.updateSubject(it.copy(name = name, iconName = icon, colorHex = color))
                 }
             }
+            scope.launch { snackbarHostState.showSnackbar(successMsg) }
             onBackClick()
         },
         onBackClick = onBackClick

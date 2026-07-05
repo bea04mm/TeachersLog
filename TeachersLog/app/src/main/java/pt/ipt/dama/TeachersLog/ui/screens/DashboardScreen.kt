@@ -2,8 +2,6 @@
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -19,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.*
 import pt.ipt.dama.TeachersLog.ui.components.*
@@ -28,6 +25,7 @@ import pt.ipt.dama.TeachersLog.ui.viewmodel.AcademicViewModel
 import pt.ipt.dama.TeachersLog.ui.viewmodel.TeacherViewModel
 import pt.ipt.dama.TeachersLog.utils.IconMapper
 import pt.ipt.dama.TeachersLog.utils.LocalizedNameMapper
+import androidx.compose.ui.platform.LocalLocale
 
 /**
  * DashboardContent is the stateless UI component for the main landing screen.
@@ -93,7 +91,7 @@ fun DashboardContent(
                         StatCard(
                             title = stringResource(R.string.total_students),
                             value = (stats?.totalStudents ?: 0).toString(),
-                            icon = Icons.Default.Group,
+                            icon = IconMapper.Account,
                             modifier = Modifier.weight(1f)
                         )
                         
@@ -102,8 +100,8 @@ fun DashboardContent(
 
                         StatCard(
                             title = stringResource(R.string.global_average),
-                            value = String.format(Locale.getDefault(), "%.1f %%", avgPercentage),
-                            icon = Icons.Default.BarChart,
+                            value = String.format(LocalLocale.current.platformLocale, "%.1f %%", avgPercentage),
+                            icon = IconMapper.Analytics,
                             modifier = Modifier.weight(1f),
                             color = avgColor
                         )
