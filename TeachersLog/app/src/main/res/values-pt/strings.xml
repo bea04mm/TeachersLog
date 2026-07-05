@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Diário do Professor</string>
+    <string name="app_name">Teacher\'s Log</string>
 
     <!-- General Actions -->
     <string name="back">Voltar</string>
@@ -176,7 +176,7 @@
     <string name="delete_account">Apagar Conta</string>
     <string name="delete_account_desc">Apagar permanentemente a sua conta e todos os dados da AWS. Esta ação não pode ser desfeita.</string>
     <string name="delete_account_confirm_title">Apagar Conta?</string>
-    <string name="delete_account_confirm_message">Tem a certeza absoluta que deseja apagar a sua conta? Todas as cópias de segurança na nuvem serão eliminadas permanentemente. Os dados locais permanecerão até limpar a cache.</string>
+    <string name="delete_account_confirm_message">Tem a certeza que deseja apagar a sua conta? Todas as cópias de segurança na nuvem serão eliminadas permanentemente. Os dados locais permanecerão até limpar a cache.</string>
     <string name="account">Conta</string>
     <string name="personal_information">Informações Pessoais</string>
     <string name="first_name">Primeiro Nome</string>
@@ -205,12 +205,35 @@
     <string name="create_account_login">Criar Conta / Iniciar Sessão</string>
     <string name="initial_setup_welcome">Bem-vindo! Para começar, por favor crie o seu primeiro ano letivo e período.</string>
     <string name="sync_notification_title">Notificação de Sincronização</string>
-    <string name="restore_success_message">Restauro concluído! Por favor reinicie ou atualize os ecrãs.</string>
+    <string name="restore_success_message">Restauro concluído! Por favor, reinicie ou atualize os ecrãs.</string>
     <string name="restore_failed_message">Falha no restauro: %s</string>
     <string name="cd_clone_year">Clonar Ano</string>
     <string name="cd_clone_period">Clonar Período</string>
     <string name="cd_options">Opções</string>
     <string name="password_label">Palavra-passe</string>
+    <string name="nav_about">Sobre</string>
+    <string name="course_label">Mestrado em Engenharia Informática - Internet das Coisas</string>
+    <string name="curriculum_unit_label">Desenvolvimento de Aplicações Móveis Avançadas</string>
+    <string name="academic_year_label">2025/2026</string>
+    <string name="institution_label">Instituto Politécnico de Tomar</string>
+    <string name="author_header">Autora</string>
+    <string name="author">Beatriz Moreira N.º25262</string>
+    <string name="libraries_frameworks_header">Bibliotecas &amp; Frameworks</string>
+    <string name="lib_jetpack_compose">Jetpack Compose - (Google: developer.android.com/jetpack/compose)</string>
+    <string name="lib_room">Room Persistence Library - (Google: developer.android.com/training/data-storage/room)</string>
+    <string name="lib_retrofit">Retrofit &amp; OkHttp - (Square: square.github.io/retrofit)</string>
+    <string name="lib_coil">Coil Image Loader - (Coil-kt: coil-kt.github.io/coil)</string>
+    <string name="lib_mlkit">ML Kit Text Recognition - (Google: developers.google.com/ml-kit)</string>
+    <string name="lib_workmanager">WorkManager - (Google: developer.android.com/topic/libraries/architecture/workmanager)</string>
+    <string name="lib_datastore">Jetpack DataStore - (Google: developer.android.com/topic/libraries/architecture/datastore)</string>
+    <string name="ocr_scan_button">Digitalizar Texto com a Câmara</string>
+    <string name="ocr_processing">A processar imagem…</string>
+    <string name="ocr_no_text_found">Nenhum texto encontrado na imagem.</string>
+    <string name="ocr_error">Falha ao reconhecer o texto.</string>
+    <string name="scale_suffix_5"> / 5,0</string>
+    <string name="scale_suffix_20"> / 20</string>
+    <string name="scale_suffix_100"> %</string>
+    <string name="weight_percentage_format">%d%%</string>
     <string name="error_user_not_authenticated">Utilizador não autenticado</string>
     <string name="error_sync_failed">Sincronização falhou: %s</string>
     <string name="error_download_failed">Download falhou: %s</string>
