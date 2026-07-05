@@ -62,6 +62,14 @@ interface ApiService {
     suspend fun downloadData(@Query("email") email: String): Response<UserDataSync>
 
     /**
+     * Clears the user's cloud backup data and associated images.
+     * @param email The user identifier.
+     * @return [Response] with Unit.
+     */
+    @DELETE("sync")
+    suspend fun clearCloudBackup(@Query("email") email: String): Response<Unit>
+
+    /**
      * Uploads an image to the backend.
      * @param image The raw image bytes in the request body.
      * @return [Response] containing the [ImageResponse] with the cloud URL.

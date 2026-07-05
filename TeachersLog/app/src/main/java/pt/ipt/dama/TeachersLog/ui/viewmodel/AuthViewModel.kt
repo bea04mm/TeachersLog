@@ -1,15 +1,12 @@
 package pt.ipt.dama.TeachersLog.ui.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pt.ipt.dama.TeachersLog.data.local.AppDatabase
 import pt.ipt.dama.TeachersLog.data.remote.NetworkClient
 import pt.ipt.dama.TeachersLog.data.remote.models.LoginRequest
 import pt.ipt.dama.TeachersLog.data.remote.models.RegisterRequest
@@ -22,7 +19,7 @@ import pt.ipt.dama.TeachersLog.utils.SessionManager
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sessionManager = SessionManager(application)
-    private val authRepository = AuthRepository(NetworkClient.apiService, sessionManager)
+    private val authRepository: AuthRepository
 
     // Expose flows directly for more reliable Compose observation
     val onboardingCompletedFlow = sessionManager.onboardingCompleted
@@ -43,6 +40,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val justLoggedIn: StateFlow<Boolean> = _justLoggedIn.asStateFlow()
 
     init {
+        val database = AppDatabase.getDatabase(application)
+        authRepository = AuthRepository(NetworkClient.apiService, sessionManager, database.teacherDao())
+
         // Simple delay to ensure splash screen shows and state is loaded
         viewModelScope.launch {
             kotlinx.coroutines.delay(1000)
@@ -78,7 +78,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             if (result.isSuccess) {
                 _justLoggedIn.value = true
             } else {
-                _authError.value = result.exceptionOrNull()?.message
+                val error = result.exceptionOrNull()?.message
+                _authError.value = when (error) {
+                    "USER_EXISTS" -> getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_user_exists)
+                    "REGISTRATION_FAILED" -> getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_registration_failed)
+                    else -> error ?: getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_unknown)
+                }
             }
             _isLoading.value = false
         }
@@ -94,7 +99,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             if (result.isSuccess) {
                 _justLoggedIn.value = true
             } else {
-                _authError.value = result.exceptionOrNull()?.message
+                val error = result.exceptionOrNull()?.message
+                _authError.value = when (error) {
+                    "INVALID_CREDENTIALS" -> getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_invalid_credentials)
+                    "LOGIN_FAILED" -> getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_login_failed)
+                    else -> error ?: getApplication<Application>().getString(pt.ipt.dama.TeachersLog.R.string.error_unknown)
+                }
             }
             _isLoading.value = false
         }

@@ -1,7 +1,9 @@
 package pt.ipt.dama.TeachersLog.data.repository
 
+import pt.ipt.dama.TeachersLog.data.local.TeacherDao
 import pt.ipt.dama.TeachersLog.data.remote.ApiService
 import pt.ipt.dama.TeachersLog.data.remote.models.*
+import pt.ipt.dama.TeachersLog.data.model.UserProfile
 import pt.ipt.dama.TeachersLog.utils.SessionManager
 
 /**
@@ -13,10 +15,12 @@ import pt.ipt.dama.TeachersLog.utils.SessionManager
  *
  * @property apiService The Retrofit service for network calls.
  * @property sessionManager Manager for local user session persistence.
+ * @property teacherDao The DAO for updating the local UserProfile table.
  */
 class AuthRepository(
     private val apiService: ApiService,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val teacherDao: TeacherDao
 ) {
 
     /**
@@ -31,9 +35,14 @@ class AuthRepository(
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
                 sessionManager.saveAuthData(data.token, data.name, data.email, data.profileImageUrl, data.syncEnabled)
+                teacherDao.insertUserProfile(UserProfile(name = data.name, email = data.email, photoUrl = data.profileImageUrl))
                 Result.success(data)
             } else {
-                Result.failure(Exception("Registration failed: ${response.code()}"))
+                val errorMsg = when (response.code()) {
+                    400 -> "USER_EXISTS"
+                    else -> "REGISTRATION_FAILED"
+                }
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -52,9 +61,14 @@ class AuthRepository(
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
                 sessionManager.saveAuthData(data.token, data.name, data.email, data.profileImageUrl, data.syncEnabled)
+                teacherDao.insertUserProfile(UserProfile(name = data.name, email = data.email, photoUrl = data.profileImageUrl))
                 Result.success(data)
             } else {
-                Result.failure(Exception("Login failed: ${response.code()}"))
+                val errorMsg = when (response.code()) {
+                    401 -> "INVALID_CREDENTIALS"
+                    else -> "LOGIN_FAILED"
+                }
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -66,6 +80,7 @@ class AuthRepository(
      */
     suspend fun logout() {
         sessionManager.clearSession()
+        teacherDao.deleteUserProfile()
     }
 
     /**
@@ -96,8 +111,26 @@ class AuthRepository(
      */
     suspend fun deleteAccount(email: String): Result<Unit> {
         return try {
+            // 1. Clean up all student images from S3 first
+            val students = teacherDao.getAllStudentsSync()
+            students.forEach { student ->
+                student.profileImageUrl?.let { url ->
+                    if (url.startsWith("http")) {
+                        try { 
+                            apiService.deleteImage(url) 
+                        } catch (_: Exception) {
+                            // Non-blocking: attempt to delete but continue account deletion
+                        }
+                    }
+                }
+            }
+
+            // 2. Delete the user account from the AWS backend
             val response = apiService.deleteAccount(email)
             if (response.isSuccessful) {
+                // 3. Clear all local data
+                teacherDao.clearAllData()
+                teacherDao.deleteUserProfile()
                 sessionManager.clearSession()
                 Result.success(Unit)
             } else {
