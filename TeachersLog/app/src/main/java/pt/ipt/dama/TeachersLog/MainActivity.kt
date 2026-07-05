@@ -431,11 +431,13 @@ fun MainApp(
                         viewModel = settingsViewModel,
                         onNavigateToAccount = { navController.navigate("account") }, 
                         onNavigateToPreferences = { navController.navigate("preferences") },
+                        onNavigateToAbout = { navController.navigate("about") },
                         onLogout = { authViewModel.logout() }
                     ) 
                 }
                 composable("preferences") { AppPreferencesScreen(settingsViewModel) { navController.popBackStack() } }
                 composable("account") { AccountDetailsScreen(settingsViewModel) { navController.popBackStack() } }
+                composable("about") { AboutScreen { navController.popBackStack() } }
                 
                 composable("subject/{id}/{name}", arguments = listOf(navArgument("id") { type = NavType.IntType }, navArgument("name") { type = NavType.StringType })) { 
                     SubjectScreen(

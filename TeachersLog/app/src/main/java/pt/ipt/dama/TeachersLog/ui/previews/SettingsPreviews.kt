@@ -22,6 +22,7 @@ fun SettingsPreview() {
             isGuest = false,
             onNavigateToAccount = {}, 
             onNavigateToPreferences = {},
+            onNavigateToAbout = {},
             onLogout = {}
         )
     }

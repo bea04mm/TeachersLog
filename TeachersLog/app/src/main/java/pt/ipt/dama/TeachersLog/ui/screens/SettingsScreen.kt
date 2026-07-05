@@ -35,6 +35,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToAccount: () -> Unit,
     onNavigateToPreferences: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
 ) {
     val userName by viewModel.userName.observeAsState("")
@@ -49,6 +50,7 @@ fun SettingsScreen(
         isGuest = isGuest,
         onNavigateToAccount = onNavigateToAccount,
         onNavigateToPreferences = onNavigateToPreferences,
+        onNavigateToAbout = onNavigateToAbout,
         onLogout = onLogout
     )
 }
@@ -64,6 +66,7 @@ fun SettingsContent(
     isGuest: Boolean,
     onNavigateToAccount: () -> Unit,
     onNavigateToPreferences: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -148,14 +151,24 @@ fun SettingsContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 TonalCard {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.app_preferences)) },
-                        supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
-                        leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
-                        trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = onNavigateToPreferences),
-                        colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
-                    )
+                    Column {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.app_preferences)) },
+                            supportingContent = { Text(stringResource(R.string.app_preferences_desc)) },
+                            leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
+                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                            modifier = Modifier.clickable(onClick = onNavigateToPreferences),
+                            colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.nav_about)) },
+                            leadingContent = { Icon(Icons.Default.Info, contentDescription = null) },
+                            trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) },
+                            modifier = Modifier.clickable(onClick = onNavigateToAbout),
+                            colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                        )
+                    }
                 }
             }
 
@@ -185,8 +198,6 @@ fun SettingsContent(
                             Text(stringResource(R.string.sign_out))
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = stringResource(R.string.version_info), style = AppTheme.typography.labelSmall, color = AppTheme.colors.outline)
                 }
             }
         }
