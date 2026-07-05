@@ -196,6 +196,8 @@
     <string name="clone_destination_class_label">Select Destination Subject:</string>
     <string name="target_period_name_label">Target Period Name:</string>
     <string name="clone_success">Cloned successfully!</string>
+    <string name="save_success">Saved successfully!</string>
+    <string name="delete_success">Deleted successfully!</string>
     <string name="copy_suffix"> (Copy)</string>
 
     <!-- Accessibility / Content Descriptions -->
@@ -238,4 +240,11 @@
     <string name="error_sync_failed">Sync failed: %s</string>
     <string name="error_download_failed">Download failed: %s</string>
     <string name="error_unknown">Unknown error</string>
+    <string name="error_invalid_email">Please enter a valid email address.</string>
+    <string name="error_password_too_short">Password must be at least 6 characters long.</string>
+    <string name="error_name_too_short">Name must be at least 3 characters long.</string>
+    <string name="error_subject_name_too_short">Subject name must be at least 3 characters long.</string>
+    <string name="error_class_name_too_short">Class name must be at least 2 characters long.</string>
+    <string name="error_component_name_too_short">Component name must be at least 2 characters long.</string>
+    <string name="error_activity_not_found">System activity not found. Please restart the app.</string>
 </resources>

@@ -196,6 +196,8 @@
     <string name="clone_destination_class_label">Selecione a Disciplina de Destino:</string>
     <string name="target_period_name_label">Nome do Período de Destino:</string>
     <string name="clone_success">Clonado com sucesso!</string>
+    <string name="save_success">Guardado com sucesso!</string>
+    <string name="delete_success">Apagado com sucesso!</string>
     <string name="copy_suffix"> (Cópia)</string>
 
     <!-- Accessibility / Content Descriptions -->
@@ -238,4 +240,11 @@
     <string name="error_sync_failed">Sincronização falhou: %s</string>
     <string name="error_download_failed">Download falhou: %s</string>
     <string name="error_unknown">Erro desconhecido</string>
+    <string name="error_invalid_email">Por favor, introduza um email válido.</string>
+    <string name="error_password_too_short">A palavra-passe deve ter pelo menos 6 caracteres.</string>
+    <string name="error_name_too_short">O nome deve ter pelo menos 3 caracteres.</string>
+    <string name="error_subject_name_too_short">O nome da disciplina deve ter pelo menos 3 caracteres.</string>
+    <string name="error_class_name_too_short">O nome da turma deve ter pelo menos 2 caracteres.</string>
+    <string name="error_component_name_too_short">O nome da componente deve ter pelo menos 2 caracteres.</string>
+    <string name="error_activity_not_found">Atividade do sistema não encontrada. Por favor, reinicie a aplicação.</string>
 </resources>
