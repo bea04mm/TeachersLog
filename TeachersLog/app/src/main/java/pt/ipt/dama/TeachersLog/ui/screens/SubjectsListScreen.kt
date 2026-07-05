@@ -3,8 +3,6 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -17,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.launch
 import pt.ipt.dama.TeachersLog.R
 import pt.ipt.dama.TeachersLog.data.model.AcademicYear
 import pt.ipt.dama.TeachersLog.data.model.Semester
@@ -61,11 +60,15 @@ fun SubjectsListContent(
     academicYears: List<AcademicYear>,
     semestersProvider: (Int) -> LiveData<List<Semester>>
 ) {
-    // ... (logic remains same)
     // State to hold the subject currently marked for deletion
     val subjectToDelete = remember { mutableStateOf<Subject?>(null) }
     val subjectToClone = remember { mutableStateOf<SubjectWithStats?>(null) }
     val pullToRefreshState = rememberPullToRefreshState()
+    
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    val deleteSuccessMsg = stringResource(R.string.delete_success)
+    val cloneSuccessMsg = stringResource(R.string.clone_success)
 
     // --- Delete Confirmation Dialog ---
     subjectToDelete.value?.let { subject ->
@@ -75,6 +78,7 @@ fun SubjectsListContent(
             onConfirm = {
                 onDeleteSubjectClick(subject)
                 subjectToDelete.value = null
+                scope.launch { snackbarHostState.showSnackbar(deleteSuccessMsg) }
             },
             onDismiss = { subjectToDelete.value = null }
         )
@@ -89,6 +93,7 @@ fun SubjectsListContent(
             onConfirm = { targetSemesterId ->
                 onCloneSubjectClick(subject.id, targetSemesterId)
                 subjectToClone.value = null
+                scope.launch { snackbarHostState.showSnackbar(cloneSuccessMsg) }
             },
             onDismiss = { subjectToClone.value = null }
         )
@@ -104,9 +109,13 @@ fun SubjectsListContent(
             ) 
         },
         floatingActionButton = {
-            // Button to navigate to the Add Subject screen
-            FloatingActionButton(onClick = onAddSubjectClick) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_subject))
+            FloatingActionButton(
+                onClick = onAddSubjectClick,
+                containerColor = AppTheme.colors.primaryContainer,
+                contentColor = AppTheme.colors.onPrimaryContainer,
+                shape = AppTheme.shapes.medium
+            ) {
+                Icon(IconMapper.Add, contentDescription = stringResource(R.string.add_subject))
             }
         }
     ) { paddingValues ->
@@ -149,14 +158,15 @@ fun SubjectsListContent(
                             Box {
                                 IconButton(onClick = { showMenu = true }) {
                                     Icon(
-                                        imageVector = Icons.Default.MoreVert, 
+                                        imageVector = IconMapper.More, 
                                         contentDescription = null,
                                         tint = AppTheme.colors.outline
                                     )
                                 }
                                 DropdownMenu(
                                     expanded = showMenu,
-                                    onDismissRequest = { showMenu = false }
+                                    onDismissRequest = { showMenu = false },
+                                    containerColor = AppTheme.colors.surfaceContainerHigh
                                 ) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.edit_subject)) },
@@ -164,7 +174,7 @@ fun SubjectsListContent(
                                             showMenu = false
                                             onEditSubjectClick(subject.id)
                                         },
-                                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
+                                        leadingIcon = { Icon(IconMapper.Edit, contentDescription = null) }
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.clone_label)) },
@@ -172,22 +182,21 @@ fun SubjectsListContent(
                                             showMenu = false
                                             subjectToClone.value = subject
                                         },
-                                        leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                                        leadingIcon = { Icon(IconMapper.Copy, contentDescription = null) }
                                     )
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.delete_subject_title)) },
                                         onClick = {
                                             showMenu = false
-                                            // Set the state to trigger the confirmation dialog
                                             subjectToDelete.value = Subject(
                                                 id = subject.id,
-                                                semesterId = 0, // Not needed for deletion
+                                                semesterId = 0, 
                                                 name = subject.name,
                                                 iconName = subject.iconName,
                                                 colorHex = subject.colorHex
                                             )
                                         },
-                                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                                        leadingIcon = { Icon(IconMapper.Delete, contentDescription = null, tint = AppTheme.colors.error) }
                                     )
                                 }
                             }
@@ -195,10 +204,7 @@ fun SubjectsListContent(
                     )
                 }
                 
-                // Add spacer at the bottom to prevent FAB from overlapping the last item
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
 
@@ -267,4 +273,3 @@ fun SubjectsListScreen(
         semestersProvider = { yearId -> academicViewModel.getSemestersForYear(yearId) }
     )
 }
-
