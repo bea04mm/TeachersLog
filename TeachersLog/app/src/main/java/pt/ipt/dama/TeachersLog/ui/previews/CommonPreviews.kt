@@ -2,8 +2,6 @@ package pt.ipt.dama.TeachersLog.ui.previews
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,6 +13,74 @@ import pt.ipt.dama.TeachersLog.data.model.AcademicYear
 import pt.ipt.dama.TeachersLog.data.model.Semester
 import pt.ipt.dama.TeachersLog.ui.components.*
 import pt.ipt.dama.TeachersLog.ui.theme.*
+import pt.ipt.dama.TeachersLog.utils.IconMapper
+
+/**
+ * Visualizes the custom [AppSnackbar] with a success message.
+ */
+@Preview(showBackground = true, name = "Success Snackbar Preview")
+@Composable
+fun SuccessSnackbarPreview() {
+    TeachersLogTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            AppSnackbar(
+                snackbarData = object : SnackbarData {
+                    override val visuals: SnackbarVisuals = AppSnackbarVisuals(
+                        message = "Changes saved successfully!",
+                        type = SnackbarType.SUCCESS
+                    )
+                    override fun performAction() {}
+                    override fun dismiss() {}
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Visualizes the custom [AppSnackbar] with an error message.
+ */
+@Preview(showBackground = true, name = "Error Snackbar Preview")
+@Composable
+fun ErrorSnackbarPreview() {
+    TeachersLogTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            AppSnackbar(
+                snackbarData = object : SnackbarData {
+                    override val visuals: SnackbarVisuals = AppSnackbarVisuals(
+                        message = "Connection failed. Please try again.",
+                        actionLabel = "Retry",
+                        type = SnackbarType.ERROR
+                    )
+                    override fun performAction() {}
+                    override fun dismiss() {}
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Visualizes the custom [AppSnackbar] with an informational message.
+ */
+@Preview(showBackground = true, name = "Info Snackbar Preview")
+@Composable
+fun InfoSnackbarPreview() {
+    TeachersLogTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            AppSnackbar(
+                snackbarData = object : SnackbarData {
+                    override val visuals: SnackbarVisuals = AppSnackbarVisuals(
+                        message = "Syncing data with cloud...",
+                        type = SnackbarType.INFO
+                    )
+                    override fun performAction() {}
+                    override fun dismiss() {}
+                }
+            )
+        }
+    }
+}
 
 /**
  * Visualizes the [TeacherTopBar] in a standard dashboard context.
@@ -48,7 +114,7 @@ fun StatCardPreview() {
         StatCard(
             title = stringResource(R.string.total_students),
             value = "45",
-            icon = Icons.Default.Group,
+            icon = IconMapper.Account,
             modifier = Modifier.padding(16.dp)
         )
     }
@@ -66,7 +132,7 @@ fun SubjectCardPreview() {
             averageGrade = 4.2,
             students = 12,
             color = Primary,
-            icon = Icons.Default.Functions,
+            icon = IconMapper.getIconByName("functions"),
             gradingScale = "5",
             modifier = Modifier.padding(16.dp),
             onClick = {}
@@ -165,13 +231,13 @@ fun CommonComponentsSummaryPreview() {
                 StatCard(
                     title = stringResource(R.string.total_students),
                     value = "120",
-                    icon = Icons.Default.Person,
+                    icon = IconMapper.Account,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
                     title = stringResource(R.string.global_average),
                     value = "4.1",
-                    icon = Icons.Default.Star,
+                    icon = IconMapper.Analytics,
                     modifier = Modifier.weight(1f),
                     color = AppTheme.colors.secondary
                 )
@@ -182,7 +248,7 @@ fun CommonComponentsSummaryPreview() {
                 averageGrade = 3.9,
                 students = 45,
                 color = AppTheme.parseColor("#006874"),
-                icon = Icons.Default.Biotech,
+                icon = IconMapper.getIconByName("biotech"),
                 gradingScale = "100",
                 onClick = {}
             )
