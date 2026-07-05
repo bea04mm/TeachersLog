@@ -247,4 +247,12 @@
     <string name="error_class_name_too_short">Class name must be at least 2 characters long.</string>
     <string name="error_component_name_too_short">Component name must be at least 2 characters long.</string>
     <string name="error_activity_not_found">System activity not found. Please restart the app.</string>
+    <string name="change_password">Change Password</string>
+    <string name="old_password">Old Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="password_changed_success">Password changed successfully!</string>
+    <string name="error_password_mismatch">New passwords do not match.</string>
+    <string name="error_incorrect_old_password">The old password is incorrect.</string>
+    <string name="security">Security</string>
 </resources>

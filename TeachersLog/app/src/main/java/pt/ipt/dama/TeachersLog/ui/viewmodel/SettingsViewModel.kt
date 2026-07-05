@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import pt.ipt.dama.TeachersLog.data.model.UserProfile
 import pt.ipt.dama.TeachersLog.data.workers.ImageUploadWorker
-import pt.ipt.dama.TeachersLog.data.workers.ImageDeleteWorker
 
 /**
  * SettingsViewModel manages global UI state such as theme preferences and application language.
@@ -241,7 +240,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 val response = NetworkClient.apiService.uploadImage(requestBody)
                 if (response.isSuccessful) response.body()?.imageUrl else null
             } else null
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -253,6 +252,25 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _isSyncing.value = true
                 authRepository.deleteAccount(email)
                 _isSyncing.value = false
+            }
+        }
+    }
+
+    /**
+     * Attempts to update the password via the AuthRepository.
+     */
+    fun changePassword(oldPass: String, newPass: String, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            val email = sessionManager.userEmail.first()
+            if (email.isBlank()) {
+                onResult("USER_NOT_LOGGED_IN")
+                return@launch
+            }
+            val result = authRepository.changePassword(email, oldPass, newPass)
+            if (result.isSuccess) {
+                onResult(null) // Success
+            } else {
+                onResult(result.exceptionOrNull()?.message ?: "ERROR")
             }
         }
     }

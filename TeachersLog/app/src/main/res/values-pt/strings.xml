@@ -247,4 +247,12 @@
     <string name="error_class_name_too_short">O nome da turma deve ter pelo menos 2 caracteres.</string>
     <string name="error_component_name_too_short">O nome da componente deve ter pelo menos 2 caracteres.</string>
     <string name="error_activity_not_found">Atividade do sistema não encontrada. Por favor, reinicie a aplicação.</string>
+    <string name="change_password">Alterar Palavra-passe</string>
+    <string name="old_password">Palavra-passe Antiga</string>
+    <string name="new_password">Nova Palavra-passe</string>
+    <string name="confirm_new_password">Confirmar Nova Palavra-passe</string>
+    <string name="password_changed_success">Palavra-passe alterada com sucesso!</string>
+    <string name="error_password_mismatch">As novas palavras-passe não coincidem.</string>
+    <string name="error_incorrect_old_password">A palavra-passe antiga está incorreta.</string>
+    <string name="security">Segurança</string>
 </resources>

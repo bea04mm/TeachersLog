@@ -35,6 +35,7 @@ import pt.ipt.dama.TeachersLog.utils.IconMapper
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToAccount: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
@@ -48,6 +49,7 @@ fun SettingsScreen(
         userPhoto = profile?.photoUrl ?: "",
         isGuest = isGuest,
         onNavigateToAccount = onNavigateToAccount,
+        onNavigateToSecurity = onNavigateToSecurity,
         onNavigateToPreferences = onNavigateToPreferences,
         onNavigateToAbout = onNavigateToAbout,
         onLogout = onLogout
@@ -64,6 +66,7 @@ fun SettingsContent(
     userPhoto: String,
     isGuest: Boolean,
     onNavigateToAccount: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit
@@ -159,6 +162,16 @@ fun SettingsContent(
                             colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
                         )
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                        if (!isGuest) {
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.security)) },
+                                leadingContent = { Icon(Icons.Default.Lock, contentDescription = null, tint = AppTheme.colors.primary) },
+                                trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                                modifier = Modifier.clickable(onClick = onNavigateToSecurity),
+                                colors = ListItemDefaults.colors(containerColor = AppTheme.transparent)
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = AppTheme.colors.outlineVariant)
+                        }
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.nav_about)) },
                             leadingContent = { Icon(Icons.Default.Info, contentDescription = null, tint = AppTheme.colors.primary) },

@@ -104,6 +104,23 @@ class AuthRepository(
     }
 
     /**
+     * Attempts to change the user's password on the backend.
+     */
+    suspend fun changePassword(email: String, oldPass: String, newPass: String): Result<Unit> {
+        return try {
+            val response = apiService.changePassword(ChangePasswordRequest(email, oldPass, newPass))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val msg = if (response.code() == 401) "INCORRECT_PASSWORD" else "PASSWORD_CHANGE_FAILED"
+                Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Permanently deletes the user account from the AWS backend.
      * 
      * @param email The identifier of the account to delete.

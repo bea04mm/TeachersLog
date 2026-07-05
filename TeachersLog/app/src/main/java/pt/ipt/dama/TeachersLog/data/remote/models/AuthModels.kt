@@ -40,6 +40,15 @@ data class UpdateSyncRequest(
 )
 
 /**
+ * Data model for password change.
+ */
+data class ChangePasswordRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("oldPassword") val oldPassword: String,
+    @SerializedName("newPassword") val newPassword: String
+)
+
+/**
  * Response for image upload operations.
  */
 data class ImageResponse(
