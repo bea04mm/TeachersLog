@@ -21,9 +21,10 @@ import pt.ipt.dama.TeachersLog.data.model.*
         StudentsClass::class, 
         Student::class, 
         StudentScore::class,
-        Grade::class
+        Grade::class,
+        UserProfile::class
     ], 
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
