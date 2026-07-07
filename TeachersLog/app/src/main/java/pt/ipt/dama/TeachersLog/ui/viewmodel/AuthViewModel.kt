@@ -12,6 +12,7 @@ import pt.ipt.dama.TeachersLog.data.remote.models.LoginRequest
 import pt.ipt.dama.TeachersLog.data.remote.models.RegisterRequest
 import pt.ipt.dama.TeachersLog.data.repository.AuthRepository
 import pt.ipt.dama.TeachersLog.utils.SessionManager
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * AuthViewModel manages the user session state, including onboarding and authentication status.
@@ -39,13 +40,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     /** Transient state to trigger post-login logic like data conflict checks. */
     val justLoggedIn: StateFlow<Boolean> = _justLoggedIn.asStateFlow()
 
+    private val _isNewRegistration = MutableStateFlow(false)
+    /** Transient state to identify if the last entry was a fresh registration. */
+    val isNewRegistration: StateFlow<Boolean> = _isNewRegistration.asStateFlow()
+
     init {
         val database = AppDatabase.getDatabase(application)
         authRepository = AuthRepository(NetworkClient.apiService, sessionManager, database.teacherDao())
 
         // Simple delay to ensure splash screen shows and state is loaded
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
+            kotlinx.coroutines.delay(1000.milliseconds)
             _isLoading.value = false
         }
     }
@@ -76,6 +81,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             val result = authRepository.register(RegisterRequest(email, pass, name, sync))
             if (result.isSuccess) {
+                _isNewRegistration.value = true
                 _justLoggedIn.value = true
             } else {
                 val error = result.exceptionOrNull()?.message
@@ -97,6 +103,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             val result = authRepository.login(LoginRequest(email, pass))
             if (result.isSuccess) {
+                _isNewRegistration.value = false
                 _justLoggedIn.value = true
             } else {
                 val error = result.exceptionOrNull()?.message
@@ -115,6 +122,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun clearJustLoggedIn() {
         _justLoggedIn.value = false
+        _isNewRegistration.value = false
     }
 
     /**

@@ -40,7 +40,7 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
         containerColor = AppTheme.colors.background,
         bottomBar = {
             Row(

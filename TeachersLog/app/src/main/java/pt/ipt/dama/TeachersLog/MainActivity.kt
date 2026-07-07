@@ -191,16 +191,21 @@ fun MainApp(
     val isGuest by authViewModel.isGuest.observeAsState(initial = false)
     val isAuthenticated by authViewModel.isAuthenticated.observeAsState(initial = false)
     val justLoggedIn by authViewModel.justLoggedIn.collectAsState()
+    val isNewRegistration by authViewModel.isNewRegistration.collectAsState()
     val isSyncing by settingsViewModel.isSyncing.collectAsState()
     val showSyncChoiceDialog = rememberSaveable { mutableStateOf(false) }
 
     // Logic to detect first login with existing data or empty state
-    LaunchedEffect(isAuthenticated, isGuest, academicYears, justLoggedIn) {
+    LaunchedEffect(isAuthenticated, isGuest, academicYears, justLoggedIn, isNewRegistration) {
         academicYears ?: return@LaunchedEffect
         if (isAuthenticated && !isGuest && justLoggedIn) {
-            // If user has local data, show conflict dialog. 
-            // If local data is empty, still show the choice to restore or start fresh.
-            showSyncChoiceDialog.value = true
+            if (isNewRegistration) {
+                // New account: Skip sync choice and go straight to initial setup
+                authViewModel.clearJustLoggedIn()
+            } else {
+                // Returning account: Show dialog to choose between local and cloud data
+                showSyncChoiceDialog.value = true
+            }
         }
     }
 
@@ -435,7 +440,7 @@ fun MainApp(
         }
     ) {
         Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
             snackbarHost = { SnackbarHost(snackbarHostState) { AppSnackbar(it) } },
             bottomBar = {
                 // Show navigation bar only on top-level screens
